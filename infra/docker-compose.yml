@@ -58,7 +58,11 @@ services:
     volumes:
       - ../backend:/var/www/html
     depends_on:
-      - app
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: on-failure
     environment:
       - DB_HOST=postgres
       - REDIS_HOST=redis
