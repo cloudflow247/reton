@@ -72,9 +72,15 @@ class HttpAlatpayGateway implements AlatpayGateway
 
         $data = (array) $response->json('data', []);
 
+        $paymentLinkUrl = (string) ($data['url'] ?? $data['paymentLink'] ?? '');
+
+        if ($paymentLinkUrl === '') {
+            throw AlatpayException::requestFailed('createPaymentLink', $response->status());
+        }
+
         return new PaymentLinkResponse(
             providerReference: (string) ($data['transactionId'] ?? $data['linkId'] ?? $request->reference),
-            paymentLinkUrl: (string) ($data['url'] ?? $data['paymentLink'] ?? ''),
+            paymentLinkUrl: $paymentLinkUrl,
             expiresAt: isset($data['expiredAt']) ? (string) $data['expiredAt'] : $request->expiresAt,
         );
     }
