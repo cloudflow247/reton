@@ -100,3 +100,21 @@ it('forbids cancelling someone elses request', function () {
     $this->actingAs($intruder)->postJson('/api/v1/payment-requests/'.$request->id.'/cancel')
         ->assertStatus(403);
 });
+
+it('shows a payment request to its owner', function () {
+    [$user, $wallet] = apiRequester();
+    $request = app(PaymentRequestService::class)->create($user, $wallet, Money::of(250_00, 'NGN'), 'Lunch money');
+
+    $this->actingAs($user)->getJson('/api/v1/payment-requests/'.$request->id)
+        ->assertOk()
+        ->assertJsonPath('data.reference', $request->reference);
+});
+
+it('forbids viewing another users payment request', function () {
+    [$user, $wallet] = apiRequester();
+    $request = app(PaymentRequestService::class)->create($user, $wallet, Money::of(250_00, 'NGN'), 'Lunch money');
+    $other = User::factory()->create();
+
+    $this->actingAs($other)->getJson('/api/v1/payment-requests/'.$request->id)
+        ->assertStatus(403);
+});
