@@ -7,6 +7,8 @@ namespace App\Domain\Payments\Alatpay\Gateways;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\CollectionRequest;
 use App\Domain\Payments\Alatpay\Data\CollectionResponse;
+use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
+use App\Domain\Payments\Alatpay\Data\PaymentLinkResponse;
 use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
@@ -38,6 +40,23 @@ class FakeAlatpayGateway implements AlatpayGateway
             accountNumber: '9'.substr(preg_replace('/\D/', '', $request->reference).'0000000000', 0, 9),
             bankName: 'Wema Bank',
             accountName: 'RETON / '.$request->customerName,
+        );
+    }
+
+    public function createPaymentLink(PaymentLinkRequest $request): PaymentLinkResponse
+    {
+        $providerReference = 'ALT-LINK-'.$request->reference;
+
+        $this->transactions[$providerReference] = [
+            'currency' => $request->amount->currency,
+            'amount' => $request->amount->amount,
+            'status' => 'pending',
+        ];
+
+        return new PaymentLinkResponse(
+            providerReference: $providerReference,
+            paymentLinkUrl: 'https://pay.alatpay.test/'.$request->reference,
+            expiresAt: $request->expiresAt,
         );
     }
 

@@ -6,6 +6,8 @@ namespace App\Domain\Payments\Alatpay\Contracts;
 
 use App\Domain\Payments\Alatpay\Data\CollectionRequest;
 use App\Domain\Payments\Alatpay\Data\CollectionResponse;
+use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
+use App\Domain\Payments\Alatpay\Data\PaymentLinkResponse;
 use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
@@ -18,6 +20,8 @@ use App\Domain\Payments\Alatpay\Data\TransferResponse;
 interface AlatpayGateway
 {
     public function createCollection(CollectionRequest $request): CollectionResponse;
+
+    public function createPaymentLink(PaymentLinkRequest $request): PaymentLinkResponse;
 
     public function fetchTransaction(string $providerReference): ?RemoteTransaction;
 
