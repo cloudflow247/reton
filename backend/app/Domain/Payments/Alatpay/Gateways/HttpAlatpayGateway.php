@@ -7,6 +7,8 @@ namespace App\Domain\Payments\Alatpay\Gateways;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\CollectionRequest;
 use App\Domain\Payments\Alatpay\Data\CollectionResponse;
+use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
+use App\Domain\Payments\Alatpay\Data\PaymentLinkResponse;
 use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
@@ -47,6 +49,39 @@ class HttpAlatpayGateway implements AlatpayGateway
             bankName: (string) ($data['virtualBankCode'] ?? 'AlatPay'),
             accountName: (string) ($data['virtualBankAccountName'] ?? $request->customerName),
             expiresAt: isset($data['expiredAt']) ? (string) $data['expiredAt'] : null,
+        );
+    }
+
+    public function createPaymentLink(PaymentLinkRequest $request): PaymentLinkResponse
+    {
+        $response = $this->client()->post('/payment-link/api/v1/links', [
+            'businessId' => config('services.alatpay.business_id'),
+            'amount' => $request->amount->amount,
+            'currency' => $request->amount->currency,
+            'orderId' => $request->reference,
+            'title' => $request->title,
+            'description' => $request->description,
+            'customer' => ['email' => $request->customerEmail],
+            'redirectUrl' => $request->redirectUrl,
+            'expiresAt' => $request->expiresAt,
+        ]);
+
+        if (! $response->successful()) {
+            throw AlatpayException::requestFailed('createPaymentLink', $response->status());
+        }
+
+        $data = (array) $response->json('data', []);
+
+        $paymentLinkUrl = (string) ($data['url'] ?? $data['paymentLink'] ?? '');
+
+        if ($paymentLinkUrl === '') {
+            throw AlatpayException::requestFailed('createPaymentLink', $response->status());
+        }
+
+        return new PaymentLinkResponse(
+            providerReference: (string) ($data['transactionId'] ?? $data['linkId'] ?? $request->reference),
+            paymentLinkUrl: $paymentLinkUrl,
+            expiresAt: isset($data['expiredAt']) ? (string) $data['expiredAt'] : $request->expiresAt,
         );
     }
 
