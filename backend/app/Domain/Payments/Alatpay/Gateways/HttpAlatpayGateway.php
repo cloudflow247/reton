@@ -10,6 +10,11 @@ use App\Domain\Payments\Alatpay\Data\CollectionResponse;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkResponse;
 use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
+use App\Domain\Payments\Alatpay\Data\StaticAccountProvisionResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
+use App\Domain\Payments\Alatpay\Data\StaticAccountResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountTransaction;
+use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
@@ -154,6 +159,88 @@ class HttpAlatpayGateway implements AlatpayGateway
             amount: (int) ($data['amount'] ?? 0),
             currency: (string) ($data['currency'] ?? 'NGN'),
         );
+    }
+
+    public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
+    {
+        $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount', [
+            'businessId' => config('services.alatpay.business_id'),
+            'staticWalletType' => $request->walletType,
+            'bvn' => $request->bvn,
+            'email' => $request->email,
+        ]);
+
+        if (! $response->successful()) {
+            throw AlatpayException::requestFailed('provisionStaticAccount', $response->status());
+        }
+
+        $data = (array) $response->json('data', $response->json());
+
+        $staticWalletId = (string) ($data['id'] ?? '');
+
+        if ($staticWalletId === '') {
+            throw AlatpayException::requestFailed('provisionStaticAccount', $response->status());
+        }
+
+        return new StaticAccountProvisionResponse(
+            staticWalletId: $staticWalletId,
+            otpTrackingId: isset($data['otpTrackingId']) ? (string) $data['otpTrackingId'] : null,
+            accountNumber: isset($data['accountNumber']) ? (string) $data['accountNumber'] : null,
+            accountName: isset($data['accountName']) ? (string) $data['accountName'] : null,
+        );
+    }
+
+    public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
+    {
+        $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount/validateAndCreate', [
+            'staticWalletId' => $request->staticWalletId,
+            'businessId' => config('services.alatpay.business_id'),
+            'otp' => $request->otp,
+            'trackingId' => $request->trackingId,
+        ]);
+
+        if (! $response->successful()) {
+            throw AlatpayException::requestFailed('verifyStaticAccount', $response->status());
+        }
+
+        $data = (array) $response->json('data', $response->json());
+
+        $accountNumber = (string) ($data['accountNumber'] ?? '');
+
+        if ($accountNumber === '') {
+            throw AlatpayException::requestFailed('verifyStaticAccount', $response->status());
+        }
+
+        return new StaticAccountResponse(
+            providerReference: (string) ($data['id'] ?? $request->staticWalletId),
+            accountNumber: $accountNumber,
+            accountName: isset($data['accountName']) ? (string) $data['accountName'] : null,
+        );
+    }
+
+    public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
+    {
+        $response = $this->client()->get('/alatpay-wallet/api/v1/staticaccount/transactions', [
+            'businessId' => config('services.alatpay.business_id'),
+            'accountNumber' => $accountNumber,
+            'pageNumber' => $page,
+            'limit' => $limit,
+        ]);
+
+        if (! $response->successful()) {
+            throw AlatpayException::requestFailed('fetchStaticAccountTransactions', $response->status());
+        }
+
+        $rows = (array) $response->json('staticAccountTransactionResponses', $response->json('data.staticAccountTransactionResponses', []));
+
+        return array_map(static fn (array $row): StaticAccountTransaction => new StaticAccountTransaction(
+            transactionId: (string) ($row['staticAccountTransactionId'] ?? ''),
+            status: (int) ($row['status'] ?? 0),
+            accountNumber: (string) ($row['accountNumber'] ?? $accountNumber),
+            amountMajor: (float) ($row['amount'] ?? 0),
+            narration: isset($row['narration']) ? (string) $row['narration'] : null,
+            notificationEmail: isset($row['notificationEmail']) ? (string) $row['notificationEmail'] : null,
+        ), $rows);
     }
 
     private function client(): PendingRequest

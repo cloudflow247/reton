@@ -9,6 +9,10 @@ use App\Domain\Payments\Alatpay\Data\CollectionResponse;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkResponse;
 use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
+use App\Domain\Payments\Alatpay\Data\StaticAccountProvisionResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
+use App\Domain\Payments\Alatpay\Data\StaticAccountResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
 
@@ -28,4 +32,11 @@ interface AlatpayGateway
     public function initiateTransfer(TransferRequest $request): TransferResponse;
 
     public function fetchTransfer(string $providerReference): ?RemoteTransaction;
+
+    public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse;
+
+    public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse;
+
+    /** @return array<int, \App\Domain\Payments\Alatpay\Data\StaticAccountTransaction> */
+    public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array;
 }
