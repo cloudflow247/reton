@@ -97,7 +97,7 @@ class AlatpayDepositService
     /**
      * @param  array<string, mixed>  $data
      */
-    private function process(WebhookEvent $event, array $data): void
+    public function process(WebhookEvent $event, array $data): void
     {
         $reference = (string) ($data['reference'] ?? '');
         $deposit = Deposit::where('provider', self::PROVIDER)
