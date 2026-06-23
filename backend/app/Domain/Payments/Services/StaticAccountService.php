@@ -6,13 +6,18 @@ namespace App\Domain\Payments\Services;
 
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
+use App\Domain\Payments\Alatpay\Data\StaticAccountTransaction;
 use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
+use App\Domain\Payments\Enums\DepositStatus;
 use App\Domain\Payments\Enums\StaticAccountStatus;
 use App\Domain\Payments\Enums\StaticWalletType;
+use App\Domain\Payments\Models\Deposit;
 use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
+use App\Support\Money\Money;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -27,6 +32,8 @@ use Illuminate\Support\Str;
 class StaticAccountService
 {
     private const PROVIDER = 'alatpay';
+
+    private const STATIC_PROVIDER = 'alatpay_static';
 
     public function __construct(
         private readonly AlatpayGateway $gateway,
@@ -92,5 +99,78 @@ class StaticAccountService
         ]);
 
         return $account->refresh();
+    }
+
+    /**
+     * Fetch inbound transactions for a static account and credit any new
+     * successful ones to the owner's wallet via the ledger.
+     *
+     * Returns the number of new credits applied in this poll.
+     */
+    public function poll(StaticAccount $account): int
+    {
+        if (! $account->isActive() || $account->account_number === null) {
+            return 0;
+        }
+
+        $credited = 0;
+
+        foreach ($this->gateway->fetchStaticAccountTransactions($account->account_number) as $txn) {
+            if (! $txn->isSuccessful() || $txn->amountMinor() <= 0) {
+                continue;
+            }
+
+            $alreadyRecorded = Deposit::where('provider', self::STATIC_PROVIDER)
+                ->where('provider_reference', $txn->transactionId)
+                ->exists();
+
+            if ($alreadyRecorded) {
+                continue;
+            }
+
+            $this->credit($account, $txn);
+            $credited++;
+        }
+
+        $account->update(['last_polled_at' => now()]);
+
+        return $credited;
+    }
+
+    private function credit(StaticAccount $account, StaticAccountTransaction $txn): void
+    {
+        DB::transaction(function () use ($account, $txn): void {
+            $wallet = Wallet::findOrFail($account->wallet_id);
+            $amount = Money::of($txn->amountMinor(), $wallet->currency);
+
+            $deposit = Deposit::create([
+                'reference' => 'SDEP-'.$txn->transactionId,
+                'user_id' => $account->user_id,
+                'wallet_id' => $account->wallet_id,
+                'provider' => self::STATIC_PROVIDER,
+                'provider_reference' => $txn->transactionId,
+                'status' => DepositStatus::Pending,
+                'amount' => $txn->amountMinor(),
+                'currency' => $wallet->currency,
+                'metadata' => [
+                    'channel' => 'static_account',
+                    'static_account_id' => $account->id,
+                    'narration' => $txn->narration,
+                ],
+            ]);
+
+            $transaction = $this->wallets->fund(
+                $wallet,
+                $amount,
+                $txn->transactionId, // ledger idempotency key
+                ['deposit_id' => $deposit->id, 'provider' => self::STATIC_PROVIDER],
+            );
+
+            $deposit->update([
+                'status' => DepositStatus::Completed,
+                'transaction_id' => $transaction->id,
+                'paid_at' => now(),
+            ]);
+        });
     }
 }
