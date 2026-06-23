@@ -128,3 +128,38 @@ it('reconciles a pending request AlatPay reports as paid', function () {
         ->and($request->fresh()->status)->toBe(PaymentRequestStatus::Paid)
         ->and($wallet->fresh()->balance)->toBe(25000);
 });
+
+it('does not credit when the webhook currency does not match', function () {
+    [$user, $wallet] = requester();
+    $request = paymentRequests()->create($user, $wallet, Money::of(250_00, 'NGN'), 'Lunch money');
+
+    // Build payload inline: same shape as signedLinkPayload() but with USD currency.
+    $rawPayload = json_encode([
+        'id' => 'evt_link_usd_1',
+        'type' => 'transaction.completed',
+        'data' => [
+            'reference' => $request->provider_reference,
+            'amount' => 25000,
+            'currency' => 'USD',
+            'status' => 'completed',
+            'customer' => ['name' => 'Ada Payer', 'email' => 'ada@example.com'],
+        ],
+    ]);
+    $signature = app(App\Domain\Payments\Alatpay\AlatpaySignatureVerifier::class)->sign($rawPayload);
+
+    paymentRequests()->handleWebhook($rawPayload, $signature);
+
+    expect($request->fresh()->status)->toBe(PaymentRequestStatus::Pending)
+        ->and($wallet->fresh()->balance)->toBe(0);
+});
+
+it('reconcile does not credit when AlatPay reports a different currency', function () {
+    [$user, $wallet] = requester();
+    $request = paymentRequests()->create($user, $wallet, Money::of(250_00, 'NGN'), 'Lunch money');
+
+    $this->gateway->markPaid($request->provider_reference, 25000, 'USD');
+
+    expect(paymentRequests()->reconcile($request->fresh()))->toBeFalse()
+        ->and($request->fresh()->status)->toBe(PaymentRequestStatus::Pending)
+        ->and($wallet->fresh()->balance)->toBe(0);
+});

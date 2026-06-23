@@ -89,7 +89,11 @@ class PaymentRequestService
 
         $remote = $this->gateway->fetchTransaction($request->provider_reference);
 
-        if ($remote === null || ! $remote->isSuccessful() || $remote->amount !== $request->amount) {
+        if ($remote === null
+            || ! $remote->isSuccessful()
+            || $remote->amount !== $request->amount
+            || $remote->currency !== $request->currency
+        ) {
             return false;
         }
 
