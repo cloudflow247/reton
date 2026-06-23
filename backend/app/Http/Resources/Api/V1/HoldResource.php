@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Resources\Api\V1;
+
+use App\Domain\Transfers\Models\Hold;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * @mixin Hold
+ */
+class HoldResource extends JsonResource
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'amount' => $this->amount,
+            'currency' => $this->currency,
+            'status' => $this->status->value,
+            'reason' => $this->reason,
+            'expires_at' => $this->expires_at,
+            'resolved_at' => $this->resolved_at,
+        ];
+    }
+}

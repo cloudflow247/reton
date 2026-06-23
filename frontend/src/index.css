@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+/* ── Reton design tokens ─────────────────────────────────────────────
+   A calm, light, trustworthy fintech surface. Deep-emerald brand on a soft
+   mist canvas; white cards with soft elevation; money set in tabular figures. */
+@theme {
+  --color-bg: #f2f6f3;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef4f0;
+  --color-mint: #0b7a57; /* brand emerald — buttons, links, accents */
+  --color-mint-strong: #095f44;
+  --color-amber: #b26a00; /* held / pending */
+  --color-danger: #d14545;
+  --color-ink: #0c231c; /* deepest text */
+  --color-text: #122a22; /* primary text */
+  --color-muted: #5d726b; /* secondary text */
+  --color-line: #e1eae5; /* hairline borders */
+  --color-vault: #0e3b33; /* brand mark fill */
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui;
+  --font-sans: 'Inter', ui-sans-serif, system-ui;
+
+  --radius: 18px;
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 620px at 86% -12%, rgba(11, 122, 87, 0.07), transparent 60%),
+    radial-gradient(900px 520px at -6% 4%, rgba(11, 122, 87, 0.05), transparent 55%),
+    var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-num {
+  font-family: var(--font-display);
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.02em;
+}
+
+/* Clean numeric inputs — no native spinner arrows. */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(16, 40, 33, 0.04),
+    0 10px 30px -20px rgba(16, 40, 33, 0.16);
+}
+
+/* Subtle green elevation for the hero / emphasis cards — never neon. */
+.shield-glow {
+  box-shadow:
+    0 0 0 1px rgba(11, 122, 87, 0.14),
+    0 22px 54px -26px rgba(11, 122, 87, 0.32);
+}
+
+/* The brand-emerald balance card — the dashboard's confident focal point. */
+.brand-card {
+  background: linear-gradient(150deg, #0e7e5c 0%, #094f39 100%);
+  color: #ffffff;
+  border-radius: var(--radius);
+  box-shadow: 0 24px 54px -26px rgba(9, 79, 57, 0.55);
+}
+
+.btn {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border-radius: 999px;
+  transition:
+    transform 0.12s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  color: var(--color-text);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--color-mint);
+  box-shadow: 0 0 0 3px rgba(11, 122, 87, 0.13);
+}
+.field::placeholder {
+  color: var(--color-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

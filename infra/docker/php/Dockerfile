@@ -1,10 +1,12 @@
 FROM php:8.4-fpm-alpine
 
-RUN apk add --no-cache postgresql-dev $PHPIZE_DEPS \
-    && docker-php-ext-install pdo pdo_pgsql bcmath \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS
+# Use the prebuilt extension installer instead of pecl + source compilation:
+# it fetches prebuilt extension binaries over curl (robust against the flaky
+# PEAR downloader) and avoids installing the gcc/clang/llvm toolchain, turning
+# an ~18-minute source build into a couple of minutes.
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN chmod +x /usr/local/bin/install-php-extensions \
+    && install-php-extensions pdo_pgsql redis bcmath
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

@@ -17,6 +17,8 @@
 
 # Tooling
 .DS_Store
+CLAUDE.md
+.claude
 *.log
 .idea/
 .vscode/
