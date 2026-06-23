@@ -17,6 +17,7 @@ use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use App\Support\Money\Money;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -128,8 +129,15 @@ class StaticAccountService
                 continue;
             }
 
-            $this->credit($account, $txn);
-            $credited++;
+            try {
+                $this->credit($account, $txn);
+                $credited++;
+            } catch (UniqueConstraintViolationException) {
+                // A concurrent poll already credited this transaction; the unique
+                // (provider, provider_reference) / idempotency_key constraints held.
+                // Treat as already-credited: skip without aborting the loop.
+                continue;
+            }
         }
 
         $account->update(['last_polled_at' => now()]);

@@ -72,3 +72,13 @@ it('stamps last_polled_at', function () {
 
     expect($account->fresh()->last_polled_at)->not->toBeNull();
 });
+
+it('does not credit a successful transaction with a zero amount', function () {
+    [$account, $wallet] = activeStaticAccount();
+    $this->gateway->recordStaticTransaction($account->account_number, 1, 0.00, 'txn-zero');
+
+    $credited = app(StaticAccountService::class)->poll($account);
+
+    expect($credited)->toBe(0)
+        ->and($wallet->fresh()->balance)->toBe(0);
+});
