@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Auth\PinController;
 use App\Http\Controllers\Api\V1\Callback\CallbackController;
 use App\Http\Controllers\Api\V1\Payment\AlatpayWebhookController;
 use App\Http\Controllers\Api\V1\Payment\DepositController;
+use App\Http\Controllers\Api\V1\Payment\PaymentRequestController;
 use App\Http\Controllers\Api\V1\Payment\PayoutController;
 use App\Http\Controllers\Api\V1\Recovery\RecoveryController;
 use App\Http\Controllers\Api\V1\Transfer\TransferController;
@@ -21,6 +22,16 @@ use Illuminate\Support\Facades\Route;
 
 // Public webhook receiver — authenticated by HMAC signature, not Sanctum.
 Route::post('webhooks/alatpay', [AlatpayWebhookController::class, 'handle'])->name('webhooks.alatpay');
+
+// Public payer-facing details for a payment request (no auth).
+Route::get('pay/{reference}', [PaymentRequestController::class, 'publicShow'])->name('pay.show');
+
+Route::middleware('auth:sanctum')->prefix('payment-requests')->name('payment-requests.')->group(function (): void {
+    Route::get('/', [PaymentRequestController::class, 'index'])->name('index');
+    Route::post('/', [PaymentRequestController::class, 'store'])->name('store');
+    Route::get('{paymentRequest}', [PaymentRequestController::class, 'show'])->name('show');
+    Route::post('{paymentRequest}/cancel', [PaymentRequestController::class, 'cancel'])->name('cancel');
+});
 
 Route::middleware('auth:sanctum')->prefix('deposits')->name('deposits.')->group(function (): void {
     Route::get('/', [DepositController::class, 'index'])->name('index');
