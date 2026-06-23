@@ -14,6 +14,22 @@
 /frontend/node_modules/
 /frontend/dist/
 /frontend/.env
+/frontend/coverage/
+/frontend/.vite/
+*.tsbuildinfo
+
+# Backend (local-only)
+/backend/coverage/
+/backend/.phpunit.cache
+
+# Local env overrides (any service)
+.env.local
+.env.*.local
+*.env.local
+
+# Docker / infra (local overrides)
+docker-compose.override.yml
+/infra/docker-compose.override.yml
 
 # Tooling
 .DS_Store
@@ -22,3 +38,15 @@
 *.log
 .idea/
 .vscode/
+
+# OS files
+Thumbs.db
+
+# Editor swap / temp files
+*.swp
+*.swo
+*~
+
+# Merge / backup artifacts
+*.bak
+*.orig
