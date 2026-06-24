@@ -47,6 +47,16 @@ it('requires a bvn for individual wallets', function () {
     ])->assertStatus(422);
 });
 
+it('rejects a bvn on a collection wallet', function () {
+    [$user, $wallet] = apiStaticOwner();
+
+    $this->actingAs($user)->postJson('/api/v1/static-accounts', [
+        'wallet_id' => $wallet->id,
+        'wallet_type' => 'collection',
+        'bvn' => '12345678901',
+    ])->assertStatus(422);
+});
+
 it('forbids provisioning against a wallet the user does not own', function () {
     [, $wallet] = apiStaticOwner();
     $intruder = User::factory()->create();

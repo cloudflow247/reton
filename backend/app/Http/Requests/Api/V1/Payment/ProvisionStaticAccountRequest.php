@@ -21,7 +21,7 @@ class ProvisionStaticAccountRequest extends FormRequest
         return [
             'wallet_id' => ['required', 'uuid', 'exists:wallets,id'],
             'wallet_type' => ['required', 'in:individual,collection'],
-            'bvn' => ['required_if:wallet_type,individual', 'prohibited_unless:wallet_type,individual', 'nullable', 'digits:11'],
+            'bvn' => ['required_if:wallet_type,individual', 'prohibited_unless:wallet_type,individual', 'digits:11'],
         ];
     }
 }
