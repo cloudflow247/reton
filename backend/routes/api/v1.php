@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Payment\AlatpayWebhookController;
 use App\Http\Controllers\Api\V1\Payment\DepositController;
 use App\Http\Controllers\Api\V1\Payment\PaymentRequestController;
 use App\Http\Controllers\Api\V1\Payment\PayoutController;
+use App\Http\Controllers\Api\V1\Payment\StaticAccountController;
 use App\Http\Controllers\Api\V1\Recovery\RecoveryController;
 use App\Http\Controllers\Api\V1\Transfer\TransferController;
 use App\Http\Controllers\Api\V1\Wallet\WalletController;
@@ -43,6 +44,13 @@ Route::middleware('auth:sanctum')->prefix('payouts')->name('payouts.')->group(fu
     Route::get('/', [PayoutController::class, 'index'])->name('index');
     Route::post('/', [PayoutController::class, 'store'])->name('store');
     Route::get('{payout}', [PayoutController::class, 'show'])->name('show');
+});
+
+Route::middleware('auth:sanctum')->prefix('static-accounts')->name('static-accounts.')->group(function (): void {
+    Route::get('/', [StaticAccountController::class, 'index'])->name('index');
+    Route::post('/', [StaticAccountController::class, 'store'])->name('store');
+    Route::get('{staticAccount}', [StaticAccountController::class, 'show'])->name('show');
+    Route::post('{staticAccount}/verify', [StaticAccountController::class, 'verify'])->name('verify');
 });
 
 Route::prefix('auth')->name('auth.')->group(function (): void {
