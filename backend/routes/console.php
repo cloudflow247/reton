@@ -3,6 +3,7 @@
 use App\Console\Commands\AutoReleaseTransfers;
 use App\Console\Commands\EscalateRecoveries;
 use App\Console\Commands\ExpireCallbacks;
+use App\Console\Commands\PollStaticAccounts;
 use App\Console\Commands\ReconcileDeposits;
 use App\Console\Commands\ReconcilePayouts;
 use Illuminate\Foundation\Inspiring;
@@ -43,4 +44,21 @@ Schedule::command(ReconcileDeposits::class)
 
 Schedule::command(ReconcilePayouts::class)
     ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+/*
+|--------------------------------------------------------------------------
+| Static account funding
+|--------------------------------------------------------------------------
+|
+| Poll active AlatPay static accounts for new inbound payments and credit the
+| owning wallets. This is the primary funding path for static accounts (AlatPay
+| exposes a transactions endpoint rather than a webhook), so it runs every
+| minute for prompt credit. Crediting is idempotent on the AlatPay transaction
+| id, and withoutOverlapping keeps ledger postings serialised.
+|
+*/
+
+Schedule::command(PollStaticAccounts::class)
+    ->everyMinute()
     ->withoutOverlapping();
