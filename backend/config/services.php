@@ -41,6 +41,7 @@ return [
         'base_url' => env('ALATPAY_BASE_URL', 'https://api.alatpay.ng'),
         'api_key' => env('ALATPAY_API_KEY'),
         'business_id' => env('ALATPAY_BUSINESS_ID'),
+        'business_bvn' => env('ALATPAY_BUSINESS_BVN'),
         'webhook_secret' => env('ALATPAY_WEBHOOK_SECRET', ''),
         'timeout' => (int) env('ALATPAY_TIMEOUT', 15),
     ],

@@ -10,6 +10,12 @@ use App\Domain\Payments\Alatpay\Data\CollectionResponse;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkResponse;
 use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
+use App\Domain\Payments\Alatpay\Data\StaticAccountProvisionResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
+use App\Domain\Payments\Alatpay\Data\StaticAccountResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountTransaction;
+use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
+use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
 
@@ -24,6 +30,14 @@ class FakeAlatpayGateway implements AlatpayGateway
 
     /** @var array<string, array{currency: string, amount: int, status: string}> */
     private array $transfers = [];
+
+    private bool $provisionImmediate = false;
+
+    /** @var array<string, array{accountNumber: ?string, otpTrackingId: ?string}> */
+    private array $staticWallets = [];
+
+    /** @var array<string, array<int, StaticAccountTransaction>> keyed by account number */
+    private array $staticTransactions = [];
 
     public function createCollection(CollectionRequest $request): CollectionResponse
     {
@@ -125,5 +139,73 @@ class FakeAlatpayGateway implements AlatpayGateway
         if (isset($this->transfers[$providerReference])) {
             $this->transfers[$providerReference]['status'] = $status;
         }
+    }
+
+    public function provisionReturnsImmediately(bool $immediate): void
+    {
+        $this->provisionImmediate = $immediate;
+    }
+
+    public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
+    {
+        $staticWalletId = 'SW-'.$request->reference;
+        $accountNumber = '04'.substr(preg_replace('/\D/', '', $request->reference).'00000000', 0, 8);
+
+        if ($this->provisionImmediate) {
+            $this->staticWallets[$staticWalletId] = ['accountNumber' => $accountNumber, 'otpTrackingId' => null];
+
+            return new StaticAccountProvisionResponse($staticWalletId, null, $accountNumber, 'RETON STATIC');
+        }
+
+        $this->staticWallets[$staticWalletId] = ['accountNumber' => $accountNumber, 'otpTrackingId' => 'OTP-'.$request->reference];
+
+        return new StaticAccountProvisionResponse($staticWalletId, 'OTP-'.$request->reference, null, null);
+    }
+
+    public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
+    {
+        if ($request->otp !== '123456') {
+            throw AlatpayException::requestFailed('verifyStaticAccount', 400);
+        }
+
+        $wallet = $this->staticWallets[$request->staticWalletId] ?? null;
+
+        if ($wallet === null || $wallet['accountNumber'] === null) {
+            throw AlatpayException::requestFailed('verifyStaticAccount', 404);
+        }
+
+        return new StaticAccountResponse(
+            providerReference: $request->staticWalletId,
+            accountNumber: $wallet['accountNumber'],
+            accountName: 'RETON STATIC',
+        );
+    }
+
+    /**
+     * Test/dev helper: inject a static-account transaction with any status.
+     */
+    public function recordStaticTransaction(string $accountNumber, int $status, float $amountMajor, string $transactionId): void
+    {
+        $this->staticTransactions[$accountNumber][] = new StaticAccountTransaction(
+            transactionId: $transactionId,
+            status: $status,
+            accountNumber: $accountNumber,
+            amountMajor: $amountMajor,
+            narration: 'ALAT TRANSFER',
+            notificationEmail: null,
+        );
+    }
+
+    /**
+     * Test/dev helper: simulate a successful inbound payment (status = 1).
+     */
+    public function markStaticFunded(string $accountNumber, float $amountMajor, string $transactionId): void
+    {
+        $this->recordStaticTransaction($accountNumber, 1, $amountMajor, $transactionId);
+    }
+
+    public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
+    {
+        return $this->staticTransactions[$accountNumber] ?? [];
     }
 }

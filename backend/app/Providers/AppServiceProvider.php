@@ -21,9 +21,11 @@ use App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway;
 use App\Domain\Payments\Models\Deposit;
 use App\Domain\Payments\Models\PaymentRequest;
 use App\Domain\Payments\Models\Payout;
+use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Payments\Policies\DepositPolicy;
 use App\Domain\Payments\Policies\PaymentRequestPolicy;
 use App\Domain\Payments\Policies\PayoutPolicy;
+use App\Domain\Payments\Policies\StaticAccountPolicy;
 use App\Domain\Recovery\Models\Recovery;
 use App\Domain\Recovery\Policies\RecoveryPolicy;
 use App\Domain\Recovery\Services\RecoveryService;
@@ -84,5 +86,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Deposit::class, DepositPolicy::class);
         Gate::policy(Payout::class, PayoutPolicy::class);
         Gate::policy(PaymentRequest::class, PaymentRequestPolicy::class);
+        Gate::policy(StaticAccount::class, StaticAccountPolicy::class);
     }
 }
