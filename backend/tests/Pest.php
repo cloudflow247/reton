@@ -15,6 +15,9 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    // Inertia first-visit responses render the root Blade (which calls @vite);
+    // stub Vite so feature tests don't require a built manifest.
+    ->beforeEach(fn () => $this->withoutVite())
     ->in('Feature');
 
 /*

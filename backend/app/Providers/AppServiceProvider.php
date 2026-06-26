@@ -35,6 +35,7 @@ use App\Domain\Transfers\Services\TransferService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Policies\WalletPolicy;
 use App\Domain\Wallet\Services\WalletService;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -77,6 +78,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Inertia serializes API Resources via toResponse(), which would wrap
+        // every resource prop in a "data" key (auth.user.data, props.transfers.data…).
+        // Drop the wrapper so pages read bare arrays. The API envelope nests
+        // resources, so its JSON shape is unaffected.
+        JsonResource::withoutWrapping();
+
         // Wallet lives in a domain namespace, so register its policy explicitly
         // rather than relying on convention-based discovery.
         Gate::policy(Wallet::class, WalletPolicy::class);
