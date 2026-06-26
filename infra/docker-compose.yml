@@ -50,6 +50,18 @@ services:
       timeout: 3s
       retries: 5
 
+  # Builds the Inertia/React frontend. Runs `vite build --watch` so the
+  # manifest + assets land in public/build (bind-mounted back to the host and
+  # served by nginx). node_modules lives in a named volume so the container's
+  # install isn't clobbered by — or written into — the host bind mount.
+  vite:
+    image: node:22-alpine
+    working_dir: /var/www/html
+    command: sh -c "npm install && npm run build -- --watch"
+    volumes:
+      - ../backend:/var/www/html
+      - vite_node_modules:/var/www/html/node_modules
+
   queue:
     build:
       context: ../backend
@@ -88,3 +100,4 @@ services:
 
 volumes:
   pgdata:
+  vite_node_modules:

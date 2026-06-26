@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\Exceptions\RenderableApiException;
 use App\Support\Http\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -23,13 +24,25 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Inertia shares auth + flash on every web response and handles
+        // asset-version reloads. Only the web group is server-rendered.
+        $middleware->web(append: [
+            HandleInertiaRequests::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Render every exception thrown on the API surface as Reton's standard
         // error envelope, so clients never receive an HTML error page.
         $exceptions->render(function (Throwable $e, Request $request) {
             if (! $request->is('api/*') && ! $request->expectsJson()) {
+                // Web/Inertia surface: turn expected domain outcomes (fraud
+                // block, PIN lock, insufficient funds…) into a friendly flash
+                // redirect instead of a 500/HTML error page. ValidationException
+                // and auth redirects keep Laravel's default web handling.
+                if ($e instanceof RenderableApiException) {
+                    return back()->with('error', $e->getMessage());
+                }
+
                 return null;
             }
 
