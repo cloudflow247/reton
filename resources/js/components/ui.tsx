@@ -39,43 +39,35 @@ export function Modal({
   )
 }
 
-/** The Reton mark: a shield (protection) holding a return-arrow (reversibility). */
-export function Logo({ size = 30 }: { size?: number }) {
-  const f = `rg-${size}`
-  const s = `rs-${size}`
+/**
+ * The Reton mark: a shield (protection) holding a return-arrow (reversibility),
+ * set in a bold emerald tile so it reads strongly at any size — the same glyph
+ * as the favicon, for a consistent brand.
+ */
+export function Logo({ size = 32 }: { size?: number }) {
   return (
-    <svg width={size} height={(size * 34) / 30} viewBox="0 0 30 34" fill="none" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
       <defs>
-        <linearGradient id={f} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#0F4A3C" />
-          <stop offset="1" stopColor="#0A2E26" />
-        </linearGradient>
-        <linearGradient id={s} x1="0.2" y1="0" x2="0.9" y2="1">
-          <stop offset="0" stopColor="#5BF2C6" />
-          <stop offset="1" stopColor="#12B585" />
+        <linearGradient id="reton-logo" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#0e7e5c" />
+          <stop offset="1" stopColor="#094f39" />
         </linearGradient>
       </defs>
-      {/* Shield */}
+      <rect width="32" height="32" rx="9" fill="url(#reton-logo)" />
       <path
-        d="M15 2.3l11.3 3.9v8.9c0 7-4.7 11.9-11.3 14.6C8.4 27 3.7 22.1 3.7 15.1V6.2L15 2.3z"
-        fill={`url(#${f})`}
-        stroke={`url(#${s})`}
-        strokeWidth="1.6"
+        d="M16 4.8l8.4 2.9v6.7c0 5.3-3.6 9-8.4 10.8-4.8-1.8-8.4-5.5-8.4-10.8V7.7L16 4.8z"
+        fill="#ffffff"
+        fillOpacity="0.14"
+        stroke="#ffffff"
+        strokeWidth="1.8"
         strokeLinejoin="round"
       />
-      {/* Centered return / undo arrow */}
+      <path d="M19.4 13.9a3.9 3.9 0 1 0 .5 4.8" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
       <path
-        d="M19.3 13.2a4.8 4.8 0 10.7 5.9"
+        d="M19.9 10.2l.2 3.9-3.8-.4"
         fill="none"
-        stroke={`url(#${s})`}
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M19.8 8.6l.2 4.7-4.6-.5"
-        fill="none"
-        stroke={`url(#${s})`}
-        strokeWidth="2.4"
+        stroke="#ffffff"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -83,15 +75,12 @@ export function Logo({ size = 30 }: { size?: number }) {
   )
 }
 
-export function Wordmark({ light }: { light?: boolean }) {
+export function Wordmark({ light, size = 32 }: { light?: boolean; size?: number }) {
   return (
     <span className="flex items-center gap-2.5">
-      <Logo />
-      <span className="font-display text-xl font-bold tracking-tight">
-        <span className={light ? 'text-white' : 'text-text'}>Re</span>
-        <span className={light ? 'text-mint' : 'text-mint'} style={light ? { color: '#7df3cd' } : undefined}>
-          TON
-        </span>
+      <Logo size={size} />
+      <span className={`font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-text'}`}>
+        Reton
       </span>
     </span>
   )

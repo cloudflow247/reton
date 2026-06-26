@@ -6,7 +6,7 @@ import '../css/app.css'
 const appName = import.meta.env.VITE_APP_NAME ?? 'Reton'
 
 createInertiaApp({
-  title: (title) => (title ? `${title} · ${appName}` : appName),
+  title: (title) => (title ? `${title} · ${appName}` : `${appName} — payments you can take back`),
   resolve: (name) =>
     resolvePageComponent(
       `./Pages/${name}.tsx`,

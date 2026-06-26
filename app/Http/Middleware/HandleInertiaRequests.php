@@ -43,6 +43,16 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? new UserResource($user) : null,
                 'wallets' => $user ? WalletResource::collection($user->wallets()->get()) : [],
             ],
+            // Demo helper for reviewers — only present when explicitly enabled
+            // (RETON_DEMO_MODE), so production never exposes credentials.
+            'demo' => config('reton.demo.enabled') ? [
+                'password' => (string) config('reton.demo.password'),
+                'pin' => (string) config('reton.demo.pin'),
+                'accounts' => array_map(
+                    static fn (array $a): array => ['name' => $a['name'], 'email' => $a['email']],
+                    (array) config('reton.demo.accounts', []),
+                ),
+            ] : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

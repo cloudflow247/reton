@@ -22,5 +22,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Provision the sign-in demo accounts when demo mode is enabled.
+        if (config('reton.demo.enabled')) {
+            $this->call(DemoSeeder::class);
+        }
     }
 }

@@ -24,6 +24,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo mode
+    |--------------------------------------------------------------------------
+    |
+    | When enabled (never in production), the sign-in screen surfaces ready-to-
+    | use demo accounts so reviewers can try the app instantly. The accounts are
+    | provisioned by DemoSeeder and all share the same demo password + PIN.
+    |
+    */
+
+    'demo' => [
+        'enabled' => (bool) env('RETON_DEMO_MODE', false),
+        'password' => env('RETON_DEMO_PASSWORD', 'demo1234'),
+        'pin' => env('RETON_DEMO_PIN', '1234'),
+        'accounts' => [
+            ['name' => 'Ada Obi', 'email' => 'ada@demo.reton.ng', 'phone' => '+2348000000001', 'fund' => 750_000_00],
+            ['name' => 'Bola Ade', 'email' => 'bola@demo.reton.ng', 'phone' => '+2348000000002', 'fund' => 120_000_00],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Transaction PIN
     |--------------------------------------------------------------------------
     |

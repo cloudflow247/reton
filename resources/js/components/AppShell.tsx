@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 pb-24 sm:px-6">
-      <header className="flex items-center justify-between py-5">
+      <header className="glass sticky top-0 z-30 -mx-4 mb-2 flex items-center justify-between border-b border-line/70 px-4 py-3.5 sm:-mx-6 sm:px-6">
         <Link href="/dashboard">
           <Wordmark />
         </Link>

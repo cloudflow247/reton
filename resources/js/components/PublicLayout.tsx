@@ -13,9 +13,9 @@ export function PublicLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-full">
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <Link href="/">
+      <header className="glass sticky top-0 z-30 border-b border-line/80">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
+          <Link href="/" className="transition-opacity hover:opacity-80">
             <Wordmark />
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-medium sm:flex">
@@ -31,7 +31,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           </nav>
           <Link
             href="/register"
-            className="btn inline-flex items-center gap-1.5 bg-mint px-4 py-2 text-sm text-white shadow-sm hover:bg-mint-strong"
+            className="btn inline-flex items-center gap-1.5 bg-mint px-4 py-2 text-sm text-white shadow-sm transition hover:bg-mint-strong"
           >
             Get started <ArrowRightIcon size={15} />
           </Link>
