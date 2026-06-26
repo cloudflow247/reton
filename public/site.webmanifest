@@ -1,0 +1,18 @@
+{
+  "name": "Reton — payments you can take back",
+  "short_name": "Reton",
+  "description": "Trust-first African wallet with callback protection, wrong-transfer recovery and real-time fraud checks, settled on ALAT by Wema.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f2f6f3",
+  "theme_color": "#0b7a57",
+  "icons": [
+    {
+      "src": "/shield.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
