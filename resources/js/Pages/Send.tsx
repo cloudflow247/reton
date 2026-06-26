@@ -76,24 +76,23 @@ function SendForm() {
   function submit(e: FormEvent) {
     e.preventDefault()
     if (!wallet || !recipient) return
-    form
-      .transform((data) => ({
-        ...data,
-        to_wallet_id: recipient.wallet_id,
-        amount: minor,
-        type: protectedMode ? 'protected' : 'normal',
-        pin,
-      }))
-      .post('/transfers', {
-        headers: deviceHeaders(),
-        preserveScroll: true,
-        onSuccess: () => {
-          setAccount('')
-          setAmount('')
-          setPin('')
-          setRecipient(null)
-        },
-      })
+    form.transform((data) => ({
+      ...data,
+      to_wallet_id: recipient.wallet_id,
+      amount: minor,
+      type: protectedMode ? 'protected' : 'normal',
+      pin,
+    }))
+    form.post('/transfers', {
+      headers: deviceHeaders(),
+      preserveScroll: true,
+      onSuccess: () => {
+        setAccount('')
+        setAmount('')
+        setPin('')
+        setRecipient(null)
+      },
+    })
   }
 
   if (done) {

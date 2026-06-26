@@ -10,12 +10,12 @@ export default function Register() {
   function submit(e: FormEvent) {
     e.preventDefault()
     // Mirror the password into the confirmation the backend's RegisterRequest expects.
-    form
-      .transform((data) => ({ ...data, password_confirmation: data.password }))
-      .post('/register', {
-        headers: deviceHeaders(),
-        onFinish: () => form.reset('password', 'password_confirmation'),
-      })
+    // transform() returns void in @inertiajs/react — set it, then post.
+    form.transform((data) => ({ ...data, password_confirmation: data.password }))
+    form.post('/register', {
+      headers: deviceHeaders(),
+      onFinish: () => form.reset('password', 'password_confirmation'),
+    })
   }
 
   return (

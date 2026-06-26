@@ -83,29 +83,28 @@ export default function Bills({ categories, bills }: Props) {
     e.preventDefault()
     if (!wallet || !canPay) return
 
-    form
-      .transform(() => {
-        const base = {
-          wallet_id: wallet.id,
-          category,
-          biller_code: fixed ? 'remita' : slug(biller),
-          customer_reference: customer.trim(),
-          pin,
-        }
-        // Amount + biller name are authoritative from the lookup for fixed bills.
-        return fixed ? base : { ...base, biller_name: biller.trim(), amount: toMinor(amount) }
-      })
-      .post('/bills', {
-        headers: deviceHeaders(),
-        preserveScroll: true,
-        onSuccess: () => {
-          setBiller('')
-          setCustomer('')
-          setAmount('')
-          setPin('')
-          setInquiry(null)
-        },
-      })
+    form.transform(() => {
+      const base = {
+        wallet_id: wallet.id,
+        category,
+        biller_code: fixed ? 'remita' : slug(biller),
+        customer_reference: customer.trim(),
+        pin,
+      }
+      // Amount + biller name are authoritative from the lookup for fixed bills.
+      return fixed ? base : { ...base, biller_name: biller.trim(), amount: toMinor(amount) }
+    })
+    form.post('/bills', {
+      headers: deviceHeaders(),
+      preserveScroll: true,
+      onSuccess: () => {
+        setBiller('')
+        setCustomer('')
+        setAmount('')
+        setPin('')
+        setInquiry(null)
+      },
+    })
   }
 
   if (done) {

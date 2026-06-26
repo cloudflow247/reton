@@ -19,9 +19,8 @@ export default function AddMoney() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form
-      .transform((data) => ({ ...data, amount: toMinor(amount) }))
-      .post('/deposits', { preserveScroll: true })
+    form.transform((data) => ({ ...data, amount: toMinor(amount) }))
+    form.post('/deposits', { preserveScroll: true })
   }
 
   if (deposit && !dismissed) {

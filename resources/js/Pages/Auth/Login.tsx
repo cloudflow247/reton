@@ -18,9 +18,9 @@ export default function Login() {
 
   function signInAs(email: string) {
     if (!demo) return
-    form
-      .transform(() => ({ email, password: demo.password }))
-      .post('/login', { headers: deviceHeaders() })
+    // transform() returns void in @inertiajs/react — set it, then post.
+    form.transform(() => ({ email, password: demo.password }))
+    form.post('/login', { headers: deviceHeaders() })
   }
 
   return (
