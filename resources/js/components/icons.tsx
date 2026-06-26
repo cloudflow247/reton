@@ -155,6 +155,24 @@ export const EyeOffIcon = (p: IconProps) => (
   </Svg>
 )
 
+export const QrIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="4" y="4" width="6" height="6" rx="1.2" />
+    <rect x="14" y="4" width="6" height="6" rx="1.2" />
+    <rect x="4" y="14" width="6" height="6" rx="1.2" />
+    <path d="M14 14h2.5v2.5M20 14v.01M14 20h2M19.5 17.5V20h.01" />
+  </Svg>
+)
+
+export const ShareIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="6.5" cy="12" r="2.5" />
+    <circle cx="17.5" cy="6" r="2.5" />
+    <circle cx="17.5" cy="18" r="2.5" />
+    <path d="M8.8 10.8 15.2 7.2M8.8 13.2l6.4 3.6" />
+  </Svg>
+)
+
 export const SparkleIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M12 4l1.6 4.8L18.5 10l-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.2L12 4z" />
