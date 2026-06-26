@@ -1,46 +1,47 @@
-# PHP / Laravel
-/backend/vendor/
-/backend/node_modules/
-/backend/.env
-/backend/.phpunit.result.cache
-/backend/storage/*.key
-/backend/storage/logs/*
-/backend/storage/framework/cache/data/*
-/backend/storage/framework/sessions/*
-/backend/storage/framework/views/*
-/backend/bootstrap/cache/*
+# Laravel
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/bootstrap/cache/*.php
+*.log
+.phpunit.result.cache
+/.phpunit.cache
+/coverage
 
-# Frontend
-/frontend/node_modules/
-/frontend/dist/
-/frontend/.env
-/frontend/coverage/
-/frontend/.vite/
-*.tsbuildinfo
-
-# Backend (local-only)
-/backend/coverage/
-/backend/.phpunit.cache
-
-# Local env overrides (any service)
+# Environment
+.env
+.env.backup
+.env.production
 .env.local
 .env.*.local
 *.env.local
+/auth.json
+
+# Build artifacts
+*.tsbuildinfo
 
 # Docker / infra (local overrides)
 docker-compose.override.yml
 /infra/docker-compose.override.yml
 
 # Tooling
-.DS_Store
 /CLAUDE.md
 .claude
-*.log
-.idea/
-.vscode/
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
 
 # OS files
+.DS_Store
 Thumbs.db
+Homestead.json
+Homestead.yaml
 
 # Editor swap / temp files
 *.swp

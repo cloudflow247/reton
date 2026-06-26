@@ -1,10 +1,10 @@
 services:
   app:
     build:
-      context: ../backend
-      dockerfile: ../infra/docker/php/Dockerfile
+      context: ..
+      dockerfile: infra/docker/php/Dockerfile
     volumes:
-      - ../backend:/var/www/html
+      - ..:/var/www/html
     depends_on:
       postgres:
         condition: service_healthy
@@ -19,7 +19,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ../backend:/var/www/html
+      - ..:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
@@ -59,16 +59,16 @@ services:
     working_dir: /var/www/html
     command: sh -c "npm install && npm run build -- --watch"
     volumes:
-      - ../backend:/var/www/html
+      - ..:/var/www/html
       - vite_node_modules:/var/www/html/node_modules
 
   queue:
     build:
-      context: ../backend
-      dockerfile: ../infra/docker/php/Dockerfile
+      context: ..
+      dockerfile: infra/docker/php/Dockerfile
     command: php artisan queue:work --tries=3
     volumes:
-      - ../backend:/var/www/html
+      - ..:/var/www/html
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,13 +81,13 @@ services:
 
   scheduler:
     build:
-      context: ../backend
-      dockerfile: ../infra/docker/php/Dockerfile
+      context: ..
+      dockerfile: infra/docker/php/Dockerfile
     # schedule:work is a long-running process that fires the scheduler every
     # minute — drives callbacks:expire and transfers:auto-release. No host cron.
     command: php artisan schedule:work
     volumes:
-      - ../backend:/var/www/html
+      - ..:/var/www/html
     depends_on:
       postgres:
         condition: service_healthy
