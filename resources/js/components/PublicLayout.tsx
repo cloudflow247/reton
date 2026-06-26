@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { Wordmark } from './ui'
+import { PoweredByAlatInline } from './PoweredByAlat'
 import { ArrowRightIcon, LockIcon } from './icons'
 
 export function PublicLayout({ children }: { children: ReactNode }) {
@@ -47,6 +48,15 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       </motion.main>
 
       <footer className="mt-24 border-t border-line bg-surface/60">
+        {/* Partner strip — the licensed bank rail, on every public page. */}
+        <div className="border-b border-line">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-6 sm:flex-row">
+            <PoweredByAlatInline />
+            <p className="text-center text-xs text-muted sm:text-right">
+              Funding, payouts &amp; settlement run on ALAT — Wema Bank’s regulated banking platform.
+            </p>
+          </div>
+        </div>
         <div className="mx-auto max-w-6xl px-5 py-12">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-3">

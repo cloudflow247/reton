@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Head, Link } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { PublicLayout } from '@/components/PublicLayout'
+import { AlatMark, PoweredByAlat } from '@/components/PoweredByAlat'
 import { ArrowRightIcon, LockIcon, ScanIcon, ShieldIcon, UndoIcon } from '@/components/icons'
 
 const features = [
@@ -32,13 +33,14 @@ export default function Home() {
     <div className="mx-auto max-w-6xl px-5">
       <Head title="Payments with a safety net" />
       {/* Hero */}
-      <section className="grid items-center gap-12 py-16 lg:grid-cols-[1.1fr_1fr] lg:py-24">
-        <motion.div initial="hidden" animate="show" variants={fade} transition={{ duration: 0.5, ease: 'easeOut' }}>
+      <section className="relative grid items-center gap-12 py-16 lg:grid-cols-[1.1fr_1fr] lg:py-24">
+        <div className="aurora" aria-hidden />
+        <motion.div className="relative" initial="hidden" animate="show" variants={fade} transition={{ duration: 0.5, ease: 'easeOut' }}>
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-mint/10 px-3 py-1.5 text-xs font-medium text-mint">
             <ShieldIcon size={14} /> Trust-first banking for Africa
           </span>
           <h1 className="mt-6 font-display text-5xl font-bold leading-[1.04] tracking-tight sm:text-6xl">
-            The first wallet with an <span className="text-mint">undo button</span> for money.
+            The first wallet with an <span className="gradient-text">undo button</span> for money.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
             Send with callback protection, recover a wrong transfer, and let real-time fraud checks watch every
@@ -62,6 +64,14 @@ export default function Home() {
             <Stat value="100%" label="ledger-backed" />
             <Stat value="<50ms" label="fraud checks" />
             <Stat value="72h" label="callback window" />
+          </div>
+
+          {/* Partner trust line — money settles on a real bank rail. */}
+          <div className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-line bg-surface px-3.5 py-2 shadow-sm">
+            <AlatMark size={26} />
+            <span className="text-sm text-muted">
+              Settlement powered by <span className="font-semibold text-text">ALAT by Wema</span>
+            </span>
           </div>
         </motion.div>
 
@@ -145,6 +155,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Powered by ALAT by Wema — the licensed bank rail */}
+      <section className="py-10">
+        <PoweredByAlat />
+      </section>
+
       {/* CTA */}
       <section className="py-16">
         <div className="card flex flex-col items-center gap-5 p-12 text-center shield-glow">
@@ -206,15 +221,21 @@ function HeroPreview() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="card absolute -bottom-6 -left-6 hidden w-56 items-center gap-3 p-4 sm:flex"
+        className="absolute -bottom-6 -left-6 hidden sm:block"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-mint/10 text-mint">
-          <UndoIcon size={18} />
-        </span>
-        <div>
-          <div className="text-sm font-semibold">Callback raised</div>
-          <div className="text-xs text-muted">₦40,000 on its way back</div>
-        </div>
+        <motion.div
+          animate={{ y: [0, -7, 0] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="card flex w-56 items-center gap-3 p-4"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-mint/10 text-mint">
+            <UndoIcon size={18} />
+          </span>
+          <div>
+            <div className="text-sm font-semibold">Callback raised</div>
+            <div className="text-xs text-muted">₦40,000 on its way back</div>
+          </div>
+        </motion.div>
       </motion.div>
     </motion.div>
   )

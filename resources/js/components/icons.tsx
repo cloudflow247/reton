@@ -108,6 +108,59 @@ export const UndoIcon = (p: IconProps) => (
   </Svg>
 )
 
+export const WalletIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H17a2 2 0 0 1 2 2v.5" />
+    <rect x="4" y="7.5" width="16" height="12" rx="2.5" />
+    <path d="M15.5 13.5h2.8" />
+    <circle cx="15.5" cy="13.5" r="0.4" fill="currentColor" stroke="none" />
+  </Svg>
+)
+
+export const BankIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3.5 9.5 12 4l8.5 5.5" />
+    <path d="M5 9.5h14" />
+    <path d="M6 12v6M10 12v6M14 12v6M18 12v6" />
+    <path d="M4 20.5h16" />
+  </Svg>
+)
+
+export const BoltIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M13 3 5 13h6l-1 8 8-10h-6l1-8z" />
+  </Svg>
+)
+
+export const ClockIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+  </Svg>
+)
+
+export const EyeIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Svg>
+)
+
+export const EyeOffIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9.6 5.8A9.5 9.5 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-3 3.6" />
+    <path d="M6.3 7.7A16 16 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 4-.9" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    <path d="M4 4l16 16" />
+  </Svg>
+)
+
+export const SparkleIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 4l1.6 4.8L18.5 10l-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.2L12 4z" />
+  </Svg>
+)
+
 export const BillIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M6 3.5h12v17l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3z" />

@@ -126,6 +126,130 @@ input[type='number'] {
   color: var(--color-muted);
 }
 
+/* ── Signature polish ────────────────────────────────────────────────
+   The details that make Reton feel premium, distinct and trustworthy —
+   accessible focus, frosted glass, brand gradient text, a calm aurora. */
+
+/* Accessible, on-brand focus for every interactive element. */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(11, 122, 87, 0.32);
+  border-radius: 12px;
+}
+
+::selection {
+  background: rgba(11, 122, 87, 0.18);
+  color: var(--color-ink);
+}
+
+/* Quiet, modern scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c9d8d1 transparent;
+}
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #c9d8d1;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #aac4ba;
+  background-clip: padding-box;
+}
+
+/* Brand gradient text for hero emphasis. */
+.gradient-text {
+  background: linear-gradient(118deg, #0e7e5c 0%, #15b585 55%, #0e7e5c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Frosted glass for overlays, floating chips and sticky bars. */
+.glass {
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+/* Hover elevation for interactive cards. */
+.elevate {
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.elevate:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 2px rgba(16, 40, 33, 0.05),
+    0 28px 56px -30px rgba(11, 122, 87, 0.4);
+}
+
+/* A signature, calm emerald aurora behind heroes and auth — never neon. */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.aurora::before,
+.aurora::after {
+  content: '';
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+}
+.aurora::before {
+  width: 40rem;
+  height: 40rem;
+  top: -12rem;
+  right: -8rem;
+  background: radial-gradient(circle, rgba(11, 122, 87, 0.22), transparent 62%);
+  animation: aurora-drift 18s ease-in-out infinite;
+}
+.aurora::after {
+  width: 32rem;
+  height: 32rem;
+  bottom: -10rem;
+  left: -7rem;
+  background: radial-gradient(circle, rgba(22, 181, 133, 0.16), transparent 62%);
+  animation: aurora-drift 24s ease-in-out infinite reverse;
+}
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-3rem, 2rem) scale(1.14);
+  }
+}
+
+/* Animated conic ring — wraps the trust mark on auth/hero. */
+.trust-ring {
+  background: conic-gradient(from 0deg, transparent, rgba(11, 122, 87, 0.55), transparent 55%);
+  animation: trust-spin 5.5s linear infinite;
+}
+@keyframes trust-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;

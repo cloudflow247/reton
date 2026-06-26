@@ -5,7 +5,7 @@ import { Button, Field } from '@/components/ui'
 import { deviceHeaders } from '@/lib/device'
 
 export default function Login() {
-  const form = useForm({ email: 'demo@reton.ng', password: 'Sup3r-Secret!' })
+  const form = useForm({ email: '', password: '' })
 
   function submit(e: FormEvent) {
     e.preventDefault()
@@ -19,6 +19,8 @@ export default function Login() {
         <Field
           label="Email"
           type="email"
+          placeholder="you@example.com"
+          autoComplete="email"
           value={form.data.email}
           onChange={(e) => form.setData('email', e.target.value)}
           required
@@ -26,6 +28,8 @@ export default function Login() {
         <Field
           label="Password"
           type="password"
+          placeholder="••••••••"
+          autoComplete="current-password"
           value={form.data.password}
           onChange={(e) => form.setData('password', e.target.value)}
           required

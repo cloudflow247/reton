@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { Head, Link } from '@inertiajs/react'
+import { motion } from 'framer-motion'
 import { PublicLayout } from '@/components/PublicLayout'
+import { PoweredByAlat } from '@/components/PoweredByAlat'
 import { ArrowRightIcon, ScanIcon, ShieldIcon, UndoIcon } from '@/components/icons'
 
 const flows = [
@@ -44,8 +46,15 @@ export default function HowItWorks() {
       </p>
 
       <div className="mt-14 space-y-10">
-        {flows.map((flow) => (
-          <section key={flow.name} className="card p-7">
+        {flows.map((flow, fi) => (
+          <motion.section
+            key={flow.name}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: fi * 0.05 }}
+            className="card p-7"
+          >
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint/10 text-mint">
                 <flow.Icon size={22} />
@@ -54,14 +63,20 @@ export default function HowItWorks() {
             </div>
             <div className="mt-6 grid gap-6 sm:grid-cols-3">
               {flow.steps.map((step, i) => (
-                <div key={i} className="border-t border-line pt-4">
-                  <span className="font-num text-sm font-semibold text-mint">0{i + 1}</span>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{step}</p>
+                <div key={i} className="border-t-2 border-mint/20 pt-4">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mint/10 font-num text-xs font-bold text-mint">
+                    {i + 1}
+                  </span>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{step}</p>
                 </div>
               ))}
             </div>
-          </section>
+          </motion.section>
         ))}
+      </div>
+
+      <div className="mt-12">
+        <PoweredByAlat />
       </div>
 
       <div className="mt-14">
