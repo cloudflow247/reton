@@ -3,13 +3,38 @@ import { Link, router, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { SharedProps } from '@/types'
 import { Wordmark } from './ui'
-import { ActivityIcon, BillIcon, HomeIcon, LockIcon, PlusIcon, SendIcon, UserIcon } from './icons'
+import {
+  ActivityIcon,
+  BellIcon,
+  BillIcon,
+  CardIcon,
+  HomeIcon,
+  SendIcon,
+  UserIcon,
+} from './icons'
 
-const nav = [
+type NavItem = {
+  to: string
+  label: string
+  end?: boolean
+  Icon: (p: { size?: number }) => JSX.Element
+}
+
+const nav: NavItem[] = [
   { to: '/dashboard', label: 'Home', end: true, Icon: HomeIcon },
   { to: '/send', label: 'Send', Icon: SendIcon },
-  { to: '/add-money', label: 'Add money', Icon: PlusIcon },
+  { to: '/cards', label: 'Cards', Icon: CardIcon },
   { to: '/bills', label: 'Bills', Icon: BillIcon },
+  { to: '/activity', label: 'Activity', Icon: ActivityIcon },
+  { to: '/profile', label: 'Profile', Icon: UserIcon },
+]
+
+// Mobile dock: two items, a centre FAB, then two more.
+const dockLeft: NavItem[] = [
+  { to: '/dashboard', label: 'Home', end: true, Icon: HomeIcon },
+  { to: '/bills', label: 'Bills', Icon: BillIcon },
+]
+const dockRight: NavItem[] = [
   { to: '/activity', label: 'Activity', Icon: ActivityIcon },
   { to: '/profile', label: 'Profile', Icon: UserIcon },
 ]
@@ -20,24 +45,30 @@ export function AppShell({ children }: { children: ReactNode }) {
   const page = usePage<SharedProps>()
   const user = page.props.auth.user
   const pathname = page.url.split('?')[0]
+  const initial = (user?.name ?? 'R').charAt(0).toUpperCase()
 
   const active = (to: string, end?: boolean) => (end ? pathname === to : pathname.startsWith(to))
 
   return (
-    <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 pb-24 sm:px-6">
-      <header className="glass sticky top-0 z-30 -mx-4 mb-2 flex items-center justify-between border-b border-line/70 px-4 py-3.5 sm:-mx-6 sm:px-6">
-        <Link href="/dashboard">
+    <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 pb-28 sm:px-6 sm:pb-10">
+      <header className="dock sticky top-3 z-30 mt-3 flex items-center justify-between gap-2 rounded-2xl px-3 py-2.5 sm:px-4">
+        <Link href="/dashboard" className="shrink-0">
           <Wordmark />
         </Link>
+
         <nav className="hidden items-center gap-1 sm:flex">
           {nav.map(({ to, label, end, Icon }) => {
             const on = active(to, end)
             return (
-              <Link key={to} href={to} className="relative rounded-full px-3.5 py-2 text-sm font-medium">
+              <Link
+                key={to}
+                href={to}
+                className="relative rounded-full px-3.5 py-2 text-sm font-medium"
+              >
                 {on && (
                   <motion.span
                     layoutId="nav-pill"
-                    className="absolute inset-0 rounded-full bg-mint/10"
+                    className="absolute inset-0 rounded-full bg-mint/[0.12]"
                     transition={spring}
                   />
                 )}
@@ -53,24 +84,36 @@ export function AppShell({ children }: { children: ReactNode }) {
             )
           })}
         </nav>
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           <Link
             href="/pin"
-            className="hidden items-center gap-1.5 text-sm text-muted hover:text-text sm:flex"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-surface-2 hover:text-text"
+            title={user?.has_transaction_pin ? 'PIN active' : 'Set your PIN'}
+            aria-label="Security"
           >
-            <LockIcon size={15} />
-            {user?.has_transaction_pin ? 'PIN' : 'Set PIN'}
+            <BellIcon size={18} />
+            {!user?.has_transaction_pin && (
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-amber ring-2 ring-white" />
+            )}
+          </Link>
+          <Link
+            href="/profile"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-mint/[0.12] font-display text-sm font-bold text-mint transition hover:bg-mint/20"
+            aria-label="Profile"
+          >
+            {initial}
           </Link>
           <button
             onClick={() => router.post('/logout')}
-            className="text-sm text-muted hover:text-danger"
+            className="hidden text-sm text-muted transition hover:text-danger sm:block sm:pl-1"
           >
             Sign out
           </button>
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-5">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
@@ -84,26 +127,63 @@ export function AppShell({ children }: { children: ReactNode }) {
         </AnimatePresence>
       </main>
 
-      {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/90 backdrop-blur sm:hidden">
-        <div className="mx-auto flex max-w-5xl items-center justify-around px-2 py-2">
-          {nav.map(({ to, label, end, Icon }) => {
-            const on = active(to, end)
-            return (
-              <Link
-                key={to}
-                href={to}
-                className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-medium ${
-                  on ? 'text-mint' : 'text-muted'
-                }`}
-              >
-                <Icon size={20} />
-                {label}
-              </Link>
-            )
-          })}
+      {/* Floating mobile dock with a centre action */}
+      <nav className="fixed inset-x-0 bottom-4 z-30 px-5 sm:hidden">
+        <div className="dock relative mx-auto flex max-w-sm items-center justify-between rounded-[22px] px-3 py-2">
+          {dockLeft.map((n) => (
+            <DockItem key={n.to} {...n} on={active(n.to, n.end)} />
+          ))}
+
+          <Link
+            href="/send"
+            className="fab -mt-9 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white"
+            aria-label="Send money"
+          >
+            <motion.span
+              whileTap={{ scale: 0.88, rotate: 90 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+            >
+              <SendIcon size={24} />
+            </motion.span>
+          </Link>
+
+          {dockRight.map((n) => (
+            <DockItem key={n.to} {...n} on={active(n.to, n.end)} />
+          ))}
         </div>
       </nav>
     </div>
+  )
+}
+
+function DockItem({
+  to,
+  label,
+  Icon,
+  on,
+}: {
+  to: string
+  label: string
+  end?: boolean
+  Icon: (p: { size?: number }) => JSX.Element
+  on: boolean
+}) {
+  return (
+    <Link
+      href={to}
+      className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-semibold transition-colors ${
+        on ? 'text-mint' : 'text-muted'
+      }`}
+    >
+      <Icon size={21} />
+      {label}
+      {on && (
+        <motion.span
+          layoutId="dock-dot"
+          className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-mint"
+          transition={spring}
+        />
+      )}
+    </Link>
   )
 }

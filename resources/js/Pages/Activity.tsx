@@ -1,88 +1,186 @@
 import type { ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { Head, usePage } from '@inertiajs/react'
+import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
 import { Card, Pill } from '@/components/ui'
-import { ReceiveIcon, SendIcon, ShieldIcon } from '@/components/icons'
+import { ReceiveIcon, SendIcon, ShieldIcon, TrendIcon } from '@/components/icons'
 import { ngn, shortDate } from '@/lib/format'
 import type { StatementEntry, Transfer } from '@/lib/types'
 import type { PageProps } from '@/types'
+
+type Tab = 'statement' | 'transfers'
 
 export default function Activity() {
   const { transfers, statement } = usePage<
     PageProps<{ transfers: Transfer[]; statement: StatementEntry[] }>
   >().props
+  const [tab, setTab] = useState<Tab>('statement')
+
+  const flow = useMemo(() => {
+    const entries = statement ?? []
+    const inflow = entries.filter((e) => e.direction === 'credit').reduce((s, e) => s + e.amount, 0)
+    const outflow = entries.filter((e) => e.direction === 'debit').reduce((s, e) => s + e.amount, 0)
+    const total = Math.max(inflow + outflow, 1)
+    return { inflow, outflow, inPct: (inflow / total) * 100, outPct: (outflow / total) * 100 }
+  }, [statement])
 
   return (
-    <div className="space-y-7">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="space-y-6"
+    >
       <Head title="Activity" />
-      <h1 className="font-display text-2xl font-bold tracking-tight">Activity</h1>
+      <div>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Activity</h1>
+        <p className="text-sm text-muted">Every movement in and out of your wallet.</p>
+      </div>
 
-      <section className="space-y-3">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted">Transfers</h2>
+      {/* Money-flow summary */}
+      <div className="card p-5">
+        <span className="inline-flex items-center gap-2 text-sm font-semibold">
+          <TrendIcon size={16} className="text-mint" /> Money flow
+        </span>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <FlowBar label="Money in" value={ngn(flow.inflow)} pct={flow.inPct} tone="mint" />
+          <FlowBar label="Money out" value={ngn(flow.outflow)} pct={flow.outPct} tone="muted" />
+        </div>
+      </div>
+
+      {/* Segmented filter */}
+      <div className="inline-flex rounded-full border border-line bg-surface-2 p-1">
+        {(['statement', 'transfers'] as Tab[]).map((t) => {
+          const on = tab === t
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className="relative rounded-full px-5 py-2 font-display text-sm font-semibold"
+            >
+              {on && (
+                <motion.span
+                  layoutId="activity-tab"
+                  className="absolute inset-0 rounded-full bg-mint shadow-sm"
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span className={`relative z-10 ${on ? 'text-white' : 'text-muted'}`}>
+                {t === 'statement' ? 'Statement' : 'Transfers'}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {tab === 'transfers' ? (
         <Card className="divide-y divide-line p-0">
           {(transfers ?? []).map((t) => (
-            <div key={t.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                    t.type === 'protected' ? 'bg-mint/10 text-mint' : 'bg-surface-2 text-muted'
-                  }`}
-                >
-                  {t.type === 'protected' ? <ShieldIcon size={16} /> : <SendIcon size={16} />}
-                </span>
-                <div>
-                  <div className="text-sm font-medium">
-                    {t.note || (t.type === 'protected' ? 'Protected transfer' : 'Transfer')}
-                  </div>
-                  <div className="text-xs text-muted">
-                    {shortDate(t.created_at)} · {t.status}
-                  </div>
+            <Row
+              key={t.id}
+              icon={t.type === 'protected' ? <ShieldIcon size={16} /> : <SendIcon size={16} />}
+              accent={t.type === 'protected'}
+              title={t.note || (t.type === 'protected' ? 'Protected transfer' : 'Transfer')}
+              sub={`${shortDate(t.created_at)} · ${t.status}`}
+              right={
+                <div className="flex items-center gap-2">
+                  {t.type === 'protected' && <Pill tone="mint">protected</Pill>}
+                  <span className="font-num text-sm">{ngn(t.amount)}</span>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {t.type === 'protected' && <Pill tone="mint">protected</Pill>}
-                <span className="font-num text-sm">{ngn(t.amount)}</span>
-              </div>
-            </div>
+              }
+            />
           ))}
           {transfers && transfers.length === 0 && <Empty>No transfers yet.</Empty>}
         </Card>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted">Wallet statement</h2>
+      ) : (
         <Card className="divide-y divide-line p-0">
           {(statement ?? []).map((e) => (
-            <div key={e.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                    e.direction === 'credit' ? 'bg-mint/10 text-mint' : 'bg-surface-2 text-muted'
-                  }`}
-                >
-                  {e.direction === 'credit' ? <ReceiveIcon size={16} /> : <SendIcon size={16} />}
+            <Row
+              key={e.id}
+              icon={e.direction === 'credit' ? <ReceiveIcon size={16} /> : <SendIcon size={16} />}
+              accent={e.direction === 'credit'}
+              title={e.transaction?.description ?? e.transaction?.type ?? 'Movement'}
+              sub={shortDate(e.created_at)}
+              right={
+                <span className={`font-num text-sm font-semibold ${e.direction === 'credit' ? 'text-mint' : 'text-text'}`}>
+                  {e.direction === 'credit' ? '+' : '−'}
+                  {ngn(e.amount)}
                 </span>
-                <div>
-                  <div className="text-sm font-medium">
-                    {e.transaction?.description ?? e.transaction?.type ?? 'Movement'}
-                  </div>
-                  <div className="text-xs text-muted">{shortDate(e.created_at)}</div>
-                </div>
-              </div>
-              <div className={`font-num text-sm ${e.direction === 'credit' ? 'text-mint' : 'text-text'}`}>
-                {e.direction === 'credit' ? '+' : '−'}
-                {ngn(e.amount)}
-              </div>
-            </div>
+              }
+            />
           ))}
           {statement && statement.length === 0 && <Empty>No movements yet.</Empty>}
         </Card>
-      </section>
-    </div>
+      )}
+    </motion.div>
   )
 }
 
 Activity.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
+
+function Row({
+  icon,
+  accent,
+  title,
+  sub,
+  right,
+}: {
+  icon: ReactNode
+  accent?: boolean
+  title: string
+  sub: string
+  right: ReactNode
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-surface-2/60">
+      <div className="flex min-w-0 items-center gap-3">
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+            accent ? 'bg-mint/10 text-mint' : 'bg-surface-2 text-muted'
+          }`}
+        >
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-medium">{title}</div>
+          <div className="text-xs text-muted">{sub}</div>
+        </div>
+      </div>
+      <div className="shrink-0">{right}</div>
+    </div>
+  )
+}
+
+function FlowBar({
+  label,
+  value,
+  pct,
+  tone,
+}: {
+  label: string
+  value: string
+  pct: number
+  tone: 'mint' | 'muted'
+}) {
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-xs">
+        <span className="text-muted">{label}</span>
+        <span className="font-num font-semibold text-text">{value}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+        <motion.div
+          className={`h-full rounded-full ${tone === 'mint' ? 'bg-mint' : 'bg-muted/50'}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.max(pct, 3)}%` }}
+          transition={{ type: 'spring', stiffness: 120, damping: 22, delay: 0.15 }}
+        />
+      </div>
+    </div>
+  )
+}
 
 function Empty({ children }: { children: ReactNode }) {
   return <div className="px-5 py-8 text-center text-sm text-muted">{children}</div>

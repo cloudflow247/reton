@@ -78,6 +78,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
     Route::inertia('/profile', 'Profile')->name('profile');
 
+    // Virtual cards
+    Route::inertia('/cards', 'Cards')->name('cards');
+
     // Transaction PIN
     Route::inertia('/pin', 'SetPin')->name('pin');
     Route::post('/pin', [PinController::class, 'update'])->name('pin.update');

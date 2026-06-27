@@ -1,10 +1,21 @@
 import type { Biller } from '@/lib/billers'
 
-/** A brand-coloured biller tile (MTN, Glo, DStv, …). */
-export function BillerLogo({ biller, size = 44 }: { biller: Biller; size?: number }) {
+/** A brand-coloured biller tile (MTN, Glo, DStv, …). Pass `round` for the
+ *  circular network-selector style used on the airtime/data flow. */
+export function BillerLogo({
+  biller,
+  size = 44,
+  round,
+}: {
+  biller: Biller
+  size?: number
+  round?: boolean
+}) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-xl font-display font-bold leading-none shadow-sm"
+      className={`flex shrink-0 items-center justify-center font-display font-bold leading-none shadow-sm ${
+        round ? 'rounded-full' : 'rounded-xl'
+      }`}
       style={{
         width: size,
         height: size,

@@ -27,77 +27,88 @@ export default function Contact() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-20">
+    <div>
       <Head title="Contact" />
-      <span className="inline-flex items-center gap-2 rounded-full border border-line bg-mint/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-mint">
-        Contact
-      </span>
-      <h1 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">We’re here to help.</h1>
-      <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-        Questions about protection, recovery or your account? Reach us any way you like — a real person will get
-        back to you.
-      </p>
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_1.1fr]">
-        <div className="space-y-3">
-          {channels.map(({ Icon, label, value, href }) => {
-            const inner = (
-              <div className="card elevate flex items-center gap-4 p-5">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint/10 text-mint">
-                  <Icon size={22} />
-                </span>
-                <div>
-                  <div className="font-display text-sm font-semibold">{label}</div>
-                  <div className="text-sm text-muted">{value}</div>
-                </div>
-              </div>
-            )
-            return href ? (
-              <a key={label} href={href} className="block">
-                {inner}
-              </a>
-            ) : (
-              <div key={label}>{inner}</div>
-            )
-          })}
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="aurora" aria-hidden />
+        <div className="relative mx-auto max-w-5xl px-5 pb-8 pt-20">
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/70 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-mint shadow-sm backdrop-blur">
+            Contact
+          </span>
+          <h1 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+            We’re <span className="gradient-text">here to help</span>.
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+            Questions about protection, recovery or your account? Reach us any way you like — a real person will get
+            back to you.
+          </p>
         </div>
+      </section>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card p-6 sm:p-7">
-          {sent ? (
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint/10 text-mint">
-                <CheckIcon size={26} />
-              </span>
-              <h2 className="font-display text-lg font-bold">Thanks — your mail client is open.</h2>
-              <p className="max-w-xs text-sm text-muted">Send the message and we’ll reply within one business day.</p>
-            </div>
-          ) : (
-            <form onSubmit={submit} className="space-y-4">
-              <h2 className="font-display text-lg font-bold tracking-tight">Send us a message</h2>
-              <Field label="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
-              <Field
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Message</span>
-                <textarea
-                  className="field w-full px-4 py-3 text-sm"
-                  rows={4}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+      <div className="mx-auto max-w-5xl px-5 pb-20">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr]">
+          <div className="space-y-3">
+            {channels.map(({ Icon, label, value, href }) => {
+              const inner = (
+                <div className="card elevate flex items-center gap-4 p-5">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint/10 text-mint">
+                    <Icon size={22} />
+                  </span>
+                  <div>
+                    <div className="font-display text-sm font-semibold">{label}</div>
+                    <div className="text-sm text-muted">{value}</div>
+                  </div>
+                </div>
+              )
+              return href ? (
+                <a key={label} href={href} className="block">
+                  {inner}
+                </a>
+              ) : (
+                <div key={label}>{inner}</div>
+              )
+            })}
+          </div>
+
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card p-6 sm:p-7">
+            {sent ? (
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint/10 text-mint">
+                  <CheckIcon size={26} />
+                </span>
+                <h2 className="font-display text-lg font-bold">Thanks — your mail client is open.</h2>
+                <p className="max-w-xs text-sm text-muted">Send the message and we’ll reply within one business day.</p>
+              </div>
+            ) : (
+              <form onSubmit={submit} className="space-y-4">
+                <h2 className="font-display text-lg font-bold tracking-tight">Send us a message</h2>
+                <Field label="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Field
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-              </label>
-              <Button type="submit" className="w-full" disabled={!name || !email || !message}>
-                Send message
-              </Button>
-            </form>
-          )}
-        </motion.div>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Message</span>
+                  <textarea
+                    className="field w-full px-4 py-3 text-sm"
+                    rows={4}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    required
+                  />
+                </label>
+                <Button type="submit" className="w-full" disabled={!name || !email || !message}>
+                  Send message
+                </Button>
+              </form>
+            )}
+          </motion.div>
+        </div>
       </div>
     </div>
   )

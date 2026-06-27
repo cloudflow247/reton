@@ -4,7 +4,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
 import { AmountField, Button, Card, Field } from '@/components/ui'
-import { CheckIcon, LockIcon, ShieldIcon } from '@/components/icons'
+import { CheckIcon, ClockIcon, LockIcon, ShieldIcon } from '@/components/icons'
 import { ngn, toMinor } from '@/lib/format'
 import { deviceHeaders } from '@/lib/device'
 import type { SharedProps } from '@/types'
@@ -37,6 +37,40 @@ export default function Send() {
 
 Send.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
 
+/* ── Recent recipients (persisted locally, newest first, de-duped, max 5) ── */
+type Recent = { account: string; name: string }
+const RECENTS_KEY = 'reton:recents'
+const RECENTS_MAX = 5
+
+function readRecents(): Recent[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(RECENTS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((r): r is Recent => !!r && typeof r.account === 'string' && typeof r.name === 'string')
+      .slice(0, RECENTS_MAX)
+  } catch {
+    return []
+  }
+}
+
+function pushRecent(account: string, name: string): Recent[] {
+  const next = [{ account, name }, ...readRecents().filter((r) => r.account !== account)].slice(0, RECENTS_MAX)
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next))
+    } catch {
+      /* storage unavailable — keep going */
+    }
+  }
+  return next
+}
+
+const maskAccount = (account: string) => `•••• ${account.slice(-4)}`
+
 function SendForm() {
   const { auth, flash } = usePage<SharedProps>().props
   const wallet = auth.wallets[0]
@@ -49,12 +83,18 @@ function SendForm() {
   const [lookupError, setLookupError] = useState('')
   const [amount, setAmount] = useState('')
   const [pin, setPin] = useState('')
+  const [recents, setRecents] = useState<Recent[]>([])
 
   const form = useForm({ from_wallet_id: wallet?.id ?? '', to_wallet_id: '', amount: 0, type: 'normal', pin: '' })
 
   const minor = toMinor(amount)
   const overBalance = wallet ? minor > wallet.available_balance : false
   const canSend = !!recipient && minor > 0 && !overBalance && pin.length >= 4
+
+  // Hydrate recent recipients from local storage on mount.
+  useEffect(() => {
+    setRecents(readRecents())
+  }, [])
 
   // Name enquiry: resolve a 10-digit account number to its holder.
   useEffect(() => {
@@ -76,6 +116,7 @@ function SendForm() {
   function submit(e: FormEvent) {
     e.preventDefault()
     if (!wallet || !recipient) return
+    const sentTo = { account, name: recipient.name }
     form.transform((data) => ({
       ...data,
       to_wallet_id: recipient.wallet_id,
@@ -87,6 +128,7 @@ function SendForm() {
       headers: deviceHeaders(),
       preserveScroll: true,
       onSuccess: () => {
+        setRecents(pushRecent(sentTo.account, sentTo.name))
         setAccount('')
         setAmount('')
         setPin('')
@@ -102,7 +144,7 @@ function SendForm() {
           <div className="mx-auto mt-2 flex h-16 w-16 items-center justify-center rounded-full bg-mint/12 text-mint">
             {done.type === 'protected' ? <ShieldIcon size={30} /> : <CheckIcon size={30} />}
           </div>
-          <h2 className="mt-4 font-display text-2xl font-bold">{ngn(done.amount)}</h2>
+          <h2 className="mt-4 font-num text-3xl font-bold tracking-tight tabular-nums">{ngn(done.amount)}</h2>
           <p className="mt-1 text-sm text-muted">
             {done.type === 'protected' ? `held for ${done.recipient_name}` : `sent to ${done.recipient_name}`}
           </p>
@@ -121,18 +163,26 @@ function SendForm() {
   }
 
   return (
-    <div className="mx-auto max-w-lg">
-      <Card className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="mx-auto max-w-lg"
+    >
+      <Card className="space-y-7">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold tracking-tight">Send money</h2>
-          <span className="rounded-full bg-surface-2 px-3 py-1 text-xs text-muted">
-            Balance {wallet ? ngn(wallet.available_balance) : '—'}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-xs text-muted">
+            <span className="text-muted">Balance</span>
+            <span className="font-num font-semibold tabular-nums text-text">
+              {wallet ? ngn(wallet.available_balance) : '—'}
+            </span>
           </span>
         </div>
 
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="space-y-7">
           {/* Recipient — with bank-style name enquiry */}
-          <div>
+          <div className="space-y-3">
             <Field
               label="Recipient account number"
               inputMode="numeric"
@@ -142,15 +192,45 @@ function SendForm() {
               onChange={(e) => setAccount(e.target.value.replace(/\D/g, ''))}
               autoComplete="off"
             />
-            {resolving && <p className="mt-2 text-xs text-muted">Checking account…</p>}
+
+            {/* Recent recipients — tap to prefill */}
+            {recents.length > 0 && !recipient && (
+              <div>
+                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+                  <ClockIcon size={12} /> Recent
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {recents.map((r) => (
+                    <button
+                      key={r.account}
+                      type="button"
+                      onClick={() => setAccount(r.account)}
+                      className="group flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-left transition hover:border-mint/40 hover:bg-mint/[0.05] active:scale-[0.98]"
+                    >
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mint/12 font-display text-xs font-bold text-mint">
+                        {r.name.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block max-w-[8rem] truncate text-xs font-semibold text-text">{r.name}</span>
+                        <span className="block font-num text-[10px] tracking-wider text-muted">
+                          {maskAccount(r.account)}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {resolving && <p className="text-xs text-muted">Checking account…</p>}
             {recipient && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-3 flex items-center gap-3 rounded-xl border border-mint/30 bg-mint/[0.06] px-4 py-3"
+                className="flex items-center gap-3 rounded-2xl border border-mint/30 bg-mint/[0.06] px-4 py-3"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-mint font-display font-bold text-white">
-                  {recipient.name.charAt(0)}
+                  {recipient.name.charAt(0).toUpperCase()}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-text">{recipient.name}</div>
@@ -159,12 +239,28 @@ function SendForm() {
                 <CheckIcon size={18} className="text-mint" />
               </motion.div>
             )}
-            {lookupError && <p className="mt-2 text-sm text-danger">{lookupError}</p>}
-            {form.errors.to_wallet_id && <p className="mt-2 text-sm text-danger">{form.errors.to_wallet_id}</p>}
+            {lookupError && <p className="text-sm text-danger">{lookupError}</p>}
+            {form.errors.to_wallet_id && <p className="text-sm text-danger">{form.errors.to_wallet_id}</p>}
           </div>
 
-          {/* Amount */}
+          {/* Amount — premium live preview + input */}
           <div>
+            <div className="mb-3 rounded-2xl border border-line bg-surface-2/60 px-5 py-5 text-center">
+              <div
+                className={`font-num text-4xl font-bold tracking-tight tabular-nums sm:text-5xl ${
+                  minor > 0 ? (overBalance ? 'text-danger' : 'text-text') : 'text-muted/50'
+                }`}
+              >
+                {ngn(minor)}
+              </div>
+              <div className="mt-1 text-xs text-muted">
+                {overBalance
+                  ? 'Above available balance'
+                  : minor > 0
+                    ? `${wallet ? ngn(wallet.available_balance - minor) : '—'} left after this`
+                    : 'Enter an amount to send'}
+              </div>
+            </div>
             <AmountField value={amount} onChange={setAmount} invalid={overBalance} />
             {overBalance && <p className="mt-2 text-sm text-danger">That’s more than your available balance.</p>}
             {form.errors.amount && <p className="mt-2 text-sm text-danger">{form.errors.amount}</p>}
@@ -213,7 +309,7 @@ function SendForm() {
           </Button>
         </form>
       </Card>
-    </div>
+    </motion.div>
   )
 }
 
@@ -234,7 +330,7 @@ function Option({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition ${
+      className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition active:scale-[0.99] ${
         active ? 'border-mint bg-mint/[0.06]' : 'border-line bg-surface hover:border-mint/30'
       }`}
     >

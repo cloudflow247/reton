@@ -250,6 +250,149 @@ textarea:focus-visible,
   }
 }
 
+/* ── Signature dashboard surface ──────────────────────────────────────
+   Living emerald mesh, morphing blobs, a slow sheen sweep and a floating
+   dock — the polish that lifts Reton next to the best Nigerian fintechs. */
+
+/* A living emerald mesh — the balance hero's backdrop. */
+.mesh {
+  background-color: #0a6a4d;
+  background-image:
+    radial-gradient(at 18% 18%, rgba(52, 224, 168, 0.6), transparent 50%),
+    radial-gradient(at 84% 8%, rgba(8, 79, 57, 0.85), transparent 46%),
+    radial-gradient(at 78% 92%, rgba(3, 52, 38, 0.92), transparent 52%),
+    radial-gradient(at 22% 88%, rgba(24, 168, 122, 0.55), transparent 48%);
+  background-size: 200% 200%;
+  animation: mesh-pan 20s ease-in-out infinite;
+}
+@keyframes mesh-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Morphing blobs — soft, ever-shifting light inside hero & feature cards. */
+.blob {
+  border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
+  animation: blob-morph 16s ease-in-out infinite;
+}
+.blob-slow {
+  animation: blob-morph 26s ease-in-out infinite reverse;
+}
+@keyframes blob-morph {
+  0%,
+  100% {
+    border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
+    transform: rotate(0deg) scale(1);
+  }
+  33% {
+    border-radius: 62% 38% 33% 67% / 63% 35% 65% 37%;
+    transform: rotate(48deg) scale(1.12);
+  }
+  66% {
+    border-radius: 35% 65% 56% 44% / 50% 62% 38% 50%;
+    transform: rotate(-32deg) scale(0.94);
+  }
+}
+
+/* A slow specular sheen that sweeps premium cards. */
+.sheen {
+  position: relative;
+  overflow: hidden;
+}
+.sheen::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.18) 46%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 64%
+  );
+  transform: translateX(-130%);
+  animation: sheen-sweep 8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sheen-sweep {
+  0%,
+  72% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+/* A reusable soft-blur reveal for hidden figures. */
+.reveal-blur {
+  transition: filter 0.32s ease;
+}
+
+/* Service-grid tiles — gradient lift on hover, the OPay/PalmPay feel. */
+.tile {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.tile:hover {
+  transform: translateY(-3px);
+  border-color: rgba(11, 122, 87, 0.35);
+  box-shadow: 0 20px 40px -28px rgba(11, 122, 87, 0.55);
+}
+
+/* Floating glass dock — mobile nav & desktop pill bar. */
+.dock {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 1px 2px rgba(16, 40, 33, 0.05),
+    0 18px 44px -22px rgba(16, 40, 33, 0.3);
+}
+
+/* The floating action button at the dock's centre. */
+.fab {
+  background: linear-gradient(150deg, #15b585 0%, #0b7a57 55%, #095f44 100%);
+  box-shadow:
+    0 0 0 5px rgba(255, 255, 255, 0.9),
+    0 16px 30px -12px rgba(9, 95, 68, 0.7);
+}
+
+/* Conic shine that slowly rotates behind avatars & rewards badges. */
+.halo {
+  background: conic-gradient(
+    from 0deg,
+    rgba(21, 181, 133, 0.85),
+    rgba(11, 122, 87, 0.15),
+    rgba(21, 181, 133, 0.85)
+  );
+  animation: trust-spin 6s linear infinite;
+}
+
+/* Marquee for the rewards / promo strip. */
+.marquee {
+  animation: marquee 22s linear infinite;
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { AppShell } from '@/components/AppShell'
 import { AmountField, Card } from '@/components/ui'
-import { CheckIcon, CopyIcon, QrIcon, ShareIcon, ShieldIcon } from '@/components/icons'
+import { CheckIcon, CopyIcon, PlusIcon, QrIcon, ShareIcon, ShieldIcon } from '@/components/icons'
 import { ngn, toMinor } from '@/lib/format'
 import type { SharedProps } from '@/types'
 
@@ -58,22 +58,20 @@ export default function Receive() {
         <p className="mt-1 text-sm text-muted">Share your account or QR — anyone on Reton can pay you instantly.</p>
       </div>
 
-      {/* QR + account card */}
+      {/* QR + account hero — a living emerald mesh with morphing light. */}
       <motion.div
-        initial={{ opacity: 0, y: 12, scale: 0.99 }}
+        initial={{ opacity: 0, y: 14, scale: 0.99 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="brand-card relative overflow-hidden p-7 text-center text-white"
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="mesh sheen relative overflow-hidden rounded-3xl p-7 text-center text-white shield-glow"
       >
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.55, 0.85, 0.55] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="blob absolute -right-16 -top-20 h-56 w-56 bg-white/10 blur-2xl" />
+          <div className="blob-slow absolute -bottom-20 -left-16 h-52 w-52 bg-mint/30 blur-2xl" />
+        </div>
 
         <div className="relative">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
             <QrIcon size={13} /> Scan to pay
           </span>
 
@@ -83,28 +81,36 @@ export default function Receive() {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.25 }}
-            className="mx-auto mt-5 w-fit rounded-2xl bg-white p-4 shadow-lg"
+            className="mx-auto mt-6 w-fit rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-white/40"
           >
-            <QRCodeSVG value={payload} size={168} level="M" fgColor="#0b2e25" bgColor="#ffffff" marginSize={0} />
+            <QRCodeSVG value={payload} size={172} level="M" fgColor="#0b2e25" bgColor="#ffffff" marginSize={0} />
           </motion.div>
 
-          {minor > 0 && <div className="mt-4 font-num text-2xl font-bold">{ngn(minor)}</div>}
+          {minor > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-5 font-num text-3xl font-bold tracking-tight"
+            >
+              {ngn(minor)}
+            </motion.div>
+          )}
 
-          <p className="mt-4 text-xs font-medium uppercase tracking-wider text-white/70">Account number</p>
-          <div className="mt-1 font-num text-3xl font-bold tracking-[0.12em]">{account || '—'}</div>
-          <p className="mt-1 text-sm text-white/80">{auth.user?.name}</p>
+          <p className="mt-5 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-white/65">Account number</p>
+          <div className="mt-1.5 font-num text-3xl font-bold tracking-[0.14em]">{account || '—'}</div>
+          <p className="mt-1.5 text-sm font-medium text-white/85">{auth.user?.name}</p>
 
-          <div className="mt-6 flex justify-center gap-2.5">
+          <div className="mt-7 grid grid-cols-2 gap-3">
             <button
               onClick={copy}
-              className="btn inline-flex items-center gap-2 border border-white/25 bg-white/10 px-4 py-2.5 text-sm text-white transition hover:bg-white/20"
+              className="btn inline-flex items-center justify-center gap-2 border border-white/25 bg-white/10 px-4 py-3 text-sm text-white backdrop-blur-sm transition hover:bg-white/20"
             >
               {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
               {copied ? 'Copied' : 'Copy'}
             </button>
             <button
               onClick={share}
-              className="btn inline-flex items-center gap-2 bg-white px-4 py-2.5 text-sm text-mint-strong shadow-sm transition hover:bg-white/90"
+              className="btn inline-flex items-center justify-center gap-2 bg-white px-4 py-3 text-sm text-mint-strong shadow-sm transition hover:bg-white/90"
             >
               <ShareIcon size={16} /> Share
             </button>
@@ -120,15 +126,28 @@ export default function Receive() {
             setRequesting((v) => !v)
             if (requesting) setAmount('')
           }}
-          className="flex w-full items-center justify-between"
+          className="flex w-full items-center justify-between gap-3"
         >
-          <span className="font-display text-sm font-semibold">Request a specific amount</span>
-          <span className="text-sm font-medium text-mint">{requesting ? 'Clear' : 'Add'}</span>
+          <span className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mint/10 text-mint">
+              <PlusIcon size={18} />
+            </span>
+            <span className="text-left">
+              <span className="block font-display text-sm font-semibold">Request a specific amount</span>
+              <span className="block text-xs text-muted">Bake a figure into your QR &amp; share link</span>
+            </span>
+          </span>
+          <span className="shrink-0 text-sm font-semibold text-mint">{requesting ? 'Clear' : 'Add'}</span>
         </button>
         {requesting && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-            <AmountField value={amount} onChange={setAmount} />
-            <p className="mt-2 text-xs text-muted">The amount is baked into your QR and share link.</p>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-line pt-4">
+              <AmountField value={amount} onChange={setAmount} />
+            </div>
           </motion.div>
         )}
       </Card>

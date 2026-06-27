@@ -214,3 +214,74 @@ export const ScanIcon = (p: IconProps) => (
     <path d="M4 12h16" />
   </Svg>
 )
+
+export const BellIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 9.5a6 6 0 0 1 12 0c0 4 1.2 5.5 1.8 6.2.4.5 0 1.3-.7 1.3H4.9c-.7 0-1.1-.8-.7-1.3C4.8 15 6 13.5 6 9.5z" />
+    <path d="M10 20a2 2 0 0 0 4 0" />
+  </Svg>
+)
+
+export const SignalIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 19.5v-3M9.7 19.5v-6M14.3 19.5v-9M19 19.5v-12" />
+  </Svg>
+)
+
+export const TvIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3.5" y="6" width="17" height="11" rx="2.5" />
+    <path d="M8.5 20.5h7M9 6 12 3.5 15 6" />
+  </Svg>
+)
+
+export const GiftIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="4" y="9.5" width="16" height="11" rx="1.6" />
+    <path d="M3 9.5h18M12 9.5v11" />
+    <path d="M12 9.5S10.5 4.5 8 5.2 9.5 9.5 12 9.5zM12 9.5s1.5-5 4-4.3-.5 4.3-4 4.3z" />
+  </Svg>
+)
+
+export const TrendIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 15.5 9 10l3.5 3.5L20 6" />
+    <path d="M15 6h5v5" />
+  </Svg>
+)
+
+export const GridIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="4" y="4" width="6.5" height="6.5" rx="1.6" />
+    <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6" />
+    <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6" />
+    <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6" />
+  </Svg>
+)
+
+export const PiggyIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 12.5c0-3 2.7-5 6.5-5 4 0 7 2.2 7 5.3 0 1.5-.7 2.8-1.9 3.7v2.5h-2.3l-.5-1.3a9 9 0 0 1-4.6 0L7.6 19H5.4v-2.6A5 5 0 0 1 4 13.5z" />
+    <path d="M4.5 11.5C3 11.4 3 9 4.7 9.3M10 7.6 11 5.5M14.5 11h.01" />
+  </Svg>
+)
+
+export const CardIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+    <path d="M3 9.5h18M6.5 14.5h4" />
+  </Svg>
+)
+
+export const ContactlessIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9 7a8 8 0 0 1 0 10M12.5 5a11 11 0 0 1 0 14M5.5 9.5a4 4 0 0 1 0 5" />
+  </Svg>
+)
+
+export const SnowIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 2.5v19M4 7l16 10M20 7 4 17" />
+    <path d="M9 3.5 12 6l3-2.5M9 20.5 12 18l3 2.5M3.5 10 5 7.2 2.3 6.5M20.5 14 19 16.8l2.7.7M3.5 14 2.3 17.5 5 16.8M20.5 10l1.2-3.5L19 7.2" />
+  </Svg>
+)

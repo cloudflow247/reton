@@ -18,14 +18,14 @@ const faqs: [string, string][] = [
 function Item({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="card overflow-hidden">
+    <div className={`card overflow-hidden transition-colors ${open ? 'border-mint/30' : ''}`}>
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
         aria-expanded={open}
       >
         <span className="font-display text-base font-semibold">{q}</span>
-        <motion.span animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.2 }} className="text-mint">
+        <motion.span animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.2 }} className="shrink-0 text-mint">
           <ChevronRightIcon size={18} />
         </motion.span>
       </button>
@@ -47,27 +47,38 @@ function Item({ q, a }: { q: string; a: string }) {
 
 export default function Faq() {
   return (
-    <div className="mx-auto max-w-3xl px-5 py-20">
+    <div>
       <Head title="FAQ" />
-      <span className="inline-flex items-center gap-2 rounded-full border border-line bg-mint/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-mint">
-        FAQ
-      </span>
-      <h1 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">Questions, answered.</h1>
-      <p className="mt-5 text-lg leading-relaxed text-muted">
-        Everything you need to know about keeping your money safe with Reton.
-      </p>
 
-      <div className="mt-10 space-y-3">
-        {faqs.map(([q, a]) => (
-          <Item key={q} q={q} a={a} />
-        ))}
-      </div>
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="aurora" aria-hidden />
+        <div className="relative mx-auto max-w-3xl px-5 pb-8 pt-20">
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/70 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-mint shadow-sm backdrop-blur">
+            FAQ
+          </span>
+          <h1 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+            Questions, <span className="gradient-text">answered</span>.
+          </h1>
+          <p className="mt-5 text-lg leading-relaxed text-muted">
+            Everything you need to know about keeping your money safe with Reton.
+          </p>
+        </div>
+      </section>
 
-      <div className="mt-10 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface-2/50 p-6">
-        <span className="text-sm text-muted">Still have a question?</span>
-        <Link href="/contact" className="text-sm font-semibold text-mint hover:underline">
-          Talk to our team →
-        </Link>
+      <div className="mx-auto max-w-3xl px-5 pb-20">
+        <div className="space-y-3">
+          {faqs.map(([q, a]) => (
+            <Item key={q} q={q} a={a} />
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface-2/50 p-6">
+          <span className="text-sm text-muted">Still have a question?</span>
+          <Link href="/contact" className="text-sm font-semibold text-mint hover:underline">
+            Talk to our team →
+          </Link>
+        </div>
       </div>
     </div>
   )
