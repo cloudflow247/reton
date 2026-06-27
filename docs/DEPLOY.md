@@ -77,7 +77,38 @@ credited.
 The app exposes `/up` (configured in `bootstrap/app.php`). Point the Cloud
 health check at it.
 
-## 6. First-deploy checklist
+## 6. Enabling demo mode (staging only)
+
+Demo mode surfaces one-click demo logins on the sign-in screen so reviewers can
+try the app instantly. It is gated on **both** an env flag and seeded accounts —
+migrations alone do not create them. **Never enable on a public/production
+environment**: the demo accounts share publicly-known credentials.
+
+1. Set the variable (saving triggers a redeploy so `config:cache` picks it up):
+
+   ```ini
+   RETON_DEMO_MODE=true
+   # optional — these are the defaults:
+   RETON_DEMO_PASSWORD=demo1234
+   RETON_DEMO_PIN=1234
+   ```
+
+2. Seed the demo accounts once, via the environment's Commands runner:
+
+   ```bash
+   php artisan db:seed --class=DemoSeeder --force
+   ```
+
+   Idempotent (skips existing accounts); only needed once per database.
+
+3. The sign-in page now shows the demo buttons. Credentials: password
+   `demo1234`, transaction PIN `1234`. Ada Obi is funded ₦750,000, Bola Ade
+   ₦120,000.
+
+To disable, set `RETON_DEMO_MODE=false` and redeploy — the buttons disappear;
+the seeded accounts remain in the database but are no longer surfaced.
+
+## 7. First-deploy checklist
 
 - [ ] Postgres + Redis attached
 - [ ] `APP_KEY` generated, `APP_ENV=production`, `APP_DEBUG=false`
