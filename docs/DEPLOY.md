@@ -108,7 +108,36 @@ environment**: the demo accounts share publicly-known credentials.
 To disable, set `RETON_DEMO_MODE=false` and redeploy — the buttons disappear;
 the seeded accounts remain in the database but are no longer surfaced.
 
-## 7. First-deploy checklist
+## 7. Troubleshooting
+
+### Build fails downloading dependencies (`composer install`, HTTP 400/403)
+
+Symptom — the build aborts partway through `composer install` with errors like:
+
+```
+Failed to download laravel/serializable-closure from dist: The
+"https://codeload.github.com/..." file could not be downloaded (HTTP/2 400)
+Source fallback is disabled. Not trying alternative sources.
+```
+
+This is **not** a code/lockfile problem (the same `composer.lock` installs fine
+locally). It's GitHub rate-limiting **unauthenticated** dist downloads from the
+build runner — intermittent, so the build often reaches 70–90% first.
+
+1. **Redeploy.** These 400s are frequently transient; a retry often passes.
+2. **If it recurs, authenticate Composer** (durable fix). Create a GitHub
+   Personal Access Token (classic — **no scopes needed** for public packages;
+   the token alone lifts the anonymous rate limit), then add to the
+   environment's Variables:
+
+   ```ini
+   COMPOSER_AUTH={"github-oauth":{"github.com":"ghp_yourtokenhere"}}
+   ```
+
+   (single-line JSON). Redeploy — Composer now authenticates every codeload
+   request and stops hitting the throttle.
+
+## 8. First-deploy checklist
 
 - [ ] Postgres + Redis attached
 - [ ] `APP_KEY` generated, `APP_ENV=production`, `APP_DEBUG=false`
