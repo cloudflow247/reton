@@ -41,6 +41,19 @@ it('renders the public home page for guests', function () {
         ->assertInertia(fn (Assert $page) => $page->component('Public/Home'));
 });
 
+it('renders public marketing pages for guests', function (string $path, string $component) {
+    $this->get($path)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component($component));
+})->with([
+    'business' => ['/business', 'Public/Business'],
+    'about' => ['/about', 'Public/About'],
+    'faq' => ['/faq', 'Public/Faq'],
+    'contact' => ['/contact', 'Public/Contact'],
+    'security' => ['/security', 'Public/Security'],
+    'how it works' => ['/how-it-works', 'Public/HowItWorks'],
+]);
+
 it('redirects guests away from the dashboard to login', function () {
     $this->get('/dashboard')->assertRedirect('/login');
 });

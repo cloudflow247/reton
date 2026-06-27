@@ -155,6 +155,25 @@ export const EyeOffIcon = (p: IconProps) => (
   </Svg>
 )
 
+export const MailIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
+    <path d="M4 7l8 5.5L20 7" />
+  </Svg>
+)
+
+export const PhoneIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6.5 4.5h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.5 6.7 2 2 0 0 1 6.5 4.5z" />
+  </Svg>
+)
+
+export const ChatIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v6A2.5 2.5 0 0 1 17.5 15H9l-4 4v-4H6.5" />
+  </Svg>
+)
+
 export const QrIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect x="4" y="4" width="6" height="6" rx="1.2" />

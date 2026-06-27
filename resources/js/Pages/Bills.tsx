@@ -3,8 +3,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Head, router, useForm, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
+import { BillerLogo } from '@/components/BillerLogo'
 import { AmountField, Button, Card, Field, Pill } from '@/components/ui'
 import { BillIcon, CheckIcon, LockIcon } from '@/components/icons'
+import { billersByCategory, type Biller } from '@/lib/billers'
 import { deviceHeaders } from '@/lib/device'
 import { ngn, shortDate, toMinor } from '@/lib/format'
 import type { BillCategory, BillCategoryOption } from '@/lib/types'
@@ -12,12 +14,12 @@ import type { PageProps } from '@/types'
 
 type Props = PageProps<{ categories: BillCategoryOption[]; bills: import('@/lib/types').Bill[] }>
 
-/** The label and placeholder for the biller-specific account a category bills against. */
+/** The reference label per category (the biller-specific account being billed). */
 const reference: Record<BillCategory, { label: string; placeholder: string; mode: 'numeric' | 'text' }> = {
   airtime: { label: 'Phone number', placeholder: '0803 000 0000', mode: 'numeric' },
   data: { label: 'Phone number', placeholder: '0803 000 0000', mode: 'numeric' },
   electricity: { label: 'Meter number', placeholder: '12-digit meter number', mode: 'numeric' },
-  cable_tv: { label: 'Smartcard number', placeholder: 'Smartcard / IUC number', mode: 'numeric' },
+  cable_tv: { label: 'Smartcard / IUC number', placeholder: 'Smartcard number', mode: 'numeric' },
   rrr: { label: 'Remita Retrieval Reference', placeholder: '12-digit RRR', mode: 'numeric' },
 }
 
@@ -29,8 +31,9 @@ export default function Bills({ categories, bills }: Props) {
   const [category, setCategory] = useState<BillCategory>(categories[0]?.value ?? 'airtime')
   const meta = useMemo(() => categories.find((c) => c.value === category), [categories, category])
   const fixed = meta?.fixed_amount ?? false
+  const billers = billersByCategory[category] ?? []
 
-  const [biller, setBiller] = useState('')
+  const [selected, setSelected] = useState<Biller | null>(null)
   const [customer, setCustomer] = useState('')
   const [amount, setAmount] = useState('')
   const [pin, setPin] = useState('')
@@ -62,14 +65,15 @@ export default function Bills({ categories, bills }: Props) {
   // Switching category resets the per-category inputs.
   function pick(next: BillCategory) {
     setCategory(next)
-    setBiller('')
+    setSelected(null)
     setCustomer('')
     setAmount('')
     setInquiry(null)
     setLookupError('')
   }
 
-  const payable = fixed ? (inquiry?.amount ?? 0) : toMinor(amount)
+  const ref = reference[category]
+  const payable = fixed ? inquiry?.amount ?? 0 : toMinor(amount)
   const overBalance = wallet ? payable > wallet.available_balance : false
   const canPay =
     !!wallet &&
@@ -77,7 +81,7 @@ export default function Bills({ categories, bills }: Props) {
     !overBalance &&
     pin.length >= 4 &&
     customer.trim().length > 0 &&
-    (fixed ? !!inquiry : biller.trim().length > 0)
+    (fixed ? !!inquiry : !!selected)
 
   function submit(e: FormEvent) {
     e.preventDefault()
@@ -87,18 +91,18 @@ export default function Bills({ categories, bills }: Props) {
       const base = {
         wallet_id: wallet.id,
         category,
-        biller_code: fixed ? 'remita' : slug(biller),
+        biller_code: fixed ? 'remita' : selected?.code ?? 'biller',
         customer_reference: customer.trim(),
         pin,
       }
       // Amount + biller name are authoritative from the lookup for fixed bills.
-      return fixed ? base : { ...base, biller_name: biller.trim(), amount: toMinor(amount) }
+      return fixed ? base : { ...base, biller_name: selected?.name ?? '', amount: toMinor(amount) }
     })
     form.post('/bills', {
       headers: deviceHeaders(),
       preserveScroll: true,
       onSuccess: () => {
-        setBiller('')
+        setSelected(null)
         setCustomer('')
         setAmount('')
         setPin('')
@@ -138,8 +142,6 @@ export default function Bills({ categories, bills }: Props) {
     )
   }
 
-  const ref = reference[category]
-
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <Head title="Bills" />
@@ -150,7 +152,7 @@ export default function Bills({ categories, bills }: Props) {
           </span>
           <div>
             <h2 className="font-display text-lg font-bold tracking-tight">Pay a bill</h2>
-            <p className="text-sm text-muted">Airtime, data, utilities and Remita — straight from your wallet.</p>
+            <p className="text-sm text-muted">Airtime, data, TV, electricity and Remita — straight from your wallet.</p>
           </div>
         </div>
 
@@ -173,22 +175,41 @@ export default function Bills({ categories, bills }: Props) {
         </div>
 
         <form onSubmit={submit} className="space-y-5">
-          {!fixed && (
-            <Field
-              label="Biller"
-              placeholder={category === 'airtime' || category === 'data' ? 'MTN, Airtel, Glo…' : 'e.g. Ikeja Electric'}
-              value={biller}
-              onChange={(e) => setBiller(e.target.value)}
-              autoComplete="off"
-            />
+          {/* Biller picker — brand tiles */}
+          {!fixed && billers.length > 0 && (
+            <div>
+              <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted">
+                {category === 'electricity' ? 'Disco' : category === 'cable_tv' ? 'Provider' : 'Network'}
+              </span>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {billers.map((b) => {
+                  const on = selected?.code === b.code
+                  return (
+                    <motion.button
+                      key={b.code}
+                      type="button"
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setSelected(b)}
+                      className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition ${
+                        on ? 'border-mint bg-mint/[0.06] shadow-sm' : 'border-line bg-surface hover:border-mint/40'
+                      }`}
+                    >
+                      <BillerLogo biller={b} size={36} />
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text">{b.name}</span>
+                      {on && <CheckIcon size={15} className="text-mint" />}
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </div>
           )}
 
           <div>
             <Field
               label={ref.label}
               inputMode={ref.mode}
-              placeholder={ref.placeholder}
-              maxLength={fixed ? 12 : 20}
+              placeholder={selected?.ref ?? ref.placeholder}
+              maxLength={fixed ? 12 : 24}
               value={customer}
               onChange={(e) =>
                 setCustomer(ref.mode === 'numeric' ? e.target.value.replace(/\D/g, '') : e.target.value)
@@ -268,7 +289,3 @@ export default function Bills({ categories, bills }: Props) {
 }
 
 Bills.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
-
-function slug(value: string): string {
-  return value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'biller'
-}

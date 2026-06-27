@@ -30,6 +30,10 @@ Route::get('/', function () {
 
 Route::inertia('/security', 'Public/Security')->name('security');
 Route::inertia('/how-it-works', 'Public/HowItWorks')->name('how-it-works');
+Route::inertia('/business', 'Public/Business')->name('business');
+Route::inertia('/about', 'Public/About')->name('about');
+Route::inertia('/faq', 'Public/Faq')->name('faq');
+Route::inertia('/contact', 'Public/Contact')->name('contact');
 
 /*
 |--------------------------------------------------------------------------

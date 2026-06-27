@@ -18,12 +18,18 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           <Link href="/" className="transition-opacity hover:opacity-80">
             <Wordmark />
           </Link>
-          <nav className="hidden items-center gap-8 text-sm font-medium sm:flex">
-            <Link href="/security" className={link('/security')}>
-              Security
+          <nav className="hidden items-center gap-7 text-sm font-medium lg:flex">
+            <Link href="/business" className={link('/business')}>
+              Business
             </Link>
             <Link href="/how-it-works" className={link('/how-it-works')}>
               How it works
+            </Link>
+            <Link href="/security" className={link('/security')}>
+              Security
+            </Link>
+            <Link href="/faq" className={link('/faq')}>
+              FAQ
             </Link>
             <Link href="/login" className="text-muted transition-colors hover:text-text">
               Sign in
@@ -68,8 +74,8 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                 <LockIcon size={13} /> Bank-grade security
               </span>
             </div>
-            <FooterCol title="Product" links={[['How it works', '/how-it-works'], ['Security', '/security'], ['Sign in', '/login']]} />
-            <FooterCol title="Company" links={[['About', '/'], ['Careers', '/'], ['Contact', '/']]} />
+            <FooterCol title="Product" links={[['How it works', '/how-it-works'], ['Security', '/security'], ['For business', '/business']]} />
+            <FooterCol title="Company" links={[['About', '/about'], ['FAQ', '/faq'], ['Contact', '/contact']]} />
             <FooterCol title="Legal" links={[['Terms', '/'], ['Privacy', '/'], ['Compliance', '/security']]} />
           </div>
           <div className="mt-10 flex flex-col gap-2 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
