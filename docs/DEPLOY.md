@@ -137,6 +137,28 @@ build runner — intermittent, so the build often reaches 70–90% first.
    (single-line JSON). Redeploy — Composer now authenticates every codeload
    request and stops hitting the throttle.
 
+### 500 on the first DB query — Postgres not attached (SQLite fallback)
+
+Symptom — pages that don't query the database render fine, but the first real
+query (e.g. signing in) 500s with:
+
+```
+Database file at path [/var/www/html/database/database.sqlite] does not exist.
+(Connection: sqlite, ...)
+```
+
+`config/database.php` defaults to `env('DB_CONNECTION', 'sqlite')`. With **no
+Postgres attached** the connection falls back to SQLite, pointing at a database
+file that does not exist on the Cloud runtime — so every query fails.
+
+1. Attach a **PostgreSQL** database to the environment. Laravel Cloud then
+   injects `DB_CONNECTION=pgsql` + `DB_HOST/PORT/DATABASE/USERNAME/PASSWORD`.
+2. In Variables, ensure there is **no leftover `DB_CONNECTION=sqlite`** (or a
+   `DB_DATABASE` pointing at a `.sqlite` file) overriding the injected values.
+3. Redeploy (so `config:cache` picks up the new vars), then run
+   `php artisan migrate --force` (and `db:seed --class=DemoSeeder --force` if
+   using demo mode) from the Commands tab.
+
 ## 8. First-deploy checklist
 
 - [ ] Postgres + Redis attached
