@@ -30,6 +30,7 @@ class TransferResource extends JsonResource
             'receiver_wallet_id' => $this->receiver_wallet_id,
             'completed_at' => $this->completed_at,
             'created_at' => $this->created_at,
+            'metadata' => $this->metadata,
             'hold' => new HoldResource($this->whenLoaded('hold')),
         ];
     }

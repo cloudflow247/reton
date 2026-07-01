@@ -9,6 +9,8 @@ use App\Domain\Callback\Models\Callback;
 use App\Domain\Fraud\Contracts\FraudScorer;
 use App\Domain\Fraud\Data\FraudContext;
 use App\Domain\Fraud\Enums\FraudRiskLevel;
+use App\Domain\Marketplace\Models\DigitalOrder;
+use App\Domain\Marketplace\Services\DigitalEscrowJudgementService;
 use App\Domain\Transfers\Models\Transfer;
 use App\Models\User;
 use App\Support\Money\Money;
@@ -22,13 +24,22 @@ use App\Support\Money\Money;
  */
 class CallbackDecisionEngine
 {
-    public function __construct(private readonly FraudScorer $fraud) {}
+    public function __construct(
+        private readonly FraudScorer $fraud,
+        private readonly DigitalEscrowJudgementService $digitalEscrow,
+    ) {}
 
     /**
      * Outcome when a callback expires with no resolution.
      */
     public function resolveOnExpiry(Callback $callback): CallbackResolution
     {
+        $order = DigitalOrder::query()->where('transfer_id', $callback->transfer_id)->first();
+
+        if ($order instanceof DigitalOrder) {
+            return $this->digitalEscrow->resolveOnCallbackExpiry($callback, $order);
+        }
+
         if ($this->receiverIsHighRisk($callback->transfer)) {
             return CallbackResolution::Refund;
         }

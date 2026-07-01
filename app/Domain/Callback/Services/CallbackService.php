@@ -6,6 +6,7 @@ namespace App\Domain\Callback\Services;
 
 use App\Domain\Callback\Enums\CallbackAction;
 use App\Domain\Callback\Enums\CallbackResolution;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Exceptions\CallbackAlreadyOpenException;
 use App\Domain\Callback\Exceptions\CallbackNotOpenException;
@@ -17,6 +18,7 @@ use App\Domain\Transfers\Enums\TransferStatus;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Transfers\Services\TransferService;
 use App\Models\User;
+use App\Support\Broadcasting\TrustProtectionBroadcaster;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -35,6 +37,7 @@ class CallbackService
     public function __construct(
         private readonly TransferService $transfers,
         private readonly CallbackDecisionEngine $engine,
+        private readonly DigitalMarketplaceService $marketplace,
     ) {}
 
     public function initiate(Transfer $transfer, User $sender, string $reason): Callback
@@ -61,6 +64,10 @@ class CallbackService
 
             $this->log($callback, $sender, CallbackAction::Initiated, $reason);
 
+            TrustProtectionBroadcaster::callbackChanged($callback, 'callback.initiated');
+
+            $this->marketplace->markDisputed($transfer);
+
             return $callback;
         });
     }
@@ -86,6 +93,10 @@ class CallbackService
 
             $this->log($callback, $receiver, CallbackAction::Rejected, $reason);
             $this->log($callback, null, CallbackAction::Escalated);
+
+            TrustProtectionBroadcaster::callbackChanged($callback->refresh(), 'callback.escalated');
+
+            $this->marketplace->markDisputed($callback->transfer);
 
             return $callback->refresh();
         });
@@ -121,6 +132,8 @@ class CallbackService
             ]);
 
             $this->log($callback, $resolver, CallbackAction::Resolved, null, ['resolution' => $resolution->value]);
+
+            TrustProtectionBroadcaster::callbackChanged($callback->refresh(), 'callback.resolved');
 
             return $callback->refresh();
         });

@@ -79,6 +79,53 @@ return [
         // Outcome when a callback expires unanswered: 'refund' (protect the
         // sender who raised it) or 'release' (protect the receiver).
         'unanswered_resolution' => env('RETON_CALLBACK_UNANSWERED_RESOLUTION', 'refund'),
+
+        // Protected wallet-to-wallet transfers: sender debited immediately, receiver
+        // credited as pending (held_balance) until release or refund.
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Digital marketplace
+    |--------------------------------------------------------------------------
+    |
+    | confirm_hours: after the seller delivers a digital item, the buyer has
+    | this long to release payment or raise a callback before auto-release.
+    |
+    */
+
+    'digital' => [
+        // Buyer confirmation window after the seller delivers.
+        'confirm_hours' => (int) env('RETON_DIGITAL_CONFIRM_HOURS', 48),
+
+        // Seller must deliver within this window or the buyer is auto-refunded.
+        'delivery_deadline_hours' => (int) env('RETON_DIGITAL_DELIVERY_DEADLINE_HOURS', 72),
+
+        // Grace period after purchase before a "not delivered" dispute is allowed.
+        'dispute_grace_hours' => (int) env('RETON_DIGITAL_DISPUTE_GRACE_HOURS', 24),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shareable links & mobile deep linking
+    |--------------------------------------------------------------------------
+    |
+    | public_base: canonical HTTPS origin for listing links pasted in WhatsApp.
+    | listing_path: stable path prefix claimed by future iOS/Android apps (/l/*).
+    | app_scheme: custom-scheme fallback (reton://l/{uuid}) before store apps ship.
+    |
+    */
+
+    'links' => [
+        'public_base' => rtrim((string) env('RETON_PUBLIC_URL', env('APP_URL', 'http://localhost')), '/'),
+        'listing_path' => env('RETON_LISTING_PATH', '/l'),
+        'app_scheme' => env('RETON_APP_SCHEME', 'reton'),
+        'mobile' => [
+            'ios_bundle_id' => env('RETON_IOS_BUNDLE_ID', 'ng.reton.app'),
+            'apple_team_id' => env('RETON_APPLE_TEAM_ID', ''),
+            'android_package' => env('RETON_ANDROID_PACKAGE', 'ng.reton.app'),
+            'android_sha256' => env('RETON_ANDROID_SHA256', ''),
+        ],
     ],
 
     /*

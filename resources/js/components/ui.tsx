@@ -6,10 +6,12 @@ export function Modal({
   title,
   onClose,
   children,
+  wide,
 }: {
   title: string
   onClose: () => void
   children: ReactNode
+  wide?: boolean
 }) {
   return (
     <motion.div
@@ -22,7 +24,7 @@ export function Modal({
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-        className="card w-full max-w-md p-6 shield-glow"
+        className={`card shield-glow max-h-[min(92vh,820px)] w-full overflow-y-auto p-6 ${wide ? 'max-w-lg' : 'max-w-md'}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

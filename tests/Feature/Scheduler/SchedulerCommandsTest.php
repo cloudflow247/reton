@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Domain\Marketplace\Enums\DigitalOrderStatus;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Services\CallbackService;
 use App\Domain\Transfers\Enums\HoldStatus;
@@ -59,7 +61,8 @@ it('auto-releases protected transfers whose hold has expired', function () {
 
     expect($transfer->fresh()->status)->toBe(TransferStatus::Completed)
         ->and($transfer->hold->fresh()->status)->toBe(HoldStatus::Released)
-        ->and($transfer->receiverWallet->fresh()->balance)->toBe(40000);
+        ->and($transfer->receiverWallet->fresh()->balance)->toBe(40000)
+        ->and($transfer->receiverWallet->fresh()->held_balance)->toBe(0);
 });
 
 it('does not auto-release a transfer that still has an open callback', function () {
@@ -70,7 +73,8 @@ it('does not auto-release a transfer that still has an open callback', function 
     $this->artisan('transfers:auto-release')->assertSuccessful();
 
     expect($transfer->fresh()->status)->toBe(TransferStatus::Held)
-        ->and($transfer->receiverWallet->fresh()->balance)->toBe(0);
+        ->and($transfer->receiverWallet->fresh()->balance)->toBe(40000)
+        ->and($transfer->receiverWallet->fresh()->held_balance)->toBe(40000);
 });
 
 it('does not auto-release a hold that has not yet expired', function () {
@@ -79,5 +83,32 @@ it('does not auto-release a hold that has not yet expired', function () {
     $this->artisan('transfers:auto-release')->assertSuccessful();
 
     expect($transfer->fresh()->status)->toBe(TransferStatus::Held)
-        ->and($transfer->receiverWallet->fresh()->balance)->toBe(0);
+        ->and($transfer->receiverWallet->fresh()->balance)->toBe(40000)
+        ->and($transfer->receiverWallet->fresh()->held_balance)->toBe(40000);
+});
+
+it('auto-refunds digital orders past the seller delivery deadline', function () {
+    $seller = User::factory()->create();
+    $buyer = User::factory()->create();
+    app(WalletService::class)->open($seller, 'NGN');
+    $buyerWallet = app(WalletService::class)->open($buyer, 'NGN');
+    app(WalletService::class)->fund($buyerWallet, Money::of(50_000_00, 'NGN'));
+
+    $listing = app(DigitalMarketplaceService::class)->createListing(
+        $seller,
+        'Preset pack',
+        'Lightroom presets.',
+        Money::of(10_000_00, 'NGN'),
+        'DOWNLOAD-LINK',
+    );
+
+    $order = app(DigitalMarketplaceService::class)->purchase($buyer, $listing, $buyerWallet->refresh());
+
+    $this->travel(73)->hours();
+
+    $this->artisan('marketplace:expire-undelivered')->assertSuccessful();
+
+    expect($order->fresh()->status)->toBe(DigitalOrderStatus::Refunded)
+        ->and($order->transfer?->fresh()->status)->toBe(TransferStatus::Refunded)
+        ->and($buyerWallet->fresh()->balance)->toBe(50_000_00);
 });

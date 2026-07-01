@@ -1,26 +1,53 @@
-import type { FormEvent } from 'react'
-import { Head, Link, useForm, usePage } from '@inertiajs/react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Head, Link, router, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { AuthLayout } from '@/components/AuthLayout'
-import { Button, Field } from '@/components/ui'
+import { RhfField } from '@/components/forms/RhfField'
+import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
+import { Button } from '@/components/ui'
 import { ArrowRightIcon, SparkleIcon } from '@/components/icons'
 import { deviceHeaders } from '@/lib/device'
+import { loginSchema, type LoginFormValues } from '@/lib/schemas/auth'
 import type { SharedProps } from '@/types'
 
 export default function Login() {
   const { demo } = usePage<SharedProps>().props
-  const form = useForm({ email: '', password: '' })
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({})
+  const [processing, setProcessing] = useState(false)
 
-  function submit(e: FormEvent) {
-    e.preventDefault()
-    form.post('/login', { headers: deviceHeaders(), onFinish: () => form.reset('password') })
+  const {
+    register,
+    handleSubmit,
+    setError,
+    resetField,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+    mode: 'onBlur',
+  })
+
+  useServerErrors(serverErrors, setError)
+
+  const postLogin = (values: LoginFormValues) => {
+    setProcessing(true)
+    setServerErrors({})
+    router.post('/login', values, {
+      headers: deviceHeaders(),
+      preserveScroll: true,
+      onError: (errs) => setServerErrors(errs as Record<string, string>),
+      onFinish: () => {
+        setProcessing(false)
+        resetField('password')
+      },
+    })
   }
 
-  function signInAs(email: string) {
+  const signInAs = (email: string) => {
     if (!demo) return
-    // transform() returns void in @inertiajs/react — set it, then post.
-    form.transform(() => ({ email, password: demo.password }))
-    form.post('/login', { headers: deviceHeaders() })
+    postLogin({ email, password: demo.password })
   }
 
   return (
@@ -46,7 +73,7 @@ export default function Login() {
                 key={a.email}
                 type="button"
                 onClick={() => signInAs(a.email)}
-                disabled={form.processing}
+                disabled={processing}
                 className="group flex w-full items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 text-left transition hover:border-mint/40 hover:shadow-sm disabled:opacity-60"
               >
                 <span className="min-w-0">
@@ -71,28 +98,24 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={submit} className="space-y-4">
-        <Field
+      <form onSubmit={handleSubmit(postLogin)} className="space-y-4" noValidate>
+        <RhfField
           label="Email"
           type="email"
           placeholder="you@example.com"
           autoComplete="email"
-          value={form.data.email}
-          onChange={(e) => form.setData('email', e.target.value)}
-          required
+          error={fieldErrorMessage(errors.email, serverErrors.email)}
+          {...register('email')}
         />
-        <Field
+        <RhfField
           label="Password"
           type="password"
           placeholder="••••••••"
           autoComplete="current-password"
-          value={form.data.password}
-          onChange={(e) => form.setData('password', e.target.value)}
-          required
+          error={fieldErrorMessage(errors.password, serverErrors.password)}
+          {...register('password')}
         />
-        {form.errors.email && <p className="text-sm text-danger">{form.errors.email}</p>}
-        {form.errors.password && <p className="text-sm text-danger">{form.errors.password}</p>}
-        <Button type="submit" loading={form.processing} className="group mt-1 w-full">
+        <Button type="submit" loading={processing} className="group mt-1 w-full">
           <span className="inline-flex items-center justify-center gap-2">
             Sign in
             <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />

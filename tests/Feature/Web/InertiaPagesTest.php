@@ -142,6 +142,7 @@ it('shares the authenticated user and wallets with every page', function () {
             ->component('Dashboard')
             ->where('auth.user.email', $user->email)
             ->where('auth.wallets.0.id', $wallet->id)
+            ->has('summary')
             ->has('activity'));
 });
 
@@ -154,6 +155,7 @@ it('passes transfers, callbacks and recoveries to the protection page', function
             ->has('transfers')
             ->has('callbacks')
             ->has('recoveries')
+            ->has('digitalOrders')
             ->has('walletId'));
 });
 

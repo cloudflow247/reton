@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Transfers\Policies;
 
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Transfers\Models\Transfer;
 use App\Models\User;
 
@@ -23,7 +24,17 @@ class TransferPolicy
      */
     public function release(User $user, Transfer $transfer): bool
     {
-        return $this->ownsWallet($user, $transfer->senderWallet?->owner_type, $transfer->senderWallet?->owner_id);
+        if (! $this->ownsWallet($user, $transfer->senderWallet?->owner_type, $transfer->senderWallet?->owner_id)) {
+            return false;
+        }
+
+        try {
+            app(DigitalMarketplaceService::class)->assertBuyerCanRelease($transfer);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

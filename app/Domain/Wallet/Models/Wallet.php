@@ -69,7 +69,7 @@ class Wallet extends Model
         return $this->morphTo();
     }
 
-    /** Funds the wallet holds but cannot spend (callback / recovery holds). */
+    /** Funds in total balance that cannot be spent yet (pending sales, recovery holds). */
     public function availableMinor(): int
     {
         return $this->balance - $this->held_balance;

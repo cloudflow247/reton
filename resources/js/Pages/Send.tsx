@@ -1,12 +1,21 @@
-import type { FormEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Head, Link, router, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
+import { Controller, useForm } from 'react-hook-form'
 import { AppShell } from '@/components/AppShell'
-import { AmountField, Button, Card, Field } from '@/components/ui'
+import { FieldError, RhfField } from '@/components/forms/RhfField'
+import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
+import { AmountField, Button, Card } from '@/components/ui'
 import { CheckIcon, ClockIcon, LockIcon, ShieldIcon } from '@/components/icons'
 import { ngn, toMinor } from '@/lib/format'
 import { deviceHeaders } from '@/lib/device'
+import {
+  sendTransferRefinements,
+  sendTransferSchema,
+  type SendTransferFormValues,
+} from '@/lib/schemas/transfer'
 import type { SharedProps } from '@/types'
 
 export default function Send() {
@@ -37,7 +46,6 @@ export default function Send() {
 
 Send.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
 
-/* ── Recent recipients (persisted locally, newest first, de-duped, max 5) ── */
 type Recent = { account: string; name: string }
 const RECENTS_KEY = 'reton:recents'
 const RECENTS_MAX = 5
@@ -63,7 +71,7 @@ function pushRecent(account: string, name: string): Recent[] {
     try {
       window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next))
     } catch {
-      /* storage unavailable — keep going */
+      /* storage unavailable */
     }
   }
   return next
@@ -76,66 +84,123 @@ function SendForm() {
   const wallet = auth.wallets[0]
   const done = flash.transfer
 
-  const [protectedMode, setProtectedMode] = useState(false)
-  const [account, setAccount] = useState('')
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({})
+  const [processing, setProcessing] = useState(false)
   const [recipient, setRecipient] = useState<{ wallet_id: string; name: string } | null>(null)
   const [resolving, setResolving] = useState(false)
   const [lookupError, setLookupError] = useState('')
-  const [amount, setAmount] = useState('')
-  const [pin, setPin] = useState('')
   const [recents, setRecents] = useState<Recent[]>([])
 
-  const form = useForm({ from_wallet_id: wallet?.id ?? '', to_wallet_id: '', amount: 0, type: 'normal', pin: '' })
+  const {
+    control,
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    setError,
+    reset,
+    formState: { errors },
+  } = useForm<SendTransferFormValues>({
+    resolver: zodResolver(sendTransferSchema),
+    defaultValues: {
+      from_wallet_id: wallet?.id ?? '',
+      to_wallet_id: '',
+      account: '',
+      amount: '',
+      pin: '',
+      type: 'normal',
+    },
+    mode: 'onBlur',
+  })
 
+  useServerErrors(serverErrors, setError)
+
+  const account = watch('account')
+  const amount = watch('amount')
+  const transferType = watch('type')
   const minor = toMinor(amount)
   const overBalance = wallet ? minor > wallet.available_balance : false
-  const canSend = !!recipient && minor > 0 && !overBalance && pin.length >= 4
+  const protectedMode = transferType === 'protected'
 
-  // Hydrate recent recipients from local storage on mount.
   useEffect(() => {
     setRecents(readRecents())
   }, [])
 
-  // Name enquiry: resolve a 10-digit account number to its holder.
+  useEffect(() => {
+    if (wallet?.id) setValue('from_wallet_id', wallet.id)
+  }, [wallet?.id, setValue])
+
   useEffect(() => {
     setRecipient(null)
     setLookupError('')
+    setValue('to_wallet_id', '')
+
     if (!/^\d{10}$/.test(account)) return
+
     setResolving(true)
     let cancelled = false
     fetch(`/lookup?account_number=${account}`, { headers: { Accept: 'application/json' } })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data) => !cancelled && setRecipient({ wallet_id: data.wallet_id, name: data.account_name }))
-      .catch(() => !cancelled && setLookupError('No Reton account found with that number.'))
+      .then((data) => {
+        if (cancelled) return
+        setRecipient({ wallet_id: data.wallet_id, name: data.account_name })
+        setValue('to_wallet_id', data.wallet_id, { shouldValidate: true })
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLookupError('No Reton account found with that number.')
+          setError('account', { type: 'manual', message: 'No Reton account found with that number.' })
+        }
+      })
       .finally(() => !cancelled && setResolving(false))
+
     return () => {
       cancelled = true
     }
-  }, [account])
+  }, [account, setError, setValue])
 
-  function submit(e: FormEvent) {
-    e.preventDefault()
+  const onSubmit = handleSubmit((values) => {
     if (!wallet || !recipient) return
-    const sentTo = { account, name: recipient.name }
-    form.transform((data) => ({
-      ...data,
-      to_wallet_id: recipient.wallet_id,
-      amount: minor,
-      type: protectedMode ? 'protected' : 'normal',
-      pin,
-    }))
-    form.post('/transfers', {
-      headers: deviceHeaders(),
-      preserveScroll: true,
-      onSuccess: () => {
-        setRecents(pushRecent(sentTo.account, sentTo.name))
-        setAccount('')
-        setAmount('')
-        setPin('')
-        setRecipient(null)
+
+    const balanceErrors = sendTransferRefinements(values, wallet.available_balance)
+    const balanceMessage = balanceErrors.amount
+    if (balanceMessage) {
+      setError('amount', { type: 'manual', message: balanceMessage })
+      return
+    }
+
+    setProcessing(true)
+    setServerErrors({})
+
+    router.post(
+      '/transfers',
+      {
+        from_wallet_id: values.from_wallet_id,
+        to_wallet_id: values.to_wallet_id,
+        amount: toMinor(values.amount),
+        type: values.type,
+        pin: values.pin,
       },
-    })
-  }
+      {
+        headers: deviceHeaders(),
+        preserveScroll: true,
+        onError: (errs) => setServerErrors(errs as Record<string, string>),
+        onSuccess: () => {
+          setRecents(pushRecent(values.account, recipient.name))
+          reset({
+            from_wallet_id: wallet.id,
+            to_wallet_id: '',
+            account: '',
+            amount: '',
+            pin: '',
+            type: values.type,
+          })
+          setRecipient(null)
+        },
+        onFinish: () => setProcessing(false),
+      },
+    )
+  })
 
   if (done) {
     return (
@@ -162,6 +227,8 @@ function SendForm() {
     )
   }
 
+  const canSend = !!recipient && minor > 0 && !overBalance && watch('pin').length >= 4
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -180,20 +247,25 @@ function SendForm() {
           </span>
         </div>
 
-        <form onSubmit={submit} className="space-y-7">
-          {/* Recipient — with bank-style name enquiry */}
+        <form onSubmit={onSubmit} className="space-y-7" noValidate>
+          <input type="hidden" {...register('from_wallet_id')} />
+          <input type="hidden" {...register('to_wallet_id')} />
+
           <div className="space-y-3">
-            <Field
+            <RhfField
               label="Recipient account number"
               inputMode="numeric"
               maxLength={10}
               placeholder="10-digit Reton account number"
-              value={account}
-              onChange={(e) => setAccount(e.target.value.replace(/\D/g, ''))}
               autoComplete="off"
+              error={fieldErrorMessage(errors.account, serverErrors.to_wallet_id ?? lookupError)}
+              {...register('account', {
+                onChange: (e) => {
+                  e.target.value = e.target.value.replace(/\D/g, '')
+                },
+              })}
             />
 
-            {/* Recent recipients — tap to prefill */}
             {recents.length > 0 && !recipient && (
               <div>
                 <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">
@@ -204,7 +276,7 @@ function SendForm() {
                     <button
                       key={r.account}
                       type="button"
-                      onClick={() => setAccount(r.account)}
+                      onClick={() => setValue('account', r.account, { shouldValidate: true })}
                       className="group flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-left transition hover:border-mint/40 hover:bg-mint/[0.05] active:scale-[0.98]"
                     >
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mint/12 font-display text-xs font-bold text-mint">
@@ -239,11 +311,8 @@ function SendForm() {
                 <CheckIcon size={18} className="text-mint" />
               </motion.div>
             )}
-            {lookupError && <p className="text-sm text-danger">{lookupError}</p>}
-            {form.errors.to_wallet_id && <p className="text-sm text-danger">{form.errors.to_wallet_id}</p>}
           </div>
 
-          {/* Amount — premium live preview + input */}
           <div>
             <div className="mb-3 rounded-2xl border border-line bg-surface-2/60 px-5 py-5 text-center">
               <div
@@ -261,49 +330,65 @@ function SendForm() {
                     : 'Enter an amount to send'}
               </div>
             </div>
-            <AmountField value={amount} onChange={setAmount} invalid={overBalance} />
-            {overBalance && <p className="mt-2 text-sm text-danger">That’s more than your available balance.</p>}
-            {form.errors.amount && <p className="mt-2 text-sm text-danger">{form.errors.amount}</p>}
+            <Controller
+              name="amount"
+              control={control}
+              render={({ field }) => (
+                <AmountField
+                  value={field.value}
+                  onChange={field.onChange}
+                  invalid={overBalance || !!errors.amount}
+                />
+              )}
+            />
+            <FieldError error={fieldErrorMessage(errors.amount, serverErrors.amount)} />
           </div>
 
-          {/* Protection choice */}
-          <div className="space-y-2">
-            <span className="block text-xs font-medium uppercase tracking-wide text-muted">How to send</span>
-            <Option
-              active={!protectedMode}
-              onClick={() => setProtectedMode(false)}
-              title="Standard"
-              desc="Arrives instantly. Final once sent."
-            />
-            <Option
-              active={protectedMode}
-              onClick={() => setProtectedMode(true)}
-              title="Protected"
-              desc="Held in escrow until you confirm — recall it any time."
-              recommended
-            />
-          </div>
+          <Controller
+            name="type"
+            control={control}
+            render={({ field }) => (
+              <div className="space-y-2">
+                <span className="block text-xs font-medium uppercase tracking-wide text-muted">How to send</span>
+                <Option
+                  active={field.value === 'normal'}
+                  onClick={() => field.onChange('normal')}
+                  title="Standard"
+                  desc="Arrives instantly. Final once sent."
+                />
+                <Option
+                  active={field.value === 'protected'}
+                  onClick={() => field.onChange('protected')}
+                  title="Protected"
+                  desc="They see pending funds; you can recall until you release."
+                  recommended
+                />
+              </div>
+            )}
+          />
 
-          {/* PIN + trust */}
           <div>
-            <Field
+            <RhfField
               label="Transaction PIN"
               type="password"
               inputMode="numeric"
               maxLength={6}
               placeholder="••••"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               autoComplete="off"
+              error={fieldErrorMessage(errors.pin, serverErrors.pin)}
+              {...register('pin', {
+                onChange: (e) => {
+                  e.target.value = e.target.value.replace(/\D/g, '')
+                },
+              })}
             />
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
               <LockIcon size={13} /> Authorised by your PIN and screened by Reton’s fraud engine.
             </p>
-            {form.errors.pin && <p className="mt-2 text-sm text-danger">{form.errors.pin}</p>}
           </div>
 
           {flash.error && <p className="text-sm text-danger">{flash.error}</p>}
-          <Button type="submit" loading={form.processing} disabled={!canSend} className="w-full">
+          <Button type="submit" loading={processing} disabled={!canSend} className="w-full">
             {protectedMode ? 'Send with protection' : 'Send'}
             {minor > 0 ? ` ${ngn(minor)}` : ''}
           </Button>

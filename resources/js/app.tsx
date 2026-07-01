@@ -1,7 +1,13 @@
+import { configureEcho } from '@laravel/echo-react'
 import { createInertiaApp } from '@inertiajs/react'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { createRoot } from 'react-dom/client'
+import { AppProviders } from '@/providers/AppProviders'
 import '../css/app.css'
+
+configureEcho({
+  broadcaster: 'reverb',
+})
 
 const appName = import.meta.env.VITE_APP_NAME ?? 'Reton'
 
@@ -13,7 +19,11 @@ createInertiaApp({
       import.meta.glob('./Pages/**/*.tsx'),
     ),
   setup({ el, App, props }) {
-    createRoot(el).render(<App {...props} />)
+    createRoot(el).render(
+      <AppProviders>
+        <App {...props} />
+      </AppProviders>,
+    )
   },
   progress: {
     color: '#0b7a57',

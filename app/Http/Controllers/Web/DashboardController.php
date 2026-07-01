@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Dashboard\Services\DashboardSummaryService;
 use App\Domain\Ledger\Models\LedgerEntry;
 use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,10 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly DashboardSummaryService $summary,
+    ) {}
+
     public function index(Request $request): Response
     {
         /** @var User $user */
@@ -22,6 +27,7 @@ class DashboardController extends Controller
         $wallet = $user->wallets()->first();
 
         return Inertia::render('Dashboard', [
+            'summary' => $this->summary->forUser($user)->toArray(),
             'activity' => $wallet instanceof Wallet
                 ? StatementEntryResource::collection($this->recentEntries($wallet))
                 : [],

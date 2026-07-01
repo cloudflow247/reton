@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { Head, Link, usePage } from '@inertiajs/react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ArrowRightIcon,
   BoltIcon,
-  CardIcon,
   CheckIcon,
   ChevronRightIcon,
   CopyIcon,
@@ -15,48 +16,35 @@ import {
   GiftIcon,
   PhoneIcon,
   PlusIcon,
-  QrIcon,
   ReceiveIcon,
   SendIcon,
   ShieldIcon,
   SignalIcon,
-  SparkleIcon,
-  TrendIcon,
   TvIcon,
   WalletIcon,
 } from '@/components/icons'
+import { TrustProtectionListener } from '@/components/TrustProtectionListener'
 import { ngn, shortDate } from '@/lib/format'
 import { useCountUp } from '@/lib/useCountUp'
+import { useUiStore } from '@/stores/ui-store'
 import type { StatementEntry } from '@/lib/types'
-import type { PageProps } from '@/types'
+import type { DashboardSummary, PageProps } from '@/types'
 
 const list = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.05, delayChildren: 0.03 } },
 }
 const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 320, damping: 26 } },
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 340, damping: 28 } },
 }
 
-const services = [
-  { to: '/send', label: 'Send', Icon: SendIcon, tone: 'mint' },
-  { to: '/add-money', label: 'Add money', Icon: PlusIcon, tone: 'mint' },
-  { to: '/cards', label: 'Cards', Icon: CardIcon, tone: 'violet' },
-  { to: '/receive', label: 'Receive', Icon: ReceiveIcon, tone: 'mint' },
-  { to: '/bills?category=airtime', label: 'Airtime', Icon: PhoneIcon, tone: 'sky' },
-  { to: '/bills?category=data', label: 'Data', Icon: SignalIcon, tone: 'sky' },
-  { to: '/bills?category=electricity', label: 'Electricity', Icon: BoltIcon, tone: 'amber' },
-  { to: '/bills?category=cable_tv', label: 'TV', Icon: TvIcon, tone: 'rose' },
+const billShortcuts = [
+  { to: '/bills?category=airtime', label: 'Airtime', Icon: PhoneIcon },
+  { to: '/bills?category=data', label: 'Data', Icon: SignalIcon },
+  { to: '/bills?category=electricity', label: 'Power', Icon: BoltIcon },
+  { to: '/bills?category=cable_tv', label: 'TV', Icon: TvIcon },
 ] as const
-
-const toneClass: Record<string, string> = {
-  mint: 'bg-mint/10 text-mint',
-  violet: 'bg-[#6d4aff]/10 text-[#6d4aff]',
-  sky: 'bg-[#1f8fff]/10 text-[#1f8fff]',
-  amber: 'bg-amber/12 text-amber',
-  rose: 'bg-[#e0457b]/10 text-[#e0457b]',
-}
 
 function greeting() {
   const h = new Date().getHours()
@@ -65,267 +53,274 @@ function greeting() {
   return 'Good evening'
 }
 
+function trustTone(score: number) {
+  if (score >= 80) return { ring: 'text-mint', label: 'Strong', badge: 'default' as const }
+  if (score >= 60) return { ring: 'text-amber', label: 'Fair', badge: 'warning' as const }
+  return { ring: 'text-danger', label: 'At risk', badge: 'danger' as const }
+}
+
 export default function Dashboard() {
-  const { auth, activity } = usePage<PageProps<{ activity: StatementEntry[] }>>().props
+  const { auth, activity, summary } = usePage<PageProps<{ activity: StatementEntry[]; summary: DashboardSummary }>>().props
   const wallet = auth.wallets[0]
   const [copied, setCopied] = useState(false)
-  const [hidden, setHidden] = useState(false)
-  const balance = useCountUp(wallet?.available_balance ?? 0)
-  const recent = (activity ?? []).slice(0, 6)
+  const hidden = useUiStore((s) => s.balanceHidden)
+  const toggleHidden = useUiStore((s) => s.toggleBalanceHidden)
+  const totalBalance = wallet?.balance ?? 0
+  const availableBalance = wallet?.available_balance ?? 0
+  const pendingBalance = wallet?.held_balance ?? 0
+  const animatedAvailable = useCountUp(availableBalance)
+  const hasPending = pendingBalance > 0
+  const recent = (activity ?? []).slice(0, 5)
+  const firstName = (auth.user?.name ?? 'there').split(' ')[0]
 
-  // Lightweight spending insight from the statement — inflow vs outflow.
+  const trust = summary ?? {
+    pending_callbacks: 0,
+    open_recoveries: 0,
+    protected_transfers_pending: 0,
+    open_fraud_alerts: 0,
+    trust_score: 100,
+  }
+
+  const attentionCount =
+    trust.pending_callbacks + trust.open_recoveries + trust.open_fraud_alerts + trust.protected_transfers_pending
+
+  const tone = trustTone(trust.trust_score)
+
   const flow = useMemo(() => {
     const entries = activity ?? []
     const inflow = entries.filter((e) => e.direction === 'credit').reduce((s, e) => s + e.amount, 0)
     const outflow = entries.filter((e) => e.direction === 'debit').reduce((s, e) => s + e.amount, 0)
-    const total = Math.max(inflow + outflow, 1)
-    return { inflow, outflow, inPct: (inflow / total) * 100, outPct: (outflow / total) * 100 }
+    return { inflow, outflow }
   }, [activity])
 
   return (
-    <motion.div variants={list} initial="hidden" animate="show" className="space-y-5">
+    <motion.div variants={list} initial="hidden" animate="show" className="space-y-4 pb-2">
       <Head title="Dashboard" />
+      {auth.user?.id && (
+        <TrustProtectionListener userId={auth.user.id} only={['summary', 'activity']} />
+      )}
 
-      {/* Greeting */}
-      <motion.div variants={item} className="flex items-end justify-between gap-4">
+      {/* Header */}
+      <motion.header variants={item} className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">{greeting()},</p>
-          <h1 className="font-display text-2xl font-bold leading-tight tracking-tight">
-            {(auth.user?.name ?? '—').split(' ')[0]} 👋
-          </h1>
+          <p className="text-sm text-muted">{greeting()}</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-text">{firstName}</h1>
         </div>
         <Link
-          href="/receive"
-          className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-text shadow-sm transition hover:border-mint/40 hover:text-mint"
+          href="/protection"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-mint shadow-sm transition hover:border-mint/30"
         >
-          <QrIcon size={15} /> My code
+          <ShieldIcon size={14} />
+          Trust {trust.trust_score}
         </Link>
-      </motion.div>
+      </motion.header>
 
-      {/* Hero: the balance, on a living emerald mesh card. */}
+      {/* Attention — only when something needs the user */}
+      {attentionCount > 0 && (
+        <motion.div variants={item}>
+          <Link
+            href="/protection"
+            className="flex items-center gap-3 rounded-2xl border border-amber/30 bg-amber/[0.08] px-4 py-3.5 transition hover:border-amber/45"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber/15 text-amber">
+              <ShieldIcon size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-text">
+                {attentionCount} {attentionCount === 1 ? 'item needs' : 'items need'} your attention
+              </span>
+              <span className="block text-xs text-muted">
+                Callbacks, recoveries, or protected transfers waiting on you
+              </span>
+            </span>
+            <ArrowRightIcon size={18} className="shrink-0 text-amber" />
+          </Link>
+        </motion.div>
+      )}
+
+      {/* Balance */}
       <motion.div variants={item}>
-        <div className="mesh sheen relative overflow-hidden rounded-[24px] p-6 text-white shadow-[0_28px_60px_-28px_rgba(9,79,57,0.65)]">
-          {/* Morphing light */}
-          <div
-            aria-hidden
-            className="blob pointer-events-none absolute -right-16 -top-20 h-64 w-64 bg-white/15 blur-2xl"
-          />
-          <div
-            aria-hidden
-            className="blob-slow pointer-events-none absolute -bottom-24 -left-10 h-56 w-56 bg-[#34e0a8]/25 blur-2xl"
-          />
+        <div className="mesh relative overflow-hidden rounded-[22px] p-5 text-white shadow-[0_24px_48px_-24px_rgba(9,79,57,0.6)] sm:p-6">
+          <div aria-hidden className="blob pointer-events-none absolute -right-12 -top-16 h-48 w-48 bg-white/12 blur-2xl" />
 
-          <div className="relative flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-white/75">
-              <WalletIcon size={15} /> Available balance
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">
-              <ShieldIcon size={13} /> Protected
-            </span>
-          </div>
-
-          <div className="relative mt-3 flex items-center gap-3">
-            <div
-              className={`reveal-blur font-num text-[2.6rem] font-bold leading-none text-white ${
-                hidden ? 'blur-md select-none' : ''
-              }`}
-            >
-              {hidden ? '₦ 0,000,000' : ngn(balance)}
-            </div>
+          <div className="relative flex items-center justify-between gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-white/70">Available to spend</span>
             <button
-              onClick={() => setHidden((v) => !v)}
-              className="mb-1 flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition hover:bg-white/15 hover:text-white"
+              type="button"
+              onClick={toggleHidden}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition hover:bg-white/15 hover:text-white"
               aria-label={hidden ? 'Show balance' : 'Hide balance'}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={hidden ? 'off' : 'on'}
-                  initial={{ opacity: 0, scale: 0.6, rotate: -20 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  exit={{ opacity: 0, scale: 0.6, rotate: 20 }}
-                  transition={{ duration: 0.18 }}
-                >
-                  {hidden ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
-                </motion.span>
-              </AnimatePresence>
+              {hidden ? <EyeOffIcon size={17} /> : <EyeIcon size={17} />}
             </button>
           </div>
 
-          <div className="relative mt-2 flex flex-wrap items-center gap-2 text-sm text-white/75">
-            <span>Total {wallet && !hidden ? ngn(wallet.balance) : '••••'}</span>
-            {!!wallet?.held_balance && !hidden && (
-              <span className="rounded-full bg-white/15 px-2 py-0.5 text-xs text-white">
-                {ngn(wallet.held_balance)} held in escrow
-              </span>
-            )}
+          <div
+            className={`relative mt-1 font-num text-[2.25rem] font-bold leading-none tracking-tight sm:text-[2.75rem] ${hidden ? 'blur-md select-none' : ''}`}
+          >
+            {hidden ? '₦ ••••••' : ngn(animatedAvailable)}
           </div>
 
-          {/* Account chip + inline actions */}
-          <div className="relative mt-5 flex flex-wrap items-center gap-2.5">
-            {wallet && (
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(wallet.account_number ?? '')
-                  setCopied(true)
-                  setTimeout(() => setCopied(false), 1500)
-                }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/85 backdrop-blur transition hover:bg-white/20"
-                title="Copy your account number"
-              >
-                <span className="text-white/60">Acct</span>
-                <span className="font-num tracking-wider text-white">{wallet.account_number}</span>
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.span
-                    key={copied ? 'done' : 'copy'}
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-                  </motion.span>
-                </AnimatePresence>
-              </button>
-            )}
-            <div className="ml-auto flex items-center gap-2">
-              <Link
-                href="/add-money"
-                className="btn inline-flex items-center gap-1.5 bg-white px-4 py-2 text-sm text-mint-strong shadow-sm hover:bg-white/90"
-              >
-                <PlusIcon size={16} /> Add money
-              </Link>
-              <Link
-                href="/send"
-                className="btn inline-flex items-center gap-1.5 border border-white/25 bg-white/10 px-4 py-2 text-sm text-white backdrop-blur hover:bg-white/20"
-              >
-                <SendIcon size={16} /> Send
-              </Link>
+          {!hidden && wallet && hasPending && (
+            <div className="relative mt-4 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-400/15 px-3 py-1 text-xs font-semibold text-amber-50">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-200" aria-hidden />
+                  {ngn(pendingBalance)} pending
+                </span>
+                <span className="text-xs text-white/55">
+                  Total in wallet {ngn(totalBalance)}
+                </span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-white/55">
+                Pending is from protected sales or holds — not spendable until the buyer confirms or a dispute ends.
+              </p>
             </div>
-          </div>
+          )}
+
+          {wallet && (
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(wallet.account_number ?? '')
+                setCopied(true)
+                setTimeout(() => setCopied(false), 1500)
+              }}
+              className="relative mt-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur transition hover:bg-white/20"
+            >
+              <span className="text-white/60">Acct</span>
+              <span className="font-num tracking-wide">{wallet.account_number}</span>
+              {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+            </button>
+          )}
         </div>
       </motion.div>
 
-      {/* Service grid */}
-      <motion.div variants={item} className="grid grid-cols-4 gap-2.5 sm:gap-3">
-        {services.map((s) => (
-          <Service key={s.label} {...s} />
-        ))}
+      {/* Primary actions — what most people open the app to do */}
+      <motion.div variants={item} className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+        <QuickAction href="/send" label="Send" Icon={SendIcon} primary />
+        <QuickAction href="/add-money" label="Add money" Icon={PlusIcon} />
+        <QuickAction href="/marketplace" label="Digital shop" Icon={GiftIcon} />
+        <QuickAction href="/protection" label="Protection" Icon={ShieldIcon} highlight={attentionCount > 0} />
       </motion.div>
 
-      {/* Rewards / promo strip */}
+      {/* Trust snapshot */}
       <motion.div variants={item}>
-        <Link
-          href="/protection"
-          className="elevate group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-mint/20 bg-gradient-to-r from-mint/[0.09] via-surface to-surface p-4"
-        >
-          <div
-            aria-hidden
-            className="blob pointer-events-none absolute -right-8 -top-10 h-32 w-32 bg-mint/15 blur-2xl"
-          />
-          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-mint/12 text-mint">
-            <GiftIcon size={24} />
-          </span>
-          <div className="relative min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="font-display text-sm font-bold tracking-tight">Every transfer is reversible</span>
-              <SparkleIcon size={14} className="text-mint" />
+        <Card className="border-mint/15">
+          <CardHeader className="pb-2">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-base">Your trust shield</CardTitle>
+                <CardDescription>Callback protection &amp; recovery at a glance</CardDescription>
+              </div>
+              <Badge variant={tone.badge}>{tone.label}</Badge>
             </div>
-            <p className="truncate text-xs text-muted">
-              Send protected — recall or recover money if something goes wrong.
-            </p>
-          </div>
-          <ArrowRightIcon
-            size={18}
-            className="relative shrink-0 text-mint transition-transform group-hover:translate-x-1"
-          />
-        </Link>
-      </motion.div>
-
-      {/* Insights */}
-      <motion.div variants={item} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="card p-5">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold">
-              <TrendIcon size={16} className="text-mint" /> Money flow
-            </span>
-            <Link href="/activity" className="text-xs font-medium text-mint hover:underline">
-              Details
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <TrustRing score={trust.trust_score} className={tone.ring} />
+            <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
+              <TrustStat label="Protected" value={trust.protected_transfers_pending} />
+              <TrustStat label="Callbacks" value={trust.pending_callbacks} />
+              <TrustStat label="Recoveries" value={trust.open_recoveries} />
+              <TrustStat label="Alerts" value={trust.open_fraud_alerts} warn={trust.open_fraud_alerts > 0} />
+            </div>
+          </CardContent>
+          <div className="border-t border-line px-5 py-3">
+            <Link
+              href="/protection"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-mint hover:underline"
+            >
+              Open protection hub <ChevronRightIcon size={16} />
             </Link>
           </div>
-          <div className="mt-4 space-y-3">
-            <FlowBar label="In" value={ngn(flow.inflow)} pct={flow.inPct} tone="mint" />
-            <FlowBar label="Out" value={ngn(flow.outflow)} pct={flow.outPct} tone="muted" />
-          </div>
-        </div>
+        </Card>
+      </motion.div>
 
-        <div className="card relative flex items-center gap-3 overflow-hidden p-5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber/12 text-amber">
-            <ShieldIcon size={20} />
-          </span>
-          <div className="min-w-0">
-            <div className="text-xs text-muted">Held in escrow</div>
-            <div className="truncate font-num text-xl font-bold">{wallet ? ngn(wallet.held_balance) : '—'}</div>
-            <div className="truncate text-[11px] text-muted">Protected &amp; recoverable</div>
-          </div>
+      {/* Bills — secondary, compact */}
+      <motion.div variants={item}>
+        <div className="flex items-center justify-between px-0.5">
+          <h2 className="text-sm font-semibold text-text">Pay bills</h2>
+          <Link href="/bills" className="text-xs font-medium text-mint hover:underline">
+            All bills
+          </Link>
+        </div>
+        <div className="mt-2 grid grid-cols-4 gap-2">
+          {billShortcuts.map(({ to, label, Icon }) => (
+            <Link
+              key={to}
+              href={to}
+              className="elevate flex flex-col items-center gap-1.5 rounded-2xl border border-line bg-surface px-2 py-3 transition hover:border-mint/25"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint/10 text-mint">
+                <Icon size={18} />
+              </span>
+              <span className="text-[11px] font-semibold text-text">{label}</span>
+            </Link>
+          ))}
         </div>
       </motion.div>
 
       {/* Recent activity */}
-      <motion.div variants={item} className="flex items-center justify-between pt-1">
-        <h2 className="font-display text-lg font-semibold">Recent activity</h2>
-        <Link href="/activity" className="inline-flex items-center gap-1 text-sm text-mint hover:underline">
-          See all <ChevronRightIcon size={15} />
-        </Link>
-      </motion.div>
-
       <motion.div variants={item}>
-        <div className="card p-0">
-          <motion.div variants={list} initial="hidden" animate="show" className="divide-y divide-line">
-            {recent.map((e) => (
-              <motion.div
-                variants={item}
-                key={e.id}
-                whileHover={{ x: 3 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                className="flex items-center justify-between px-5 py-3.5"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                      e.direction === 'credit' ? 'bg-mint/10 text-mint' : 'bg-surface-2 text-muted'
-                    }`}
-                  >
-                    {e.direction === 'credit' ? <ReceiveIcon size={16} /> : <SendIcon size={16} />}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">
-                      {e.transaction?.description ?? e.transaction?.type ?? 'Movement'}
-                    </div>
-                    <div className="text-xs text-muted">{shortDate(e.created_at)}</div>
-                  </div>
-                </div>
-                <div className={`font-num text-sm ${e.direction === 'credit' ? 'text-mint' : 'text-text'}`}>
-                  {e.direction === 'credit' ? '+' : '−'}
-                  {ngn(e.amount)}
-                </div>
-              </motion.div>
-            ))}
-            {recent.length === 0 && (
-              <div className="flex flex-col items-center gap-3 px-5 py-12 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint/10 text-mint">
-                  <WalletIcon size={24} />
-                </span>
-                <p className="text-sm text-muted">No movements yet.</p>
-                <Link
-                  href="/add-money"
-                  className="btn inline-flex items-center gap-1.5 bg-mint px-4 py-2 text-sm text-white hover:bg-mint-strong"
-                >
-                  <PlusIcon size={15} /> Add money
-                </Link>
-              </div>
-            )}
-          </motion.div>
+        <div className="flex items-center justify-between px-0.5">
+          <h2 className="text-sm font-semibold text-text">Recent activity</h2>
+          <Link href="/activity" className="text-xs font-medium text-mint hover:underline">
+            See all
+          </Link>
         </div>
+
+        <div className="card mt-2 overflow-hidden p-0">
+          {recent.length > 0 ? (
+            <ul className="divide-y divide-line">
+              {recent.map((e) => (
+                <li key={e.id}>
+                  <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                          e.direction === 'credit' ? 'bg-mint/10 text-mint' : 'bg-surface-2 text-muted'
+                        }`}
+                      >
+                        {e.direction === 'credit' ? <ReceiveIcon size={16} /> : <SendIcon size={16} />}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {e.transaction?.description ?? e.transaction?.type ?? 'Movement'}
+                        </p>
+                        <p className="text-xs text-muted">{shortDate(e.created_at)}</p>
+                      </div>
+                    </div>
+                    <span className={`shrink-0 font-num text-sm font-semibold ${e.direction === 'credit' ? 'text-mint' : 'text-text'}`}>
+                      {e.direction === 'credit' ? '+' : '−'}
+                      {ngn(e.amount)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-mint/10 text-mint">
+                <WalletIcon size={22} />
+              </span>
+              <p className="text-sm text-muted">No transactions yet</p>
+              <Link
+                href="/add-money"
+                className="btn inline-flex items-center gap-1.5 bg-mint px-4 py-2 text-sm text-white hover:bg-mint-strong"
+              >
+                <PlusIcon size={15} /> Add money
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {(flow.inflow > 0 || flow.outflow > 0) && (
+          <p className="mt-2 px-0.5 text-xs text-muted">
+            This period: <span className="font-num font-medium text-mint">+{ngn(flow.inflow)}</span>
+            {' · '}
+            <span className="font-num font-medium text-text">−{ngn(flow.outflow)}</span>
+          </p>
+        )}
       </motion.div>
     </motion.div>
   )
@@ -333,53 +328,77 @@ export default function Dashboard() {
 
 Dashboard.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
 
-function Service({
-  to,
+function QuickAction({
+  href,
   label,
   Icon,
-  tone,
+  primary = false,
+  highlight = false,
 }: {
-  to: string
+  href: string
   label: string
   Icon: (p: { size?: number }) => JSX.Element
-  tone: string
+  primary?: boolean
+  highlight?: boolean
 }) {
   return (
-    <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.95 }} transition={{ type: 'spring', stiffness: 400, damping: 22 }}>
-      <Link href={to} className="tile flex flex-col items-center gap-2 px-2 py-3.5">
-        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${toneClass[tone] ?? toneClass.mint}`}>
-          <Icon size={20} />
-        </span>
-        <span className="text-center text-[11px] font-semibold leading-tight text-text sm:text-xs">{label}</span>
-      </Link>
-    </motion.div>
+    <Link
+      href={href}
+      className={`elevate relative flex min-h-[4.5rem] flex-col items-center justify-center gap-2 rounded-2xl border px-3 py-3.5 text-center transition ${
+        primary
+          ? 'border-mint/30 bg-mint text-white hover:bg-mint-strong'
+          : highlight
+            ? 'border-amber/35 bg-amber/[0.06] hover:border-amber/50'
+            : 'border-line bg-surface hover:border-mint/25'
+      }`}
+    >
+      {highlight && !primary && (
+        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-amber ring-2 ring-surface" />
+      )}
+      <Icon size={22} className={primary ? 'text-white' : highlight ? 'text-amber' : 'text-mint'} />
+      <span className={`text-xs font-semibold sm:text-sm ${primary ? 'text-white' : 'text-text'}`}>{label}</span>
+    </Link>
   )
 }
 
-function FlowBar({
-  label,
-  value,
-  pct,
-  tone,
-}: {
-  label: string
-  value: string
-  pct: number
-  tone: 'mint' | 'muted'
-}) {
+function TrustRing({ score, className }: { score: number; className: string }) {
+  const radius = 36
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (score / 100) * circumference
+
   return (
-    <div>
-      <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-muted">{label}</span>
-        <span className="font-num font-semibold text-text">{value}</span>
+    <div className="flex shrink-0 flex-col items-center gap-1">
+      <div className="relative h-24 w-24">
+        <svg className="h-full w-full -rotate-90" viewBox="0 0 96 96" aria-hidden>
+          <circle cx="48" cy="48" r={radius} fill="none" stroke="currentColor" strokeWidth="8" className="text-surface-2" />
+          <circle
+            cx="48"
+            cy="48"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            className={className}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-num text-2xl font-bold leading-none">{score}</span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted">Score</span>
+        </div>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface-2">
-        <motion.div
-          className={`h-full rounded-full ${tone === 'mint' ? 'bg-mint' : 'bg-muted/50'}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${Math.max(pct, 3)}%` }}
-          transition={{ type: 'spring', stiffness: 120, damping: 22, delay: 0.15 }}
-        />
+    </div>
+  )
+}
+
+function TrustStat({ label, value, warn = false }: { label: string; value: number; warn?: boolean }) {
+  return (
+    <div className="rounded-xl border border-line bg-surface-2/50 px-3 py-2.5 text-center">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted">{label}</div>
+      <div className={`mt-0.5 font-num text-xl font-bold ${warn && value > 0 ? 'text-danger' : 'text-text'}`}>
+        {value}
       </div>
     </div>
   )

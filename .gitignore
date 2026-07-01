@@ -36,6 +36,10 @@ docker-compose.override.yml
 /.nova
 /.vscode
 /.zed
+/.cursor
+
+# Accidental local binaries
+composer.phar
 
 # OS files
 .DS_Store

@@ -19,7 +19,11 @@ use App\Domain\Fraud\Rules\NewDeviceRule;
 use App\Domain\Fraud\Rules\VelocityRule;
 use App\Domain\Fraud\Services\FraudService;
 use App\Domain\Fraud\Services\RuleBasedFraudScorer;
-use App\Domain\Ledger\Services\LedgerService;
+use App\Domain\Marketplace\Models\DigitalListing;
+use App\Domain\Marketplace\Models\DigitalOrder;
+use App\Domain\Marketplace\Policies\DigitalListingPolicy;
+use App\Domain\Marketplace\Policies\DigitalOrderPolicy;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Ledger\Services\SystemAccountResolver;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
@@ -38,6 +42,7 @@ use App\Domain\Recovery\Services\RecoveryService;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Transfers\Policies\TransferPolicy;
 use App\Domain\Transfers\Services\TransferService;
+use App\Observers\TransferMarketplaceObserver;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Policies\WalletPolicy;
 use App\Domain\Wallet\Services\WalletService;
@@ -58,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SystemAccountResolver::class);
         $this->app->singleton(WalletService::class);
         $this->app->singleton(TransferService::class);
+        $this->app->singleton(DigitalMarketplaceService::class);
         $this->app->singleton(CallbackService::class);
         $this->app->singleton(RecoveryService::class);
         $this->app->singleton(BillPaymentService::class);
@@ -101,6 +107,8 @@ class AppServiceProvider extends ServiceProvider
         // rather than relying on convention-based discovery.
         Gate::policy(Wallet::class, WalletPolicy::class);
         Gate::policy(Transfer::class, TransferPolicy::class);
+        Gate::policy(DigitalListing::class, DigitalListingPolicy::class);
+        Gate::policy(DigitalOrder::class, DigitalOrderPolicy::class);
         Gate::policy(Callback::class, CallbackPolicy::class);
         Gate::policy(Recovery::class, RecoveryPolicy::class);
         Gate::policy(Deposit::class, DepositPolicy::class);
@@ -108,5 +116,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PaymentRequest::class, PaymentRequestPolicy::class);
         Gate::policy(StaticAccount::class, StaticAccountPolicy::class);
         Gate::policy(BillPayment::class, BillPaymentPolicy::class);
+
+        Transfer::observe(TransferMarketplaceObserver::class);
     }
 }

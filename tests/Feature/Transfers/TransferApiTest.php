@@ -42,7 +42,7 @@ it('creates a normal transfer that settles immediately', function () {
         ->and($to->fresh()->balance)->toBe(25000);
 });
 
-it('creates a protected transfer that holds funds in escrow', function () {
+it('creates a protected transfer with receiver pending balance', function () {
     [$sender, $from] = partyWithWallet(1_000_00);
     [, $to] = partyWithWallet();
 
@@ -57,7 +57,9 @@ it('creates a protected transfer that holds funds in escrow', function () {
         ->assertJsonPath('data.status', 'held');
 
     expect($from->fresh()->balance)->toBe(60000)
-        ->and($to->fresh()->balance)->toBe(0);
+        ->and($to->fresh()->balance)->toBe(40000)
+        ->and($to->fresh()->held_balance)->toBe(40000)
+        ->and($to->fresh()->availableMinor())->toBe(0);
 });
 
 it('rejects a transfer with the wrong pin', function () {

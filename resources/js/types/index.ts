@@ -7,6 +7,14 @@ export type TransferReceipt = {
   recipient_name: string
 }
 
+export type DashboardSummary = {
+  pending_callbacks: number
+  open_recoveries: number
+  protected_transfers_pending: number
+  open_fraud_alerts: number
+  trust_score: number
+}
+
 export type DemoInfo = {
   password: string
   pin: string

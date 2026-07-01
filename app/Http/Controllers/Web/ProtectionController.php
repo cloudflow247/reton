@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Web;
 use App\Domain\Auth\Services\PinService;
 use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Services\CallbackService;
+use App\Domain\Marketplace\Models\DigitalOrder;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Recovery\Models\Recovery;
 use App\Domain\Recovery\Services\RecoveryService;
 use App\Domain\Transfers\Models\Transfer;
@@ -21,6 +23,7 @@ use App\Http\Requests\Api\V1\Recovery\ReportRecoveryRequest;
 use App\Http\Requests\Api\V1\Recovery\ReturnRecoveryRequest;
 use App\Http\Requests\Api\V1\Transfer\ReleaseTransferRequest;
 use App\Http\Resources\Api\V1\CallbackResource;
+use App\Http\Resources\Api\V1\DigitalOrderResource;
 use App\Http\Resources\Api\V1\RecoveryResource;
 use App\Http\Resources\Api\V1\TransferResource;
 use App\Models\User;
@@ -38,6 +41,7 @@ class ProtectionController extends Controller
         private readonly CallbackService $callbacks,
         private readonly RecoveryService $recoveries,
         private readonly PinService $pins,
+        private readonly DigitalMarketplaceService $marketplace,
     ) {}
 
     public function index(Request $request): Response
@@ -65,11 +69,18 @@ class ProtectionController extends Controller
             ->latest()
             ->get();
 
+        $digitalOrders = DigitalOrder::query()
+            ->where(fn ($q) => $q->where('buyer_id', $user->getKey())->orWhere('seller_id', $user->getKey()))
+            ->with(['listing', 'transfer.hold'])
+            ->latest()
+            ->get();
+
         return Inertia::render('Protection', [
             'walletId' => $walletId,
             'transfers' => TransferResource::collection($transfers),
             'callbacks' => CallbackResource::collection($callbacks),
             'recoveries' => RecoveryResource::collection($recoveries),
+            'digitalOrders' => DigitalOrderResource::collection($digitalOrders),
         ]);
     }
 
@@ -80,6 +91,8 @@ class ProtectionController extends Controller
         /** @var User $user */
         $user = $request->user();
         $this->verifyPin($this->pins, $user, $request->string('pin')->toString());
+
+        $this->marketplace->assertBuyerCanRelease($transfer);
 
         $this->transfers->release($transfer);
 
@@ -93,6 +106,15 @@ class ProtectionController extends Controller
         /** @var User $user */
         $user = $request->user();
         $this->verifyPin($this->pins, $user, $request->string('pin')->toString());
+
+        $order = DigitalOrder::query()->where('transfer_id', $transfer->id)->first();
+        if ($order instanceof DigitalOrder) {
+            $this->marketplace->assertCanInitiateGenericCallback(
+                $order,
+                $user,
+                $request->string('reason')->toString(),
+            );
+        }
 
         $this->callbacks->initiate($transfer, $user, $request->string('reason')->toString());
 

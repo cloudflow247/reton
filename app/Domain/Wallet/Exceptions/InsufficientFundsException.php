@@ -17,6 +17,13 @@ final class InsufficientFundsException extends DomainException implements Render
         );
     }
 
+    public static function heldFor(string $walletId, Money $available, Money $requested): self
+    {
+        return new self(
+            "Wallet [{$walletId}] does not have {$requested} available to reverse (available {$available})."
+        );
+    }
+
     public function apiStatus(): int
     {
         return 422;

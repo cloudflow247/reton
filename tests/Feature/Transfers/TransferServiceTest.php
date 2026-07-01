@@ -56,20 +56,25 @@ it('completes a normal transfer immediately', function () {
         ->and($to->fresh()->balance)->toBe(30000);
 });
 
-it('holds funds in escrow for a protected transfer', function () {
+it('holds protected funds as receiver pending balance', function () {
     [$sender, $from] = fundedWallet(1_000_00);
     [, $to] = fundedWallet(0);
 
     $transfer = transfers()->sendProtected($sender, $from, $to, Money::of(400_00, 'NGN'));
 
+    $receiver = $to->fresh();
+
     expect($transfer->type)->toBe(TransferType::Protected)
         ->and($transfer->status)->toBe(TransferStatus::Held)
-        ->and($from->fresh()->balance)->toBe(60000)   // sender debited
-        ->and($to->fresh()->balance)->toBe(0)          // receiver NOT yet credited
-        ->and(escrowBalanceMinor())->toBe(40000)       // funds sit in escrow
+        ->and($from->fresh()->balance)->toBe(60000)
+        ->and($from->fresh()->held_balance)->toBe(0)
+        ->and($from->fresh()->availableMinor())->toBe(60000)
+        ->and($receiver->balance)->toBe(40000)
+        ->and($receiver->held_balance)->toBe(40000)
+        ->and($receiver->availableMinor())->toBe(0)
+        ->and(escrowBalanceMinor())->toBe(0)
         ->and($transfer->hold)->not->toBeNull()
-        ->and($transfer->hold->status)->toBe(HoldStatus::Active)
-        ->and($transfer->hold->expires_at)->not->toBeNull();
+        ->and($transfer->hold->status)->toBe(HoldStatus::Active);
 });
 
 it('refuses a protected transfer that exceeds the available balance', function () {
@@ -79,16 +84,20 @@ it('refuses a protected transfer that exceeds the available balance', function (
     transfers()->sendProtected($sender, $from, $to, Money::of(500_00, 'NGN'));
 })->throws(InsufficientFundsException::class);
 
-it('releases a protected transfer to the receiver', function () {
+it('releases pending funds to the receiver available balance', function () {
     [$sender, $from] = fundedWallet(1_000_00);
     [, $to] = fundedWallet(0);
 
     $transfer = transfers()->sendProtected($sender, $from, $to, Money::of(400_00, 'NGN'));
     $released = transfers()->release($transfer);
 
+    $receiver = $to->fresh();
+
     expect($released->status)->toBe(TransferStatus::Completed)
         ->and($released->hold->fresh()->status)->toBe(HoldStatus::Released)
-        ->and($to->fresh()->balance)->toBe(40000)
+        ->and($receiver->balance)->toBe(40000)
+        ->and($receiver->held_balance)->toBe(0)
+        ->and($receiver->availableMinor())->toBe(40000)
         ->and(escrowBalanceMinor())->toBe(0);
 });
 
@@ -101,8 +110,9 @@ it('refunds a protected transfer back to the sender', function () {
 
     expect($refunded->status)->toBe(TransferStatus::Refunded)
         ->and($refunded->hold->fresh()->status)->toBe(HoldStatus::Refunded)
-        ->and($from->fresh()->balance)->toBe(100000)   // sender made whole
+        ->and($from->fresh()->balance)->toBe(100000)
         ->and($to->fresh()->balance)->toBe(0)
+        ->and($to->fresh()->held_balance)->toBe(0)
         ->and(escrowBalanceMinor())->toBe(0);
 });
 
@@ -130,7 +140,6 @@ it('conserves money across a protected hold and release', function () {
     $transfer = transfers()->sendProtected($sender, $from, $to, Money::of(250_00, 'NGN'));
     transfers()->release($transfer);
 
-    $total = Wallet::sum('balance') + escrowBalanceMinor();
-
-    expect($total)->toBe(100000); // the originally funded 1,000.00 NGN, intact
+    expect(Wallet::sum('balance'))->toBe(100000)
+        ->and(escrowBalanceMinor())->toBe(0);
 });

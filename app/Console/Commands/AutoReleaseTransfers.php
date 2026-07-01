@@ -8,6 +8,7 @@ use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Models\Callback;
 use App\Domain\Transfers\Enums\HoldStatus;
 use App\Domain\Transfers\Enums\TransferStatus;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Transfers\Models\Hold;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Transfers\Services\TransferService;
@@ -25,18 +26,23 @@ class AutoReleaseTransfers extends Command
 
     protected $description = 'Release protected transfers whose hold has expired and that have no open callback';
 
-    public function handle(TransferService $transfers): int
+    public function handle(TransferService $transfers, DigitalMarketplaceService $marketplace): int
     {
         $released = 0;
 
         Hold::query()
             ->where('status', HoldStatus::Active->value)
+            ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now())
             ->with('transfer')
-            ->each(function (Hold $hold) use ($transfers, &$released): void {
+            ->each(function (Hold $hold) use ($transfers, $marketplace, &$released): void {
                 $transfer = $hold->transfer;
 
                 if (! $transfer instanceof Transfer || $transfer->status !== TransferStatus::Held) {
+                    return;
+                }
+
+                if ($marketplace->blocksAutoRelease($hold, $transfer)) {
                     return;
                 }
 

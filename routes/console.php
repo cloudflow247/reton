@@ -3,6 +3,7 @@
 use App\Console\Commands\AutoReleaseTransfers;
 use App\Console\Commands\EscalateRecoveries;
 use App\Console\Commands\ExpireCallbacks;
+use App\Console\Commands\ExpireUndeliveredDigitalOrders;
 use App\Console\Commands\PollStaticAccounts;
 use App\Console\Commands\ReconcileDeposits;
 use App\Console\Commands\ReconcilePayouts;
@@ -27,6 +28,10 @@ Artisan::command('inspire', function () {
 */
 
 Schedule::command(ExpireCallbacks::class)
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+Schedule::command(ExpireUndeliveredDigitalOrders::class)
     ->everyFiveMinutes()
     ->withoutOverlapping();
 

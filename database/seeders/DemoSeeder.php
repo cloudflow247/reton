@@ -50,5 +50,7 @@ class DemoSeeder extends Seeder
                 app(WalletService::class)->fund($wallet, Money::of($fund, 'NGN'));
             }
         }
+
+        $this->call(DigitalMarketplaceDemoSeeder::class);
     }
 }

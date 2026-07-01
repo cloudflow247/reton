@@ -8,10 +8,12 @@ use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\BillsController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\MarketplaceController;
 use App\Http\Controllers\Web\PinController;
 use App\Http\Controllers\Web\ProtectionController;
 use App\Http\Controllers\Web\SendController;
 use App\Http\Controllers\Web\WalletLookupController;
+use App\Http\Controllers\Web\WellKnownController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -34,6 +36,20 @@ Route::inertia('/business', 'Public/Business')->name('business');
 Route::inertia('/about', 'Public/About')->name('about');
 Route::inertia('/faq', 'Public/Faq')->name('faq');
 Route::inertia('/contact', 'Public/Contact')->name('contact');
+
+/*
+|--------------------------------------------------------------------------
+| Shareable links & mobile deep-link association
+|--------------------------------------------------------------------------
+| /l/{uuid} is the canonical listing URL for WhatsApp shares and future
+| Universal Links / App Links. Keep this path stable across web and mobile.
+*/
+Route::get('/.well-known/apple-app-site-association', [WellKnownController::class, 'appleAppSiteAssociation'])
+    ->name('well-known.aasa');
+Route::get('/.well-known/assetlinks.json', [WellKnownController::class, 'assetLinks'])
+    ->name('well-known.assetlinks');
+
+Route::get('/l/{listing}', [MarketplaceController::class, 'show'])->name('marketplace.listings.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +100,14 @@ Route::middleware('auth')->group(function () {
     // Transaction PIN
     Route::inertia('/pin', 'SetPin')->name('pin');
     Route::post('/pin', [PinController::class, 'update'])->name('pin.update');
+
+    // Digital marketplace — protected purchases between users
+    Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace');
+    Route::post('/marketplace/listings', [MarketplaceController::class, 'store'])->name('marketplace.listings.store');
+    Route::post('/marketplace/listings/{listing}/purchase', [MarketplaceController::class, 'purchase'])->name('marketplace.listings.purchase');
+    Route::post('/marketplace/orders/{order}/deliver', [MarketplaceController::class, 'deliver'])->name('marketplace.orders.deliver');
+    Route::post('/marketplace/orders/{order}/confirm', [MarketplaceController::class, 'confirm'])->name('marketplace.orders.confirm');
+    Route::post('/marketplace/orders/{order}/dispute', [MarketplaceController::class, 'dispute'])->name('marketplace.orders.dispute');
 
     // Protection center — held transfers, callbacks, recoveries
     Route::get('/protection', [ProtectionController::class, 'index'])->name('protection');

@@ -169,6 +169,76 @@ class WalletService
         $this->assertSufficientFunds($wallet, $amount);
     }
 
+    /**
+     * Protected transfer hold: funds are credited on the ledger but cannot be
+     * spent until the protected transfer is released to the receiver.
+     */
+    public function holdIncoming(Wallet $wallet, Money $amount): void
+    {
+        $this->assertCurrency($wallet, $amount);
+
+        Wallet::whereKey($wallet->getKey())->increment('held_balance', $amount->amount);
+    }
+
+    /**
+     * Unlock previously held incoming funds so they become part of available balance.
+     */
+    public function releaseIncomingHold(Wallet $wallet, Money $amount): void
+    {
+        $this->assertCurrency($wallet, $amount);
+
+        $updated = Wallet::whereKey($wallet->getKey())
+            ->where('held_balance', '>=', $amount->amount)
+            ->decrement('held_balance', $amount->amount);
+
+        if ($updated === 0) {
+            throw InsufficientFundsException::heldFor((string) $wallet->getKey(), $wallet->fresh()->available(), $amount);
+        }
+    }
+
+    /**
+     * Reverse a protected transfer: unwind the receiver's pending hold and move
+     * ledger funds back to the sender (callback refund / dispute upheld).
+     */
+    public function reverseProtected(
+        Wallet $receiver,
+        Wallet $sender,
+        Money $amount,
+        ?string $idempotencyKey = null,
+        ?string $description = null,
+    ): Transaction {
+        $this->assertCurrency($receiver, $amount);
+        $this->assertCurrency($sender, $amount);
+
+        if (($replay = $this->ledger->findByIdempotencyKey($idempotencyKey)) !== null) {
+            return $replay;
+        }
+
+        return DB::transaction(function () use ($receiver, $sender, $amount, $idempotencyKey, $description): Transaction {
+            $locked = Wallet::whereKey($receiver->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($locked->balance < $amount->amount || $locked->held_balance < $amount->amount) {
+                throw InsufficientFundsException::heldFor((string) $receiver->getKey(), $locked->available(), $amount);
+            }
+
+            Wallet::whereKey($receiver->getKey())
+                ->where('held_balance', '>=', $amount->amount)
+                ->decrement('held_balance', $amount->amount);
+
+            return $this->ledger->post(
+                PostingDraft::for(TransactionType::CallbackRefund)
+                    ->describedAs($description ?? 'Protected transfer refunded to sender')
+                    ->idempotentBy($idempotencyKey)
+                    ->withMetadata([
+                        'from_wallet_id' => $receiver->getKey(),
+                        'to_wallet_id' => $sender->getKey(),
+                    ])
+                    ->debit($receiver->ledger_account_id, $amount)
+                    ->credit($sender->ledger_account_id, $amount)
+            );
+        });
+    }
+
     private function assertCurrency(Wallet $wallet, Money $amount): void
     {
         if ($wallet->currency !== $amount->currency) {
