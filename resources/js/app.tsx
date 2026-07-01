@@ -1,13 +1,11 @@
-import { configureEcho } from '@laravel/echo-react'
 import { createInertiaApp } from '@inertiajs/react'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { createRoot } from 'react-dom/client'
+import { setupEcho } from '@/lib/broadcasting'
 import { AppProviders } from '@/providers/AppProviders'
 import '../css/app.css'
 
-configureEcho({
-  broadcaster: 'reverb',
-})
+setupEcho()
 
 const appName = import.meta.env.VITE_APP_NAME ?? 'Reton'
 

@@ -159,6 +159,37 @@ file that does not exist on the Cloud runtime — so every query fails.
    `php artisan migrate --force` (and `db:seed --class=DemoSeeder --force` if
    using demo mode) from the Commands tab.
 
+### Blank dashboard after login (Inertia shell loads, page is empty)
+
+Symptom — login succeeds and the URL is `/dashboard`, but the content area is
+empty (no nav, no balance card). The browser tab title may still update.
+
+1. **Open DevTools → Console** on the deployed site. A JavaScript error on the
+   Dashboard chunk (often from Reverb/Echo) prevents React from mounting.
+2. **Reverb is optional for v1 Cloud deploys.** The frontend only connects when
+   `VITE_REVERB_APP_KEY` was present at **build time**. If you have not
+   provisioned Reverb yet, redeploy after pulling the latest code — Dashboard
+   and Protection work without WebSockets; live trust reloads are simply disabled.
+3. **When you add Reverb later**, set build-time variables on Laravel Cloud
+   (same values as runtime):
+
+   ```ini
+   BROADCAST_CONNECTION=reverb
+   REVERB_APP_ID=reton
+   REVERB_APP_KEY=<generated>
+   REVERB_APP_SECRET=<generated>
+   REVERB_HOST=<your-reverb-host>
+   REVERB_PORT=443
+   REVERB_SCHEME=https
+   VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+   VITE_REVERB_HOST="${REVERB_HOST}"
+   VITE_REVERB_PORT="${REVERB_PORT}"
+   VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+   ```
+
+4. Confirm **Postgres is attached** (see above) — a 500 on the first dashboard
+   query can also present as a blank Inertia page if the error body is empty.
+
 ## 8. First-deploy checklist
 
 - [ ] Postgres + Redis attached

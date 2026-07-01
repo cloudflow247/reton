@@ -70,7 +70,7 @@ export default function Dashboard() {
   const pendingBalance = wallet?.held_balance ?? 0
   const animatedAvailable = useCountUp(availableBalance)
   const hasPending = pendingBalance > 0
-  const recent = (activity ?? []).slice(0, 5)
+  const recent = (Array.isArray(activity) ? activity : []).slice(0, 5)
   const firstName = (auth.user?.name ?? 'there').split(' ')[0]
 
   const trust = summary ?? {
@@ -87,7 +87,7 @@ export default function Dashboard() {
   const tone = trustTone(trust.trust_score)
 
   const flow = useMemo(() => {
-    const entries = activity ?? []
+    const entries = Array.isArray(activity) ? activity : []
     const inflow = entries.filter((e) => e.direction === 'credit').reduce((s, e) => s + e.amount, 0)
     const outflow = entries.filter((e) => e.direction === 'debit').reduce((s, e) => s + e.amount, 0)
     return { inflow, outflow }

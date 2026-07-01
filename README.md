@@ -81,4 +81,4 @@ Set `QUEUE_CONNECTION=redis`, `BROADCAST_CONNECTION=reverb`, and the `REVERB_*` 
 php artisan test
 ```
 
-See `CHANGELOG.md` for release notes and `docs/` for the build roadmap and milestone specs.
+See `CHANGELOG.md` for release notes and `docs/release-2026-06-30/TEAM_BRIEF.md` for screenshots, topology, and a team demo script.

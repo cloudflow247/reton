@@ -29,7 +29,7 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'summary' => $this->summary->forUser($user)->toArray(),
             'activity' => $wallet instanceof Wallet
-                ? StatementEntryResource::collection($this->recentEntries($wallet))
+                ? StatementEntryResource::collection($this->recentEntries($wallet))->resolve()
                 : [],
         ]);
     }
