@@ -9,8 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('shares wallets as a plain list for inertia', function () {
-    $user = User::factory()->create();
-    app(WalletService::class)->open($user, 'NGN');
+    [$user] = readyUserWithWallet();
 
     $wallets = $this->actingAs($user)->get('/dashboard')
         ->assertOk()

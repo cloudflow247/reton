@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@inertiajs/react'
 import { motion } from 'framer-motion'
+import { AuthStepIndicator } from './AuthStepIndicator'
 import { Logo, Wordmark } from './ui'
 import { PoweredByAlatInline } from './PoweredByAlat'
 import { LockIcon, ScanIcon, ShieldIcon, SparkleIcon, UndoIcon } from './icons'
@@ -13,13 +14,24 @@ const pillars = [
 
 const ease = [0.22, 1, 0.36, 1] as const
 
-export function AuthLayout({ children, title, sub }: { children: ReactNode; title: string; sub: string }) {
+export function AuthLayout({
+  children,
+  title,
+  sub,
+  step,
+  totalSteps,
+}: {
+  children: ReactNode
+  title: string
+  sub: string
+  step?: number
+  totalSteps?: number
+}) {
   return (
     <div className="relative min-h-full overflow-hidden">
       <div className="aurora" aria-hidden />
 
       <div className="relative mx-auto grid min-h-full max-w-6xl items-center gap-12 px-6 py-10 lg:grid-cols-[1.05fr_minmax(0,1fr)] lg:gap-16 lg:py-16">
-        {/* Thesis: the most characteristic thing about Reton is that money can come back. */}
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -30,7 +42,6 @@ export function AuthLayout({ children, title, sub }: { children: ReactNode; titl
             <Wordmark size={34} />
           </Link>
 
-          {/* Animated trust mark */}
           <div className="relative mt-12 inline-flex h-16 w-16 items-center justify-center">
             <span className="trust-ring absolute inset-0 rounded-full" aria-hidden />
             <span className="absolute inset-[2px] flex items-center justify-center rounded-full bg-surface shadow-sm">
@@ -46,8 +57,7 @@ export function AuthLayout({ children, title, sub }: { children: ReactNode; titl
             The first wallet with an <span className="gradient-text">undo button</span> for money.
           </h1>
           <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted">
-            Send with callback protection, recover wrong transfers, and let real-time fraud checks watch every
-            move. If something goes wrong, Reton can bring your money back.
+            Send with callback protection, recover wrong transfers, and let real-time fraud checks watch every move.
           </p>
 
           <div className="mt-10 space-y-3">
@@ -81,15 +91,23 @@ export function AuthLayout({ children, title, sub }: { children: ReactNode; titl
           transition={{ duration: 0.5, ease, delay: 0.1 }}
           className="card shield-glow mx-auto w-full max-w-md p-7 sm:p-8"
         >
-          <Link href="/" className="inline-flex lg:hidden">
-            <Wordmark />
+          <Link href="/" className="mx-auto flex w-fit flex-col items-center gap-2 lg:mx-0 lg:items-start">
+            <Logo size={44} />
+            <Wordmark size={26} />
           </Link>
-          <h2 className="mt-6 font-display text-[1.7rem] font-bold leading-tight tracking-tight lg:mt-0">
+
+          {totalSteps !== undefined && step !== undefined && (
+            <div className="mt-6">
+              <AuthStepIndicator step={step} total={totalSteps} />
+            </div>
+          )}
+
+          <h2 className="mt-4 text-center font-display text-[1.7rem] font-bold leading-tight tracking-tight lg:text-left">
             {title}
           </h2>
-          <p className="mt-1.5 text-sm text-muted">{sub}</p>
+          <p className="mt-1.5 text-center text-sm text-muted lg:text-left">{sub}</p>
           <div className="mt-7">{children}</div>
-          <p className="mt-7 flex items-center justify-center gap-1.5 border-t border-line pt-5 text-xs text-muted">
+          <p className="mt-7 flex items-center justify-center gap-1.5 border-t border-line pt-5 text-xs text-muted lg:justify-start">
             <LockIcon size={13} className="text-mint" /> Bank-grade encryption · your money is protected
           </p>
         </motion.section>

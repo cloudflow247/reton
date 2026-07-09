@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Head, Link, router, usePage } from '@inertiajs/react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { AuthLayout } from '@/components/AuthLayout'
@@ -12,14 +12,23 @@ import { deviceHeaders } from '@/lib/device'
 import { loginSchema, type LoginFormValues } from '@/lib/schemas/auth'
 import type { SharedProps } from '@/types'
 
+const slide = {
+  initial: { opacity: 0, x: 24 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -24 },
+}
+
 export default function Login() {
   const { demo } = usePage<SharedProps>().props
+  const [step, setStep] = useState(0)
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({})
   const [processing, setProcessing] = useState(false)
 
   const {
     register,
     handleSubmit,
+    trigger,
+    getValues,
     setError,
     resetField,
     formState: { errors },
@@ -50,11 +59,19 @@ export default function Login() {
     postLogin({ email, password: demo.password })
   }
 
+  async function nextStep() {
+    const ok = await trigger('email')
+    if (ok) setStep(1)
+  }
+
+  const titles = ['Welcome back', 'Enter your password']
+  const subs = ['Sign in to your Reton wallet.', `Signing in as ${getValues('email') || 'you'}.`]
+
   return (
-    <AuthLayout title="Welcome back" sub="Sign in to your Reton wallet.">
+    <AuthLayout title={titles[step]} sub={subs[step]} step={step} totalSteps={2}>
       <Head title="Sign in" />
 
-      {demo && (
+      {demo && step === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -64,7 +81,7 @@ export default function Login() {
             <SparkleIcon size={14} /> Try it instantly
           </div>
           <p className="mt-1.5 text-xs leading-relaxed text-muted">
-            Tap a demo account to sign in — no signup needed. Transaction PIN for payments is{' '}
+            Tap a demo account — PIN for payments is{' '}
             <span className="font-num font-semibold text-text">{demo.pin}</span>.
           </p>
           <div className="mt-3 space-y-2">
@@ -80,48 +97,62 @@ export default function Login() {
                   <span className="block text-sm font-semibold text-text">{a.name}</span>
                   <span className="block truncate text-xs text-muted">{a.email}</span>
                 </span>
-                <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-mint">
-                  Use
-                  <ArrowRightIcon size={14} className="transition-transform group-hover:translate-x-0.5" />
-                </span>
+                <ArrowRightIcon size={14} className="shrink-0 text-mint transition group-hover:translate-x-0.5" />
               </button>
             ))}
           </div>
         </motion.div>
       )}
 
-      {demo && (
-        <div className="mb-6 flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-muted">
-          <span className="h-px flex-1 bg-line" />
-          or sign in with email
-          <span className="h-px flex-1 bg-line" />
-        </div>
-      )}
-
       <form onSubmit={handleSubmit(postLogin)} className="space-y-4" noValidate>
-        <RhfField
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          autoComplete="email"
-          error={fieldErrorMessage(errors.email, serverErrors.email)}
-          {...register('email')}
-        />
-        <RhfField
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          autoComplete="current-password"
-          error={fieldErrorMessage(errors.password, serverErrors.password)}
-          {...register('password')}
-        />
-        <Button type="submit" loading={processing} className="group mt-1 w-full">
-          <span className="inline-flex items-center justify-center gap-2">
-            Sign in
-            <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />
-          </span>
-        </Button>
+        <AnimatePresence mode="wait">
+          {step === 0 ? (
+            <motion.div key="email" {...slide} transition={{ duration: 0.22 }} className="space-y-4">
+              <RhfField
+                label="Email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                autoFocus
+                error={fieldErrorMessage(errors.email, serverErrors.email)}
+                {...register('email')}
+              />
+              <Button type="button" onClick={nextStep} className="group mt-1 w-full">
+                <span className="inline-flex items-center justify-center gap-2">
+                  Continue
+                  <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div key="password" {...slide} transition={{ duration: 0.22 }} className="space-y-4">
+              <RhfField
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                autoFocus
+                error={fieldErrorMessage(errors.password, serverErrors.password)}
+                {...register('password')}
+              />
+              <Button type="submit" loading={processing} className="group mt-1 w-full">
+                <span className="inline-flex items-center justify-center gap-2">
+                  Sign in
+                  <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Button>
+              <button
+                type="button"
+                onClick={() => setStep(0)}
+                className="w-full text-center text-sm text-muted transition hover:text-mint"
+              >
+                ← Use a different email
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </form>
+
       <p className="mt-6 text-center text-sm text-muted">
         New to Reton?{' '}
         <Link href="/register" className="font-semibold text-mint hover:underline">

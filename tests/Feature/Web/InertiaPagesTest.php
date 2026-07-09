@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\Money\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -20,7 +21,9 @@ uses(RefreshDatabase::class);
  */
 function webUser(int $fundMinor = 0, string $pin = '1234'): array
 {
-    $user = User::factory()->create(['transaction_pin' => Hash::make($pin)]);
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->forceFill(['transaction_pin' => Hash::make($pin)])->save();
+    $user->refresh();
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     if ($fundMinor > 0) {
@@ -70,23 +73,29 @@ it('sends authenticated users from / to the dashboard', function () {
 | Session auth
 |--------------------------------------------------------------------------
 */
-it('registers a user, opens a wallet, and signs them in', function () {
+it('registers a user, opens a wallet, and sends them to verify email', function () {
+    Mail::fake();
+
     $this->post('/register', [
         'name' => 'Ada Lovelace',
         'email' => 'ada@retonpay.com',
         'phone' => '+2348012345678',
         'password' => 'Sup3r-Secret!',
         'password_confirmation' => 'Sup3r-Secret!',
-    ])->assertRedirect('/dashboard');
+    ])->assertRedirect(route('verification.notice'));
 
     $this->assertAuthenticated();
 
     $user = User::where('email', 'ada@retonpay.com')->firstOrFail();
-    expect($user->wallets()->count())->toBe(1);
+    expect($user->wallets()->count())->toBe(1)
+        ->and($user->email_verified_at)->toBeNull();
+
+    Mail::assertSent(\App\Mail\VerifyEmailMail::class);
 });
 
 it('logs in with valid credentials', function () {
     $user = User::factory()->create(['password' => Hash::make('password')]);
+    $user->forceFill(['transaction_pin' => Hash::make('1234')])->save();
 
     $this->post('/login', ['email' => $user->email, 'password' => 'password'])
         ->assertRedirect('/dashboard');

@@ -55,8 +55,7 @@ it('upgrades to tier 3 with nin and address', function () {
 });
 
 it('provisions a collection static account for tier 1 users via web', function () {
-    $user = User::factory()->create();
-    $wallet = app(WalletService::class)->open($user, 'NGN');
+    [$user, $wallet] = readyUserWithWallet();
 
     $this->actingAs($user)->post('/static-account', ['wallet_id' => $wallet->id])
         ->assertRedirect()
@@ -79,7 +78,7 @@ it('renders add money with kyc and static account props', function () {
 });
 
 it('renders profile with kyc props', function () {
-    $user = User::factory()->create();
+    $user = readyUser();
 
     $this->actingAs($user)->get('/profile')
         ->assertOk()

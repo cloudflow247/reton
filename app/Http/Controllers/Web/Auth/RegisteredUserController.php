@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web\Auth;
 
 use App\Domain\Auth\Data\DeviceContext;
 use App\Domain\Auth\Services\AuthService;
+use App\Http\Controllers\Web\Concerns\RedirectsAfterAuth;
 use App\Http\Controllers\Web\Concerns\RemembersRedirect;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
@@ -18,6 +19,7 @@ use Inertia\Response;
 class RegisteredUserController extends Controller
 {
     use RemembersRedirect;
+    use RedirectsAfterAuth;
 
     public function __construct(private readonly AuthService $auth) {}
 
@@ -40,6 +42,6 @@ class RegisteredUserController extends Controller
         Auth::guard('web')->login($user, remember: true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended($this->redirectAfterAuth($user));
     }
 }

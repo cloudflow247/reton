@@ -74,9 +74,18 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
           <VerifyPill ok={!!user?.email_verified} label="Email" />
           <VerifyPill ok={!!user?.phone_verified} label="Phone" />
+          {!user?.email_verified && (
+            <button
+              type="button"
+              onClick={() => router.post('/email/verification-notification', {}, { preserveScroll: true })}
+              className="text-xs font-semibold text-mint hover:underline"
+            >
+              Resend verification email
+            </button>
+          )}
           {user?.has_transaction_pin ? (
             <Pill tone="mint">
               <CheckIcon size={12} /> PIN set

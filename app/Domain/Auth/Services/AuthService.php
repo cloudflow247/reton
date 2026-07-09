@@ -38,6 +38,8 @@ class AuthService
             $this->wallets->open($user, 'NGN');
             $this->devices->remember($user, $device);
 
+            $user->sendEmailVerificationNotification();
+
             return $user;
         });
     }

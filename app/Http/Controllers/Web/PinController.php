@@ -20,6 +20,7 @@ class PinController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+        $hadPin = $user->hasTransactionPin();
 
         try {
             $this->pins->set(
@@ -30,6 +31,16 @@ class PinController extends Controller
         } catch (RenderableApiException $e) {
             // A wrong current PIN surfaces on the current_pin field.
             throw ValidationException::withMessages(['current_pin' => $e->getMessage()]);
+        }
+
+        $user->refresh();
+
+        if (! $hadPin && $user->hasTransactionPin()) {
+            if ($request->boolean('from_onboarding')) {
+                return redirect()->route('onboarding')->with('success', 'PIN saved — one last step.');
+            }
+
+            return redirect()->route('dashboard')->with('success', 'PIN set — your wallet is ready.');
         }
 
         return back()->with('success', 'Transaction PIN updated.');

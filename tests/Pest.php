@@ -46,7 +46,30 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+use App\Domain\Wallet\Services\WalletService;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
+function readyUser(array $attributes = [], string $pin = '1234'): User
 {
-    // ..
+    $user = User::factory()->create(array_merge([
+        'email_verified_at' => now(),
+    ], $attributes));
+
+    $user->forceFill(['transaction_pin' => Hash::make($pin)])->save();
+
+    return $user->fresh();
+}
+
+function readyUserWithWallet(array $attributes = [], int $fundMinor = 0, string $pin = '1234'): array
+{
+    $user = readyUser($attributes, $pin);
+    $wallet = app(WalletService::class)->open($user, 'NGN');
+
+    if ($fundMinor > 0) {
+        app(WalletService::class)->fund($wallet, \App\Support\Money\Money::of($fundMinor, 'NGN'));
+        $wallet->refresh();
+    }
+
+    return [$user, $wallet];
 }

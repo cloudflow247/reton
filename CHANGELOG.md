@@ -5,6 +5,7 @@ All notable changes to Reton are documented here. Format follows [Keep a Changel
 ## [Unreleased]
 
 ### Added
+- **Smooth onboarding** — paginated login/signup with Reton logo, email verification on signup, HTML email templates (verify + support), and a 3-step onboarding wizard (welcome → PIN → fund).
 - **Admin site settings** — email notifications (`support@retonpay.com` default), SEO / Open Graph / JSON-LD, security headers (HSTS, CSP, frame options), auth rate limits, and robots/sitemap — all editable from admin → Site; SMTP secrets encrypted at rest.
 - **Admin platform settings** — all `RETON_*` business rules and integration credentials (Dojah, Remita, KYC tiers, fraud, callback/recovery windows, marketplace timing, FX/cards, Horizon access) editable from the admin dashboard; encrypted at rest with masked secrets, audit logs, and env fallbacks until saved.
 - **Dojah KYC verification** — BVN and NIN identity checks via `KycVerificationGateway` (fake sandbox + HTTP production), name/DOB matching, consent requirement, rate limiting, and audit logs without storing raw identifiers.
@@ -21,7 +22,7 @@ All notable changes to Reton are documented here. Format follows [Keep a Changel
 - Bridgecard, Interswitch, Giglogistics, and admin-path settings documented in `.env.example` / admin Integrations.
 
 ### Fixed
-- Profile KYC forms no longer crash for Tier 1 users (Inertia `useForm` instead of react-hook-form `register`).
+- **Admin route conflict** — `/dashboard` no longer matches the configurable admin `{adminPrefix}` wildcard; user dashboard routes register first and admin path validation runs before the admin gate.
 - Bill payment RRR tests now respect injected fake provider instances.
 - Buttons no longer stack icon above label — shared `.btn` uses horizontal flex, consistent radius, and focus rings.
 - Header nav no longer overlaps the Reton wordmark; Sign out no longer wraps onto two lines.

@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 function adminUser(): User
 {
-    return User::factory()->create(['is_admin' => true]);
+    return readyUser(['is_admin' => true]);
 }
 
 function setAdminPath(string $path): void
@@ -227,7 +227,7 @@ it('shares the admin path only with administrators', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('adminPath', '/secret-console'));
 
-    $user = User::factory()->create(['is_admin' => false]);
+    $user = readyUser(['is_admin' => false]);
 
     $this->actingAs($user)->get('/dashboard')
         ->assertOk()

@@ -32,6 +32,7 @@ class PlatformTestMail extends Mailable
     public function content(): Content
     {
         return new Content(
+            html: 'mail.html.platform-test',
             text: 'mail.platform-test',
         );
     }

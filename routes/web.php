@@ -8,7 +8,11 @@ use App\Http\Controllers\Web\Admin\AdminIntegrationsController;
 use App\Http\Controllers\Web\ActivityController;
 use App\Http\Controllers\Web\AddMoneyController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Web\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Web\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
+use App\Http\Controllers\Web\Auth\VerifyEmailController;
+use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\BillsController;
 use App\Http\Controllers\Web\CardsController;
 use App\Http\Controllers\Web\DashboardController;
@@ -34,9 +38,22 @@ use Inertia\Inertia;
 | marketing home for signed-out users only.
 */
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : Inertia::render('Public/Home');
+    if (! auth()->check()) {
+        return Inertia::render('Public/Home');
+    }
+
+    /** @var \App\Models\User $user */
+    $user = auth()->user();
+
+    if (! $user->hasVerifiedEmail()) {
+        return redirect()->route('verification.notice');
+    }
+
+    if (! $user->hasTransactionPin()) {
+        return redirect()->route('onboarding');
+    }
+
+    return redirect()->route('dashboard');
 })->name('home');
 
 Route::inertia('/security', 'Public/Security')->name('security');
@@ -104,13 +121,45 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated app (Inertia)
+| Authenticated — email verification (pre-wallet access)
 |--------------------------------------------------------------------------
-| GET screens that only need the shared `auth` prop render directly; data and
-| mutations route through Web controllers that reuse the domain services and
-| the existing API FormRequests.
 */
-Route::middleware('auth')->group(function () {
+Route::middleware('auth')->group(function (): void {
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    Route::get('/email/verify', EmailVerificationPromptController::class)->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Verified users — onboarding + wallet setup
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding');
+
+    Route::get('/add-money', [AddMoneyController::class, 'index'])->name('add-money');
+    Route::get('/add-money/return/{reference}', [AddMoneyController::class, 'returnFromAlatpay'])->name('add-money.return');
+    Route::get('/deposits/{deposit}/pay', [AddMoneyController::class, 'pay'])->name('deposits.pay');
+    Route::post('/deposits/{deposit}/simulate-pay', [AddMoneyController::class, 'simulatePay'])->name('deposits.simulate-pay');
+    Route::post('/deposits', [AddMoneyController::class, 'store'])->name('deposits.store');
+
+    Route::inertia('/pin', 'SetPin')->name('pin');
+    Route::post('/pin', [PinController::class, 'update'])->name('pin.update');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated app (Inertia) — verified + onboarding complete
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Send + name enquiry + transfer
@@ -118,12 +167,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/lookup', [WalletLookupController::class, 'show'])->name('wallets.lookup');
     Route::post('/transfers', [SendController::class, 'store'])->name('transfers.store');
 
-    // Add money (deposit) + receive
-    Route::get('/add-money', [AddMoneyController::class, 'index'])->name('add-money');
-    Route::get('/add-money/return/{reference}', [AddMoneyController::class, 'returnFromAlatpay'])->name('add-money.return');
-    Route::get('/deposits/{deposit}/pay', [AddMoneyController::class, 'pay'])->name('deposits.pay');
-    Route::post('/deposits/{deposit}/simulate-pay', [AddMoneyController::class, 'simulatePay'])->name('deposits.simulate-pay');
-    Route::post('/deposits', [AddMoneyController::class, 'store'])->name('deposits.store');
+    // Receive (deposits use add-money route in verified group)
     Route::get('/receive', [ReceiveController::class, 'index'])->name('receive');
     Route::post('/static-account', [ReceiveController::class, 'provision'])->name('static-account.provision');
     Route::post('/static-account/{staticAccount}/verify', [ReceiveController::class, 'verify'])->name('static-account.verify');
@@ -152,10 +196,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/cards/freeze', [CardsController::class, 'freeze'])->name('cards.freeze');
     Route::post('/cards/unfreeze', [CardsController::class, 'unfreeze'])->name('cards.unfreeze');
 
-    // Transaction PIN
-    Route::inertia('/pin', 'SetPin')->name('pin');
-    Route::post('/pin', [PinController::class, 'update'])->name('pin.update');
-
     // Digital marketplace — protected purchases between users
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace');
     Route::post('/marketplace/listings', [MarketplaceController::class, 'store'])->name('marketplace.listings.store');
@@ -179,17 +219,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/support', [SupportController::class, 'index'])->name('support');
     Route::post('/support/messages', [SupportController::class, 'storeMessage'])->name('support.messages.store');
     Route::post('/support/escalate', [SupportController::class, 'escalate'])->name('support.escalate');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Platform admin — path segment is configurable in App settings
-    |--------------------------------------------------------------------------
-    */
-    Route::middleware(['admin', 'admin.path'])
-        ->prefix('{adminPrefix}')
-        ->where(['adminPrefix' => '[a-z0-9\-]+'])
-        ->name('admin.')
-        ->group(base_path('routes/admin.php'));
-
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Platform admin — registered last so /dashboard and other literals win
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified', 'admin.path', 'admin'])
+    ->prefix('{adminPrefix}')
+    ->where(['adminPrefix' => '[a-z0-9\-]+'])
+    ->name('admin.')
+    ->group(base_path('routes/admin.php'));

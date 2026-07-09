@@ -41,6 +41,8 @@ final class AdminPath
         'about',
         'faq',
         'contact',
+        'onboarding',
+        'email',
         '.well-known',
     ];
 

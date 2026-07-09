@@ -322,8 +322,8 @@ it('refunds invalid-item disputes by default when callback expires', function ()
 });
 
 it('does not expose a public listing catalog on the marketplace page', function () {
-    $user = User::factory()->create();
-    $other = User::factory()->create();
+    $user = readyUser();
+    $other = readyUser();
 
     app(DigitalMarketplaceService::class)->createListing(
         $other,
