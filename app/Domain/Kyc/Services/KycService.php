@@ -37,6 +37,25 @@ class KycService
         );
     }
 
+    /**
+     * CBN-aligned gate: verified BVN required before ALATPay funding or static VA.
+     *
+     * @return non-empty-string Verified 11-digit BVN (sent to ALATPay on collections)
+     */
+    public function assertBvnVerifiedForPayments(User $user): string
+    {
+        $profile = $this->forUser($user);
+        $bvn = $profile->decryptedBvn();
+
+        if ($bvn === null || $profile->bvn_verified_at === null) {
+            throw ValidationException::withMessages([
+                'bvn' => ['Verify your BVN before funding your wallet or opening a deposit account.'],
+            ]);
+        }
+
+        return $bvn;
+    }
+
     public function upgradeToTier2(User $user, string $bvn, string $dateOfBirth, ?string $ipAddress = null): UserKyc
     {
         $bvn = (string) preg_replace('/\D/', '', $bvn);

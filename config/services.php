@@ -110,4 +110,19 @@ return [
         'timeout' => (int) env('DOJAH_TIMEOUT', 20),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Termii (SMS & WhatsApp OTP)
+    |--------------------------------------------------------------------------
+    | @see https://developers.termii.com/
+    */
+    'termii' => [
+        'driver' => env('TERMII_DRIVER', 'fake'),
+        'base_url' => env('TERMII_BASE_URL', 'https://api.ng.termii.com'),
+        'api_key' => env('TERMII_API_KEY'),
+        'sender_id' => env('TERMII_SENDER_ID', 'Reton'),
+        'channel' => env('TERMII_CHANNEL', 'generic'),
+        'timeout' => (int) env('TERMII_TIMEOUT', 15),
+    ],
+
 ];

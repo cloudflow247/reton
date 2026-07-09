@@ -24,6 +24,7 @@ function webUser(int $fundMinor = 0, string $pin = '1234'): array
     $user = User::factory()->create(['email_verified_at' => now()]);
     $user->forceFill(['transaction_pin' => Hash::make($pin)])->save();
     $user->refresh();
+    ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     if ($fundMinor > 0) {

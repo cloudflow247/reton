@@ -19,6 +19,7 @@ final readonly class PaymentLinkRequest
         public string $customerEmail = '',
         public string $customerName = '',
         public ?string $customerPhone = null,
+        public ?string $customerBvn = null,
         public ?string $redirectUrl = null,
         public ?string $expiresAt = null,
         /** ALAT Pay channel: * = all, 1 = card, 2 = transfer, 3 = bank details, 5 = USSD */

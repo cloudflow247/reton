@@ -58,6 +58,18 @@ class AdminDashboardController extends Controller
                     'ready' => $this->settings->isRemitaReady(),
                     'driver' => config('services.remita.driver'),
                 ],
+                'termii' => [
+                    'ready' => $this->settings->isTermiiReady(),
+                    'driver' => config('services.termii.driver'),
+                ],
+                'bridgecard' => [
+                    'ready' => $this->settings->isVirtualCardsReady(),
+                    'driver' => config('services.bridgecard.driver'),
+                ],
+                'mail' => [
+                    'ready' => (bool) config('reton.mail.notifications_enabled'),
+                    'driver' => config('mail.default'),
+                ],
             ],
             'recentAudit' => AdminAuditLog::query()
                 ->with('user:id,name,email')

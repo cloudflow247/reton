@@ -54,14 +54,14 @@ it('upgrades to tier 3 with nin and address', function () {
         ->and($kyc->city)->toBe('Lekki');
 });
 
-it('provisions a collection static account for tier 1 users via web', function () {
+it('provisions an individual static account when bvn is verified', function () {
     [$user, $wallet] = readyUserWithWallet();
 
     $this->actingAs($user)->post('/static-account', ['wallet_id' => $wallet->id])
         ->assertRedirect()
         ->assertSessionHas('success');
 
-    expect(StaticAccount::query()->where('wallet_id', $wallet->id)->first()?->wallet_type)->toBe(StaticWalletType::Collection);
+    expect(StaticAccount::query()->where('wallet_id', $wallet->id)->first()?->wallet_type)->toBe(StaticWalletType::Individual);
 });
 
 it('renders add money with kyc and static account props', function () {
@@ -90,6 +90,9 @@ it('renders profile with kyc props', function () {
 
 it('enforces kyc limits on deposits', function () {
     $user = User::factory()->create();
+    $kyc = app(KycService::class)->forUser($user);
+    $kyc->storeBvn('22334455667');
+    $kyc->update(['bvn_verified_at' => now()]);
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     $this->actingAs($user)->post('/deposits', [

@@ -25,6 +25,7 @@ beforeEach(function () {
 function apiDepositor(): array
 {
     $user = User::factory()->create();
+    ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     return [$user, $wallet];

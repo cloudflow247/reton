@@ -19,6 +19,7 @@ it('credits deposits that AlatPay confirms but whose webhook was missed', functi
     $this->app->instance(AlatpayGateway::class, $gateway);
 
     $user = User::factory()->create();
+    ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
     $deposit = app(AlatpayDepositService::class)->initiate($user, $wallet, Money::of(500_00, 'NGN'));
 

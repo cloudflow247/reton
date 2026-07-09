@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Admin;
 
+use App\Domain\Notifications\Contracts\SmsGateway;
 use App\Domain\Bills\Interswitch\Gateways\HttpInterswitchProvider;
 use App\Domain\Bills\Interswitch\Services\InterswitchTokenService;
 use App\Domain\Cards\Bridgecard\Gateways\HttpBridgecardVirtualCardGateway;
@@ -23,6 +24,7 @@ class AdminIntegrationsController extends Controller
         private readonly HttpInterswitchProvider $interswitch,
         private readonly HttpBridgecardVirtualCardGateway $bridgecard,
         private readonly InterswitchTokenService $interswitchTokens,
+        private readonly SmsGateway $sms,
     ) {}
 
     public function index(): Response
@@ -53,6 +55,10 @@ class AdminIntegrationsController extends Controller
                     $this->settings->maskedGroup('remita'),
                     ['ready' => $this->settings->isRemitaReady()],
                 ),
+                'termii' => array_merge(
+                    $this->settings->maskedGroup('termii'),
+                    ['ready' => $this->settings->isTermiiReady()],
+                ),
             ],
             'webhookUrls' => [
                 'alatpay' => url('/api/v1/webhooks/alatpay'),
@@ -63,6 +69,7 @@ class AdminIntegrationsController extends Controller
                 'bridgecard' => 'https://docs.bridgecard.co/',
                 'dojah' => 'https://docs.dojah.io',
                 'remita' => 'https://remita.net',
+                'termii' => 'https://developers.termii.com/',
             ],
         ]);
     }
@@ -70,7 +77,7 @@ class AdminIntegrationsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita'],
+            'integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita,termii'],
         ]);
 
         $group = (string) $request->input('integration');
@@ -124,10 +131,18 @@ class AdminIntegrationsController extends Controller
                 'api_secret' => ['nullable', 'string', 'max:500'],
                 'timeout' => ['required', 'integer', 'min:5', 'max:120'],
             ],
+            'termii' => [
+                'driver' => ['required', 'in:fake,http'],
+                'base_url' => ['required', 'url', 'max:255'],
+                'api_key' => ['nullable', 'string', 'max:500'],
+                'sender_id' => ['required', 'string', 'max:20'],
+                'channel' => ['required', 'string', 'max:32'],
+                'timeout' => ['required', 'integer', 'min:5', 'max:120'],
+            ],
         };
 
         $validated = $request->validate(array_merge(
-            ['integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita']],
+            ['integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita,termii']],
             $rules,
         ));
 
@@ -146,7 +161,7 @@ class AdminIntegrationsController extends Controller
     {
         if ($integration === 'alatpay') {
             if (! $this->settings->isIntegrationReady('alatpay')) {
-                return back()->with('error', 'Add API key and Business ID before testing.');
+                return back()->with('error', 'Add API key, Business ID, and Business BVN before testing.');
             }
 
             if (config('services.alatpay.driver') === 'fake') {
@@ -200,6 +215,42 @@ class AdminIntegrationsController extends Controller
             }
 
             return back()->with('error', 'Bridgecard credentials incomplete.');
+        }
+
+        if ($integration === 'termii') {
+            if (! $this->settings->isTermiiReady()) {
+                return back()->with('error', 'Add Termii API key and sender ID before testing.');
+            }
+
+            if (config('services.termii.driver') === 'fake') {
+                return back()->with('success', 'Termii is in demo (fake) mode — switch driver to Live HTTP for production SMS.');
+            }
+
+            if ($this->sms->ping()) {
+                return back()->with('success', 'Termii API reachable — SMS & WhatsApp OTP ready.');
+            }
+
+            return back()->with('error', 'Termii test failed — check API key and sender ID.');
+        }
+
+        if ($integration === 'dojah') {
+            if (! $this->settings->isDojahReady()) {
+                return back()->with('error', 'Add Dojah App ID and Secret Key before testing.');
+            }
+
+            if (config('services.dojah.driver') === 'fake') {
+                return back()->with('success', 'Dojah is in demo (fake) mode — switch driver to Live HTTP for production BVN/NIN checks.');
+            }
+
+            return back()->with('success', 'Dojah credentials configured for live BVN/NIN verification.');
+        }
+
+        if ($integration === 'remita') {
+            if (! $this->settings->isRemitaReady()) {
+                return back()->with('error', 'Add Remita merchant ID and API key before going live.');
+            }
+
+            return back()->with('success', 'Remita credentials configured.');
         }
 
         return back()->with('error', 'Connection test is not available for this integration yet.');

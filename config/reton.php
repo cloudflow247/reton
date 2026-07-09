@@ -314,6 +314,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | SMS / OTP (Termii)
+    |--------------------------------------------------------------------------
+    |
+    | Configure via admin → Site → SMS. API credentials live under Integrations → Termii.
+    |
+    */
+
+    'sms' => [
+        'notifications_enabled' => (bool) env('RETON_SMS_ENABLED', false),
+        'otp_enabled' => (bool) env('RETON_SMS_OTP_ENABLED', true),
+        'whatsapp_otp_enabled' => (bool) env('RETON_SMS_WHATSAPP_OTP', false),
+        'default_channel' => env('RETON_SMS_DEFAULT_CHANNEL', 'sms'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | SEO & social previews
     |--------------------------------------------------------------------------
     */

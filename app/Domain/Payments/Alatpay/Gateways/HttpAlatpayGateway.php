@@ -35,11 +35,12 @@ class HttpAlatpayGateway implements AlatpayGateway
             'currency' => $request->amount->currency,
             'orderId' => $request->reference,
             'description' => $request->description,
-            'customer' => [
+            'customer' => array_filter([
                 'email' => $request->customerEmail,
                 'name' => $request->customerName,
                 'phone' => $request->customerPhone,
-            ],
+                'bvn' => $request->customerBvn,
+            ]),
         ]);
 
         if (! $response->successful()) {
@@ -70,6 +71,7 @@ class HttpAlatpayGateway implements AlatpayGateway
                 'email' => $request->customerEmail,
                 'name' => $request->customerName ?: null,
                 'phone' => $request->customerPhone,
+                'bvn' => $request->customerBvn,
             ]),
             'redirectUrl' => $request->redirectUrl,
             'expiresAt' => $request->expiresAt,

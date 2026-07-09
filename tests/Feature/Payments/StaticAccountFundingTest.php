@@ -25,6 +25,7 @@ beforeEach(function () {
 function activeStaticAccount(): array
 {
     $user = User::factory()->create();
+    ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
     $svc = app(StaticAccountService::class);
     $account = $svc->provision($user, $wallet, StaticWalletType::Individual, '12345678901');

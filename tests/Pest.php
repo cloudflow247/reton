@@ -46,9 +46,33 @@ expect()->extend('toBeOne', function () {
 |
 */
 
+use App\Domain\Kyc\Enums\KycTier;
+use App\Domain\Kyc\Services\KycService;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+
+function ensureVerifiedBvn(User $user, ?string $bvn = null): User
+{
+    $kyc = app(KycService::class)->forUser($user);
+
+    if ($kyc->decryptedBvn() !== null) {
+        return $user->fresh();
+    }
+
+    if ($bvn === null) {
+        $suffix = str_pad((string) (abs(crc32((string) $user->getKey())) % 1_000_000_000), 9, '0', STR_PAD_LEFT);
+        $bvn = '22'.$suffix;
+    }
+
+    $kyc->storeBvn($bvn);
+    $kyc->update([
+        'tier' => KycTier::Tier2,
+        'bvn_verified_at' => now(),
+    ]);
+
+    return $user->fresh();
+}
 
 function readyUser(array $attributes = [], string $pin = '1234'): User
 {
@@ -64,6 +88,7 @@ function readyUser(array $attributes = [], string $pin = '1234'): User
 function readyUserWithWallet(array $attributes = [], int $fundMinor = 0, string $pin = '1234'): array
 {
     $user = readyUser($attributes, $pin);
+    ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     if ($fundMinor > 0) {

@@ -4,6 +4,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
 import { AlatMark } from '@/components/PoweredByAlat'
+import { BvnVerificationGate } from '@/components/BvnVerificationGate'
 import { StaticWalletCard } from '@/components/StaticWalletCard'
 import { Page, PageHero } from '@/components/page-kit'
 import { AmountField, Button, Card, CopyRow, Pill } from '@/components/ui'
@@ -137,6 +138,10 @@ export default function AddMoney() {
 
         <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />
 
+        {!kyc.bvn_verified ? (
+          <BvnVerificationGate />
+        ) : (
+          <>
         {openDeposits.length > 0 && (
           <Card className="space-y-3 p-4">
             <p className="text-sm font-semibold">Resume a payment</p>
@@ -259,6 +264,8 @@ export default function AddMoney() {
             Every deposit is ledger-backed and reconciled.
           </p>
         </Card>
+          </>
+        )}
       </Page>
     </AppShell>
   )

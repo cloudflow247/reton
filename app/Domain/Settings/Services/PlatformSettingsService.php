@@ -30,6 +30,7 @@ class PlatformSettingsService
         'giglogistics',
         'dojah',
         'remita',
+        'termii',
     ];
 
     /** @var array<string, list<string>> */
@@ -40,6 +41,7 @@ class PlatformSettingsService
         'giglogistics' => ['api_key', 'webhook_secret'],
         'dojah' => ['app_id', 'secret_key'],
         'remita' => ['api_key', 'api_secret'],
+        'termii' => ['api_key'],
         'app' => ['demo_password', 'demo_pin'],
         'mail' => ['smtp_password'],
     ];
@@ -92,6 +94,14 @@ class PlatformSettingsService
             'merchant_id' => '',
             'api_key' => '',
             'api_secret' => '',
+            'timeout' => 15,
+        ],
+        'termii' => [
+            'driver' => 'fake',
+            'base_url' => 'https://api.ng.termii.com',
+            'api_key' => '',
+            'sender_id' => 'Reton',
+            'channel' => 'generic',
             'timeout' => 15,
         ],
         'app' => [
@@ -193,6 +203,12 @@ class PlatformSettingsService
             'smtp_username' => '',
             'smtp_password' => '',
             'smtp_encryption' => 'tls',
+        ],
+        'sms' => [
+            'notifications_enabled' => false,
+            'otp_enabled' => true,
+            'whatsapp_otp_enabled' => false,
+            'default_channel' => 'sms',
         ],
         'seo' => [
             'site_name' => 'Reton',
@@ -302,7 +318,9 @@ class PlatformSettingsService
 
         return match ($group) {
             'alatpay' => ($values['driver'] ?? '') === 'fake'
-                || (! empty($values['api_key']) && ! empty($values['business_id'])),
+                || (! empty($values['api_key']) && ! empty($values['business_id']) && ! empty($values['business_bvn'])),
+            'termii' => ($values['driver'] ?? '') === 'fake'
+                || (! empty($values['api_key']) && ! empty($values['sender_id'])),
             'remita' => ($values['driver'] ?? '') === 'fake'
                 || (! empty($values['api_key']) && ! empty($values['merchant_id'])),
             'interswitch' => ($values['driver'] ?? '') === 'fake'
@@ -323,6 +341,11 @@ class PlatformSettingsService
     public function isDojahReady(): bool
     {
         return $this->isIntegrationReady('dojah');
+    }
+
+    public function isTermiiReady(): bool
+    {
+        return $this->isIntegrationReady('termii');
     }
 
     public function isVirtualCardsReady(): bool
@@ -488,6 +511,12 @@ class PlatformSettingsService
             ]),
             'bills' => config(['reton.bills.provider' => (string) ($values['provider'] ?? 'interswitch')]),
             'horizon' => config(['reton.horizon.allowed_emails' => (string) ($values['allowed_emails'] ?? '')]),
+            'sms' => config(['reton.sms' => [
+                'notifications_enabled' => (bool) ($values['notifications_enabled'] ?? false),
+                'otp_enabled' => (bool) ($values['otp_enabled'] ?? true),
+                'whatsapp_otp_enabled' => (bool) ($values['whatsapp_otp_enabled'] ?? false),
+                'default_channel' => (string) ($values['default_channel'] ?? 'sms'),
+            ]]),
             'seo' => config(['reton.seo' => [
                 'site_name' => (string) ($values['site_name'] ?? 'Reton'),
                 'title' => (string) ($values['title'] ?? 'Reton'),
@@ -550,12 +579,13 @@ class PlatformSettingsService
         ]);
 
         if ($mail['mailer'] === 'smtp') {
+            $encryption = (string) $mail['smtp_encryption'];
             config([
                 'mail.mailers.smtp.host' => $mail['smtp_host'],
                 'mail.mailers.smtp.port' => $mail['smtp_port'],
                 'mail.mailers.smtp.username' => $mail['smtp_username'],
                 'mail.mailers.smtp.password' => $mail['smtp_password'],
-                'mail.mailers.smtp.scheme' => $mail['smtp_encryption'] === 'tls' ? 'smtp' : null,
+                'mail.mailers.smtp.scheme' => $encryption === 'ssl' ? 'smtps' : 'smtp',
             ]);
         }
     }
@@ -665,6 +695,7 @@ class PlatformSettingsService
                 'allowed_emails' => (string) config('reton.horizon.allowed_emails'),
             ],
             'mail' => (array) config('reton.mail'),
+            'sms' => (array) config('reton.sms', []),
             'seo' => (array) config('reton.seo'),
             'security' => (array) config('reton.security'),
             default => in_array($group, self::SERVICE_GROUPS, true)

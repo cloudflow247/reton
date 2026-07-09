@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Payments\Services;
 
 use App\Domain\Kyc\Services\KycLimitService;
+use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\CollectionRequest;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
@@ -37,20 +38,23 @@ class AlatpayDepositService
         private readonly WalletService $wallets,
         private readonly AlatpayWebhookGuard $guard,
         private readonly KycLimitService $kycLimits,
+        private readonly KycService $kyc,
     ) {}
 
     public function initiate(User $user, Wallet $wallet, Money $amount, DepositMethod $method = DepositMethod::BankTransfer): Deposit
     {
+        $bvn = $this->kyc->assertBvnVerifiedForPayments($user);
         $this->kycLimits->assertCanCredit($user, $wallet, $amount);
 
         return match ($method) {
-            DepositMethod::BankTransfer => $this->initiateBankTransfer($user, $wallet, $amount),
-            DepositMethod::AlatpayCheckout, DepositMethod::AlatpayCard => $this->initiatePaymentLink($user, $wallet, $amount, $method),
+            DepositMethod::BankTransfer => $this->initiateBankTransfer($user, $wallet, $amount, $bvn),
+            DepositMethod::AlatpayCheckout, DepositMethod::AlatpayCard => $this->initiatePaymentLink($user, $wallet, $amount, $method, $bvn),
         };
     }
 
-    public function initiateBankTransfer(User $user, Wallet $wallet, Money $amount): Deposit
+    public function initiateBankTransfer(User $user, Wallet $wallet, Money $amount, ?string $bvn = null): Deposit
     {
+        $bvn ??= $this->kyc->assertBvnVerifiedForPayments($user);
         $deposit = $this->createPendingDeposit($user, $wallet, $amount, DepositMethod::BankTransfer);
 
         $collection = $this->gateway->createCollection(new CollectionRequest(
@@ -59,6 +63,7 @@ class AlatpayDepositService
             customerName: (string) $user->name,
             customerEmail: (string) $user->email,
             customerPhone: $user->phone,
+            customerBvn: $bvn,
         ));
 
         $deposit->update([
@@ -69,8 +74,9 @@ class AlatpayDepositService
         return $deposit->refresh();
     }
 
-    public function initiatePaymentLink(User $user, Wallet $wallet, Money $amount, DepositMethod $method): Deposit
+    public function initiatePaymentLink(User $user, Wallet $wallet, Money $amount, DepositMethod $method, ?string $bvn = null): Deposit
     {
+        $bvn ??= $this->kyc->assertBvnVerifiedForPayments($user);
         $deposit = $this->createPendingDeposit($user, $wallet, $amount, $method);
 
         $link = $this->gateway->createPaymentLink(new PaymentLinkRequest(
@@ -81,6 +87,7 @@ class AlatpayDepositService
             customerEmail: (string) $user->email,
             customerName: (string) $user->name,
             customerPhone: $user->phone,
+            customerBvn: $bvn,
             redirectUrl: route('add-money.return', ['reference' => $deposit->reference]),
             channel: $method->alatpayChannel(),
         ));

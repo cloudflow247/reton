@@ -35,7 +35,9 @@ use App\Domain\Marketplace\Policies\DigitalOrderPolicy;
 use App\Domain\Logistics\Giglogistics\Contracts\GiglogisticsGateway;
 use App\Domain\Logistics\Giglogistics\Gateways\FakeGiglogisticsGateway;
 use App\Domain\Logistics\Giglogistics\Services\GiglogisticsWebhookService;
-use App\Domain\Marketplace\Services\DigitalMarketplaceService;
+use App\Domain\Notifications\Contracts\SmsGateway;
+use App\Domain\Notifications\Gateways\FakeTermiiGateway;
+use App\Domain\Notifications\Gateways\HttpTermiiGateway;
 use App\Domain\Marketplace\Services\HubVerificationService;
 use App\Domain\Marketplace\Services\ListingVerificationService;
 use App\Domain\Marketplace\Services\ShipmentService;
@@ -140,6 +142,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(KycVerificationGateway::class, fn () => config('services.dojah.driver') === 'http'
             ? app(HttpDojahGateway::class)
             : new FakeDojahGateway);
+
+        $this->app->singleton(SmsGateway::class, fn () => config('services.termii.driver') === 'http'
+            ? app(HttpTermiiGateway::class)
+            : new FakeTermiiGateway);
     }
 
     /**

@@ -6,7 +6,7 @@ import { Button, Card, Field } from '@/components/ui'
 import { adminUrl } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
-type SiteGroup = 'mail' | 'seo' | 'security'
+type SiteGroup = 'mail' | 'sms' | 'seo' | 'security'
 type GroupValues = Record<string, string | number | boolean>
 
 type SiteProps = PageProps<{
@@ -15,6 +15,7 @@ type SiteProps = PageProps<{
 
 const tabs: { id: SiteGroup; label: string }[] = [
   { id: 'mail', label: 'Email' },
+  { id: 'sms', label: 'SMS & OTP' },
   { id: 'seo', label: 'SEO & social' },
   { id: 'security', label: 'Security' },
 ]
@@ -131,7 +132,7 @@ export default function Site() {
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Site</h1>
           <p className="mt-1 text-sm text-muted">
-            Email notifications, SEO / Open Graph previews, and platform security headers.
+            Email, SMS/OTP, SEO previews, and platform security headers.
           </p>
         </div>
 
@@ -268,6 +269,50 @@ export default function Site() {
                     Send test email to me
                   </Button>
                 </div>
+              </>
+            )}
+
+            {tab === 'sms' && (
+              <>
+                <p className="rounded-xl border border-mint/20 bg-mint/[0.06] px-4 py-3 text-sm text-muted">
+                  Termii API credentials are configured under{' '}
+                  <span className="font-semibold text-text">Integrations → Termii</span>. Enable SMS here when your
+                  sender ID is approved.
+                </p>
+                <Toggle
+                  label="SMS notifications enabled"
+                  hint="Master switch for Termii SMS and OTP delivery."
+                  checked={Boolean(form.data.notifications_enabled)}
+                  onChange={(v) => form.setData('notifications_enabled', v)}
+                />
+                <Toggle
+                  label="OTP via SMS enabled"
+                  hint="Send one-time codes for phone verification and security alerts."
+                  checked={Boolean(form.data.otp_enabled)}
+                  onChange={(v) => form.setData('otp_enabled', v)}
+                />
+                <Toggle
+                  label="WhatsApp OTP (optional)"
+                  hint="Deliver OTP over WhatsApp when Termii WhatsApp is enabled on your account."
+                  checked={Boolean(form.data.whatsapp_otp_enabled)}
+                  onChange={(v) => form.setData('whatsapp_otp_enabled', v)}
+                />
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
+                    Default OTP channel
+                  </span>
+                  <select
+                    value={String(form.data.default_channel ?? 'sms')}
+                    onChange={(e) => form.setData('default_channel', e.target.value)}
+                    className="field w-full px-4 py-3 text-sm"
+                  >
+                    <option value="sms">SMS</option>
+                    <option value="whatsapp">WhatsApp</option>
+                  </select>
+                </label>
+                <Button type="submit" disabled={form.processing}>
+                  Save SMS settings
+                </Button>
               </>
             )}
 

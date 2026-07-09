@@ -24,6 +24,7 @@ class AdminSiteSettingsController extends Controller
         return Inertia::render('Admin/Site', [
             'groups' => [
                 'mail' => $this->settings->maskedGroup('mail'),
+                'sms' => $this->settings->maskedGroup('sms'),
                 'seo' => $this->settings->maskedGroup('seo'),
                 'security' => $this->settings->maskedGroup('security'),
             ],
@@ -33,7 +34,7 @@ class AdminSiteSettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'group' => ['required', 'in:mail,seo,security'],
+            'group' => ['required', 'in:mail,sms,seo,security'],
         ]);
 
         $group = (string) $request->input('group');
@@ -53,6 +54,12 @@ class AdminSiteSettingsController extends Controller
                 'smtp_username' => ['nullable', 'string', 'max:255'],
                 'smtp_password' => ['nullable', 'string', 'max:500'],
                 'smtp_encryption' => ['required', 'in:tls,ssl,none'],
+            ],
+            'sms' => [
+                'notifications_enabled' => ['required', 'boolean'],
+                'otp_enabled' => ['required', 'boolean'],
+                'whatsapp_otp_enabled' => ['required', 'boolean'],
+                'default_channel' => ['required', 'in:sms,whatsapp'],
             ],
             'seo' => [
                 'site_name' => ['required', 'string', 'max:120'],

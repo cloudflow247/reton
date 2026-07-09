@@ -7,7 +7,7 @@ import { CheckIcon } from '@/components/icons'
 import { adminUrl } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
-type IntegrationGroup = 'alatpay' | 'interswitch' | 'bridgecard' | 'giglogistics' | 'dojah' | 'remita'
+type IntegrationGroup = 'alatpay' | 'interswitch' | 'bridgecard' | 'giglogistics' | 'dojah' | 'remita' | 'termii'
 
 type GroupValues = Record<string, string | number | boolean>
 
@@ -23,6 +23,7 @@ const tabs: { id: IntegrationGroup; label: string }[] = [
   { id: 'remita', label: 'Remita (RRR)' },
   { id: 'bridgecard', label: 'Bridgecard (Cards)' },
   { id: 'dojah', label: 'Dojah (KYC)' },
+  { id: 'termii', label: 'Termii (SMS)' },
   { id: 'giglogistics', label: 'Giglogistics' },
 ]
 
@@ -406,6 +407,47 @@ function IntegrationForm({
           </>
         )}
 
+        {group === 'termii' && (
+          <>
+            <Field
+              label="API base URL"
+              value={String(form.data.base_url ?? '')}
+              onChange={(e) => form.setData('base_url', e.target.value)}
+              hint="Production: https://api.ng.termii.com"
+            />
+            <SecretField
+              label="API key"
+              name="api_key"
+              value={String(form.data.api_key ?? '')}
+              isSet={!!form.data.api_key_set}
+              onChange={(v) => form.setData('api_key', v)}
+            />
+            <Field
+              label="Sender ID"
+              value={String(form.data.sender_id ?? '')}
+              onChange={(e) => form.setData('sender_id', e.target.value)}
+              hint="Approved Termii sender name (max 11 characters)."
+            />
+            <Field
+              label="SMS channel"
+              value={String(form.data.channel ?? 'generic')}
+              onChange={(e) => form.setData('channel', e.target.value)}
+              hint="generic or dnd for Nigeria."
+            />
+            <Field
+              label="Timeout (seconds)"
+              type="number"
+              min={5}
+              max={120}
+              value={String(form.data.timeout ?? 15)}
+              onChange={(e) => form.setData('timeout', Number(e.target.value))}
+            />
+            <p className="text-xs text-muted">
+              Enable delivery under Site → SMS & OTP. WhatsApp OTP is toggled there when Termii WhatsApp is active.
+            </p>
+          </>
+        )}
+
       <div className="flex flex-wrap gap-3 pt-2">
         <Button type="submit" loading={form.processing}>
           Save {group}
@@ -423,6 +465,21 @@ function IntegrationForm({
         {group === 'bridgecard' && driver === 'http' && (
           <Button type="button" variant="ghost" onClick={testConnection}>
             Test Bridgecard
+          </Button>
+        )}
+        {group === 'termii' && driver === 'http' && (
+          <Button type="button" variant="ghost" onClick={testConnection}>
+            Test Termii
+          </Button>
+        )}
+        {group === 'dojah' && driver === 'http' && (
+          <Button type="button" variant="ghost" onClick={testConnection}>
+            Verify Dojah config
+          </Button>
+        )}
+        {group === 'remita' && driver === 'http' && (
+          <Button type="button" variant="ghost" onClick={testConnection}>
+            Verify Remita config
           </Button>
         )}
       </div>

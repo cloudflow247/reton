@@ -33,6 +33,7 @@ function deposits(): AlatpayDepositService
 function depositor(): array
 {
     $user = User::factory()->create();
+    ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     return [$user, $wallet];

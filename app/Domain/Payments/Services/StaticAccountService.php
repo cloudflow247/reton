@@ -51,6 +51,8 @@ class StaticAccountService
      */
     public function provisionForWallet(User $user, Wallet $wallet): StaticAccount
     {
+        $this->kyc->assertBvnVerifiedForPayments($user);
+
         $existing = StaticAccount::query()
             ->where('wallet_id', $wallet->getKey())
             ->latest()

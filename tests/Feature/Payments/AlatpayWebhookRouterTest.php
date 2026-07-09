@@ -52,6 +52,7 @@ it('routes a payment-request collection to the request handler', function () {
 
 it('routes a deposit collection to the deposit handler', function () {
     $user = User::factory()->create();
+    ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
     $deposit = app(AlatpayDepositService::class)->initiate($user, $wallet, Money::of(500_00, 'NGN'));
 

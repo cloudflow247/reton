@@ -17,6 +17,7 @@ final readonly class CollectionRequest
         public string $customerName,
         public string $customerEmail,
         public ?string $customerPhone = null,
+        public ?string $customerBvn = null,
         public string $description = 'Wallet funding',
     ) {}
 }
