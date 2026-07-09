@@ -7,7 +7,7 @@ import { Button, Field } from '@/components/ui'
 import { ChatIcon, CheckIcon, MailIcon, PhoneIcon } from '@/components/icons'
 
 const channels = [
-  { Icon: MailIcon, label: 'Email us', value: 'support@reton.ng', href: 'mailto:support@reton.ng' },
+  { Icon: MailIcon, label: 'Email us', value: 'support@retonpay.com', href: 'mailto:support@retonpay.com' },
   { Icon: PhoneIcon, label: 'Call us', value: '+234 700 000 0000', href: 'tel:+2347000000000' },
   { Icon: ChatIcon, label: 'In-app chat', value: 'Mon–Sat, 8am–8pm WAT', href: null },
 ]
@@ -22,7 +22,7 @@ export default function Contact() {
     e.preventDefault()
     // No inbox backend yet — hand off to the user's mail client.
     const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`)
-    window.location.href = `mailto:support@reton.ng?subject=${encodeURIComponent('Reton enquiry from ' + name)}&body=${body}`
+    window.location.href = `mailto:support@retonpay.com?subject=${encodeURIComponent('Reton enquiry from ' + name)}&body=${body}`
     setSent(true)
   }
 

@@ -58,6 +58,35 @@ Route::get('/.well-known/apple-app-site-association', [WellKnownController::clas
 Route::get('/.well-known/assetlinks.json', [WellKnownController::class, 'assetLinks'])
     ->name('well-known.assetlinks');
 
+Route::get('/robots.txt', function () {
+    $robots = (string) config('reton.seo.robots', 'index,follow');
+    $base = rtrim((string) (config('reton.links.public_base') ?: config('app.url')), '/');
+
+    $lines = ['User-agent: *'];
+
+    if (str_contains(strtolower($robots), 'noindex')) {
+        $lines[] = 'Disallow: /';
+    } else {
+        $lines[] = 'Allow: /';
+    }
+
+    $lines[] = 'Sitemap: '.$base.'/sitemap.xml';
+
+    return response(implode("\n", $lines)."\n", 200, ['Content-Type' => 'text/plain']);
+})->name('robots');
+
+Route::get('/sitemap.xml', function () {
+    $base = rtrim((string) (config('reton.links.public_base') ?: config('app.url')), '/');
+    $paths = ['/', '/security', '/how-it-works', '/business', '/about', '/faq', '/contact'];
+    $lastmod = now()->toDateString();
+
+    $urls = collect($paths)->map(fn (string $path) => "  <url>\n    <loc>{$base}{$path}</loc>\n    <lastmod>{$lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n  </url>")->implode("\n");
+
+    $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n{$urls}\n</urlset>";
+
+    return response($xml, 200, ['Content-Type' => 'application/xml']);
+})->name('sitemap');
+
 Route::get('/l/{listing}', [MarketplaceController::class, 'show'])->name('marketplace.listings.show');
 
 /*
@@ -67,10 +96,10 @@ Route::get('/l/{listing}', [MarketplaceController::class, 'show'])->name('market
 */
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:auth');
 
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('/register', [RegisteredUserController::class, 'store']);
+    Route::post('/register', [RegisteredUserController::class, 'store'])->middleware('throttle:auth');
 });
 
 /*

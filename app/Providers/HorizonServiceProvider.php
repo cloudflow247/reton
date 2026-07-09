@@ -33,7 +33,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
             }
 
             return in_array(optional($user)->email, array_filter(
-                explode(',', (string) env('HORIZON_ALLOWED_EMAILS', '')),
+                array_map('trim', explode(',', (string) config('reton.horizon.allowed_emails', ''))),
             ));
         });
     }

@@ -45,6 +45,14 @@ class AdminIntegrationsController extends Controller
                     $this->settings->maskedGroup('giglogistics'),
                     ['ready' => $this->settings->isIntegrationReady('giglogistics')],
                 ),
+                'dojah' => array_merge(
+                    $this->settings->maskedGroup('dojah'),
+                    ['ready' => $this->settings->isDojahReady()],
+                ),
+                'remita' => array_merge(
+                    $this->settings->maskedGroup('remita'),
+                    ['ready' => $this->settings->isRemitaReady()],
+                ),
             ],
             'webhookUrls' => [
                 'alatpay' => url('/api/v1/webhooks/alatpay'),
@@ -53,6 +61,8 @@ class AdminIntegrationsController extends Controller
             'docsUrls' => [
                 'interswitch' => 'https://docs.interswitchgroup.com/docs/bills-payment-1',
                 'bridgecard' => 'https://docs.bridgecard.co/',
+                'dojah' => 'https://docs.dojah.io',
+                'remita' => 'https://remita.net',
             ],
         ]);
     }
@@ -60,7 +70,7 @@ class AdminIntegrationsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics'],
+            'integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita'],
         ]);
 
         $group = (string) $request->input('integration');
@@ -99,10 +109,25 @@ class AdminIntegrationsController extends Controller
                 'webhook_secret' => ['nullable', 'string', 'max:500'],
                 'fake_advance_minutes' => ['required', 'integer', 'min:0', 'max:1440'],
             ],
+            'dojah' => [
+                'driver' => ['required', 'in:fake,http'],
+                'base_url' => ['required', 'url', 'max:255'],
+                'app_id' => ['nullable', 'string', 'max:500'],
+                'secret_key' => ['nullable', 'string', 'max:500'],
+                'timeout' => ['required', 'integer', 'min:5', 'max:120'],
+            ],
+            'remita' => [
+                'driver' => ['required', 'in:fake,http'],
+                'base_url' => ['required', 'url', 'max:255'],
+                'merchant_id' => ['nullable', 'string', 'max:120'],
+                'api_key' => ['nullable', 'string', 'max:500'],
+                'api_secret' => ['nullable', 'string', 'max:500'],
+                'timeout' => ['required', 'integer', 'min:5', 'max:120'],
+            ],
         };
 
         $validated = $request->validate(array_merge(
-            ['integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics']],
+            ['integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita']],
             $rules,
         ));
 

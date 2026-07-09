@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Support\Services;
 
+use App\Domain\Notifications\Services\PlatformMailService;
 use App\Domain\Support\Data\SupportReply;
 use App\Domain\Support\Enums\SupportMessageRole;
 use App\Domain\Support\Enums\SupportTicketStatus;
@@ -19,6 +20,7 @@ class SupportChatService
     public function __construct(
         private readonly RuleBasedSupportResponder $responder,
         private readonly TransactionLookupService $lookup,
+        private readonly PlatformMailService $mail,
     ) {}
 
     /**
@@ -110,6 +112,8 @@ class SupportChatService
                 ],
                 'metadata' => ['ticket_id' => $ticket->id, 'ticket_reference' => $ticket->reference],
             ]);
+
+            $this->mail->notifySupportTicketOpened($ticket, $user);
 
             return $ticket;
         });

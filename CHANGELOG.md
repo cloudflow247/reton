@@ -5,6 +5,8 @@ All notable changes to Reton are documented here. Format follows [Keep a Changel
 ## [Unreleased]
 
 ### Added
+- **Admin site settings** — email notifications (`support@retonpay.com` default), SEO / Open Graph / JSON-LD, security headers (HSTS, CSP, frame options), auth rate limits, and robots/sitemap — all editable from admin → Site; SMTP secrets encrypted at rest.
+- **Admin platform settings** — all `RETON_*` business rules and integration credentials (Dojah, Remita, KYC tiers, fraud, callback/recovery windows, marketplace timing, FX/cards, Horizon access) editable from the admin dashboard; encrypted at rest with masked secrets, audit logs, and env fallbacks until saved.
 - **Dojah KYC verification** — BVN and NIN identity checks via `KycVerificationGateway` (fake sandbox + HTTP production), name/DOB matching, consent requirement, rate limiting, and audit logs without storing raw identifiers.
 - **AI Customer Support** — in-app chat at `/support` with rule-based assistant: transaction lookup by reference (TRF-, DEP-, CBK-, RCV-, BILL-, PO-), callback protection explanations, wrong-transfer recovery guidance, live trust score, and human escalation via support tickets (`TKT-…`). Open tickets surface on the admin dashboard.
 - **Platform admin** — secret admin path, encrypted integration settings, audit logs, promote/revoke admins, and control-center dashboard (ALATPay, Interswitch, Giglogistics, Dojah health).

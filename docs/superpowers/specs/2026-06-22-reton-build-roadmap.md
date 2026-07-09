@@ -57,7 +57,7 @@ not architecture.
 
 ## 3. Non-engineering blocker (must run in parallel)
 
-`reton.ng` operates in **Nigeria (CBN-regulated)** while the entity is **`Pte Ltd`
+`retonpay.com` operates in **Nigeria (CBN-regulated)** while the entity is **`Pte Ltd`
 (Singapore)**. Moving real customer money requires either:
 
 1. A CBN license (MMO / PSSP / Switching & Processing, as applicable), or

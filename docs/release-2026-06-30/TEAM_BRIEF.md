@@ -5,7 +5,7 @@ Team walkthrough of what shipped today: new pages, money flows, and how pieces c
 **Screenshots:** [`screenshots/`](screenshots/) (9 captures, 1280×900 @2x)  
 **Regenerate:** with the app running (`php artisan serve`), run `node scripts/capture-release-screenshots.mjs`
 
-Demo logins (when `RETON_DEMO_MODE=true`): `ada@demo.reton.ng` / `bola@demo.reton.ng` — password `demo1234`, PIN `1234`.
+Demo logins (when `RETON_DEMO_MODE=true`): `ada@demo.retonpay.com` / `bola@demo.retonpay.com` — password `demo1234`, PIN `1234`.
 
 ---
 
@@ -136,7 +136,7 @@ Configurable windows (`config/reton.php` → `digital.*`):
 
 ```mermaid
 flowchart LR
-  URL["https://reton.ng/l/{uuid}"]
+  URL["https://retonpay.com/l/{uuid}"]
   AASA["/.well-known/apple-app-site-association"]
   AL["/.well-known/assetlinks.json"]
   App["Reton mobile app"]

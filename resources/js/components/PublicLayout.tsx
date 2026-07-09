@@ -99,7 +99,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <FooterCol title="Legal" links={[['Terms', '/'], ['Privacy', '/'], ['Compliance', '/security']]} />
           </div>
           <div className="mt-12 flex flex-col gap-2 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-            <span>© 2026 Reton Pte Ltd · reton.ng</span>
+            <span>© 2026 Reton Pte Ltd · retonpay.com</span>
             <span>Made for a safer Africa.</span>
           </div>
         </div>

@@ -68,6 +68,8 @@ use App\Domain\Wallet\Policies\WalletPolicy;
 use App\Domain\Wallet\Services\WalletService;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -168,8 +170,15 @@ class AppServiceProvider extends ServiceProvider
 
         Transfer::observe(TransferMarketplaceObserver::class);
 
+        RateLimiter::for('auth', function (Request $request) {
+            $limit = max(3, (int) config('reton.security.auth_rate_limit', 10));
+
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute($limit)->by($request->ip());
+        });
+
         $this->app->booted(function (): void {
             app(PlatformSettingsService::class)->applyToConfig();
+            config(['session.secure' => (bool) config('reton.security.session_secure_cookie', false)]);
         });
     }
 }

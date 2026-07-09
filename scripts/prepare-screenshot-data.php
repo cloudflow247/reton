@@ -13,8 +13,8 @@ use App\Models\User;
 use App\Support\Money\Money;
 use Illuminate\Support\Facades\Hash;
 
-$ada = User::where('email', 'ada@demo.reton.ng')->firstOrFail();
-$bola = User::where('email', 'bola@demo.reton.ng')->firstOrFail();
+$ada = User::where('email', 'ada@demo.retonpay.com')->firstOrFail();
+$bola = User::where('email', 'bola@demo.retonpay.com')->firstOrFail();
 
 app(WalletService::class)->open($ada, 'NGN');
 $bolaWallet = app(WalletService::class)->open($bola, 'NGN');
@@ -26,7 +26,7 @@ $listing = $marketplace->createListing(
     'UI kit — Lagos Fintech',
     'Figma component library with mobile wallet patterns. Instant download after delivery.',
     Money::of(15_000_00, 'NGN'),
-    "Download: https://demo.reton.ng/files/lagos-ui-kit.zip\nLicense: RETON-DEMO-SCREENSHOT",
+    "Download: https://demo.retonpay.com/files/lagos-ui-kit.zip\nLicense: RETON-DEMO-SCREENSHOT",
 );
 
 // Active protected order for Protection / Marketplace order cards.
@@ -38,7 +38,7 @@ $shareListing = $marketplace->createListing(
     'eBook — Trust-First Payments',
     'PDF guide to callback protection and wrong-transfer recovery for African fintech.',
     Money::of(5_000_00, 'NGN'),
-    "Download: https://demo.reton.ng/files/trust-first-payments.pdf\nAccess code: BOLA-SCREENSHOT",
+    "Download: https://demo.retonpay.com/files/trust-first-payments.pdf\nAccess code: BOLA-SCREENSHOT",
 );
 
 echo json_encode([

@@ -180,7 +180,7 @@ export default function Marketplace() {
                     if (openError) setOpenError(null)
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && openItem()}
-                  placeholder="https://reton.ng/l/RTN-7K3M9P or RTN-7K3M9P"
+                  placeholder="https://retonpay.com/l/RTN-7K3M9P or RTN-7K3M9P"
                   className="field w-full px-4 py-3 text-sm"
                   autoComplete="off"
                 />

@@ -51,9 +51,12 @@ class AdminDashboardController extends Controller
                     'driver' => config('services.giglogistics.driver'),
                 ],
                 'dojah' => [
-                    'ready' => config('services.dojah.driver') === 'fake'
-                        || (! empty(config('services.dojah.app_id')) && ! empty(config('services.dojah.secret_key'))),
+                    'ready' => $this->settings->isDojahReady(),
                     'driver' => config('services.dojah.driver'),
+                ],
+                'remita' => [
+                    'ready' => $this->settings->isRemitaReady(),
+                    'driver' => config('services.remita.driver'),
                 ],
             ],
             'recentAudit' => AdminAuditLog::query()

@@ -73,7 +73,7 @@ it('sends authenticated users from / to the dashboard', function () {
 it('registers a user, opens a wallet, and signs them in', function () {
     $this->post('/register', [
         'name' => 'Ada Lovelace',
-        'email' => 'ada@reton.ng',
+        'email' => 'ada@retonpay.com',
         'phone' => '+2348012345678',
         'password' => 'Sup3r-Secret!',
         'password_confirmation' => 'Sup3r-Secret!',
@@ -81,7 +81,7 @@ it('registers a user, opens a wallet, and signs them in', function () {
 
     $this->assertAuthenticated();
 
-    $user = User::where('email', 'ada@reton.ng')->firstOrFail();
+    $user = User::where('email', 'ada@retonpay.com')->firstOrFail();
     expect($user->wallets()->count())->toBe(1);
 });
 

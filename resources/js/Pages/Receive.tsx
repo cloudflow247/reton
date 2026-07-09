@@ -29,7 +29,7 @@ export default function Receive() {
   // A scannable pay link. Encodes the account (and an optional requested
   // amount) so a future deep-link / scanner can prefill a transfer.
   const payload = useMemo(() => {
-    const base = `https://reton.ng/pay/${account}`
+    const base = `https://retonpay.com/pay/${account}`
     return minor > 0 ? `${base}?amount=${minor}` : base
   }, [account, minor])
 

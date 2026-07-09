@@ -50,11 +50,11 @@ try {
   await page.goto(`${BASE}/l/${LISTING_ID}`, { waitUntil: 'networkidle' })
   await shot(page, '01-listing-share-guest')
 
-  await login(page, 'bola@demo.reton.ng')
+  await login(page, 'bola@demo.retonpay.com')
   await page.goto(`${BASE}/l/${LISTING_ID}`, { waitUntil: 'networkidle' })
   await shot(page, '02-listing-share-seller-qr')
 
-  await login(page, 'ada@demo.reton.ng')
+  await login(page, 'ada@demo.retonpay.com')
   await page.goto(`${BASE}/marketplace`, { waitUntil: 'networkidle' })
   await shot(page, '03-marketplace-seller')
 
@@ -76,7 +76,7 @@ try {
   await shot(page, '07-protection-center')
 
   await context.clearCookies()
-  await login(page, 'ada@demo.reton.ng')
+  await login(page, 'ada@demo.retonpay.com')
   await page.goto(`${BASE}/marketplace`, { waitUntil: 'networkidle' })
   await shot(page, '08-marketplace-buyer-view')
 

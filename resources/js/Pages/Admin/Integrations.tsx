@@ -7,7 +7,7 @@ import { CheckIcon } from '@/components/icons'
 import { adminUrl } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
-type IntegrationGroup = 'alatpay' | 'interswitch' | 'bridgecard' | 'giglogistics'
+type IntegrationGroup = 'alatpay' | 'interswitch' | 'bridgecard' | 'giglogistics' | 'dojah' | 'remita'
 
 type GroupValues = Record<string, string | number | boolean>
 
@@ -20,7 +20,9 @@ type IntegrationsProps = PageProps<{
 const tabs: { id: IntegrationGroup; label: string }[] = [
   { id: 'alatpay', label: 'ALATPay' },
   { id: 'interswitch', label: 'Interswitch (Bills)' },
+  { id: 'remita', label: 'Remita (RRR)' },
   { id: 'bridgecard', label: 'Bridgecard (Cards)' },
+  { id: 'dojah', label: 'Dojah (KYC)' },
   { id: 'giglogistics', label: 'Giglogistics' },
 ]
 
@@ -324,6 +326,86 @@ function IntegrationForm({
         </>
       )}
 
+        {group === 'dojah' && (
+          <>
+            <Field
+              label="API base URL"
+              value={String(form.data.base_url ?? '')}
+              onChange={(e) => form.setData('base_url', e.target.value)}
+              hint="Sandbox: https://sandbox.dojah.io — Production: https://api.dojah.io"
+            />
+            <SecretField
+              label="App ID"
+              name="app_id"
+              value={String(form.data.app_id ?? '')}
+              isSet={!!form.data.app_id_set}
+              onChange={(v) => form.setData('app_id', v)}
+            />
+            <SecretField
+              label="Secret key"
+              name="secret_key"
+              value={String(form.data.secret_key ?? '')}
+              isSet={!!form.data.secret_key_set}
+              onChange={(v) => form.setData('secret_key', v)}
+            />
+            <Field
+              label="Timeout (seconds)"
+              type="number"
+              min={5}
+              max={120}
+              value={String(form.data.timeout ?? 20)}
+              onChange={(e) => form.setData('timeout', Number(e.target.value))}
+            />
+            <p className="text-xs text-muted">
+              BVN & NIN verification for KYC tier upgrades —{' '}
+              <a href="https://docs.dojah.io" target="_blank" rel="noreferrer" className="text-mint hover:underline">
+                Dojah API
+              </a>
+              .
+            </p>
+          </>
+        )}
+
+        {group === 'remita' && (
+          <>
+            <Field
+              label="Base URL"
+              value={String(form.data.base_url ?? '')}
+              onChange={(e) => form.setData('base_url', e.target.value)}
+            />
+            <Field
+              label="Merchant ID"
+              value={String(form.data.merchant_id ?? '')}
+              onChange={(e) => form.setData('merchant_id', e.target.value)}
+            />
+            <SecretField
+              label="API key"
+              name="api_key"
+              value={String(form.data.api_key ?? '')}
+              isSet={!!form.data.api_key_set}
+              onChange={(v) => form.setData('api_key', v)}
+            />
+            <SecretField
+              label="API secret"
+              name="api_secret"
+              value={String(form.data.api_secret ?? '')}
+              isSet={!!form.data.api_secret_set}
+              onChange={(v) => form.setData('api_secret', v)}
+            />
+            <Field
+              label="Timeout (seconds)"
+              type="number"
+              min={5}
+              max={120}
+              value={String(form.data.timeout ?? 15)}
+              onChange={(e) => form.setData('timeout', Number(e.target.value))}
+            />
+            <p className="text-xs text-muted">
+              Remita RRR bill payments — select Remita under Platform → Bill payments when live.
+            </p>
+          </>
+        )}
+
       <div className="flex flex-wrap gap-3 pt-2">
         <Button type="submit" loading={form.processing}>
           Save {group}
@@ -360,7 +442,7 @@ export default function Integrations() {
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Integrations</h1>
           <p className="mt-1 text-sm text-muted">
-            Store ALATPay, Interswitch Quickteller (bills), Bridgecard (virtual cards), and Giglogistics credentials securely. Values are encrypted at rest.
+            Store payment, KYC, card, and logistics credentials securely. Values are encrypted at rest — env vars are fallbacks until saved here.
           </p>
         </div>
 

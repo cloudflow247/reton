@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Inertia shares auth + flash on every web response and handles
         // asset-version reloads. Only the web group is server-rendered.
         $middleware->web(append: [
+            \App\Http\Middleware\ApplyPlatformSecurityHeaders::class,
             HandleInertiaRequests::class,
         ]);
 

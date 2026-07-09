@@ -17,8 +17,8 @@ class DigitalMarketplaceDemoSeeder extends Seeder
 {
     public function run(): void
     {
-        $ada = User::where('email', 'ada@demo.reton.ng')->first();
-        $bola = User::where('email', 'bola@demo.reton.ng')->first();
+        $ada = User::where('email', 'ada@demo.retonpay.com')->first();
+        $bola = User::where('email', 'bola@demo.retonpay.com')->first();
 
         if (! $ada || ! $bola) {
             return;
@@ -32,7 +32,7 @@ class DigitalMarketplaceDemoSeeder extends Seeder
                 'UI kit — Lagos Fintech',
                 'Figma component library with mobile wallet patterns. Instant download after delivery.',
                 Money::of(15_000_00, 'NGN'),
-                "Download: https://demo.reton.ng/files/lagos-ui-kit.zip\nLicense: RETON-DEMO-ADA-001",
+                "Download: https://demo.retonpay.com/files/lagos-ui-kit.zip\nLicense: RETON-DEMO-ADA-001",
             );
         }
 
@@ -42,7 +42,7 @@ class DigitalMarketplaceDemoSeeder extends Seeder
                 'eBook — Trust-First Payments',
                 'PDF guide to callback protection and wrong-transfer recovery for African fintech.',
                 Money::of(5_000_00, 'NGN'),
-                "Download: https://demo.reton.ng/files/trust-first-payments.pdf\nAccess code: BOLA-TRUST-42",
+                "Download: https://demo.retonpay.com/files/trust-first-payments.pdf\nAccess code: BOLA-TRUST-42",
             );
         }
 

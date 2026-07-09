@@ -1,34 +1,82 @@
 import type { FormEvent } from 'react'
-import { Head, useForm, usePage } from '@inertiajs/react'
+import { useState } from 'react'
+import { Head, Link, useForm, usePage } from '@inertiajs/react'
 import { AdminLayout } from '@/components/AdminLayout'
 import { Button, Card } from '@/components/ui'
 import { adminUrl } from '@/lib/admin'
-import { ngn } from '@/lib/format'
 import type { PageProps } from '@/types'
 
 type AppSettingsProps = PageProps<{
   app: {
     demo_enabled: boolean
+    demo_password: string
+    demo_password_set?: boolean
+    demo_pin: string
+    demo_pin_set?: boolean
     public_url: string
     admin_path: string
+    listing_path: string
+    app_scheme: string
+    ios_bundle_id: string
+    apple_team_id: string
+    android_package: string
+    android_sha256: string
   }
   reservedAdminPaths: string[]
-  kyc: Record<
-    string,
-    {
-      single_transaction_max: number
-      daily_inflow_max: number
-      wallet_balance_max: number
-    }
-  >
 }>
 
+function SecretField({
+  label,
+  value,
+  isSet,
+  onChange,
+  hint,
+}: {
+  label: string
+  value: string
+  isSet?: boolean
+  onChange: (v: string) => void
+  hint?: string
+}) {
+  const [show, setShow] = useState(false)
+
+  return (
+    <label className="block">
+      <span className="mb-1.5 flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted">
+        {label}
+        {isSet && (
+          <button type="button" onClick={() => setShow((s) => !s)} className="normal-case text-mint hover:underline">
+            {show ? 'Hide' : 'Replace'}
+          </button>
+        )}
+      </span>
+      <input
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={isSet && !show ? '•••••••• (saved — type to replace)' : 'Enter value'}
+        className="field w-full px-4 py-3 font-mono text-sm"
+        autoComplete="off"
+      />
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+    </label>
+  )
+}
+
 export default function AppSettings() {
-  const { app, kyc, reservedAdminPaths, flash } = usePage<AppSettingsProps>().props
+  const { app, reservedAdminPaths, flash } = usePage<AppSettingsProps>().props
   const form = useForm({
     demo_enabled: app.demo_enabled,
+    demo_password: app.demo_password.includes('••••') ? '' : app.demo_password,
+    demo_pin: app.demo_pin.includes('••••') ? '' : app.demo_pin,
     public_url: app.public_url,
     admin_path: app.admin_path,
+    listing_path: app.listing_path,
+    app_scheme: app.app_scheme,
+    ios_bundle_id: app.ios_bundle_id,
+    apple_team_id: app.apple_team_id,
+    android_package: app.android_package,
+    android_sha256: app.android_sha256,
   })
 
   const previewPath = form.data.admin_path.replace(/^\/+|\/+$/g, '').toLowerCase() || 'admin'
@@ -49,7 +97,9 @@ export default function AppSettings() {
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Application</h1>
-          <p className="mt-1 text-sm text-muted">Platform-wide toggles, admin URL, and share-link configuration.</p>
+          <p className="mt-1 text-sm text-muted">
+            Platform toggles, admin URL, share links, and mobile deep-link identifiers.
+          </p>
         </div>
 
         {flash.success && (
@@ -107,6 +157,22 @@ export default function AppSettings() {
               </div>
             </label>
 
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SecretField
+                label="Demo password"
+                value={form.data.demo_password}
+                isSet={app.demo_password_set}
+                onChange={(v) => form.setData('demo_password', v)}
+              />
+              <SecretField
+                label="Demo transaction PIN"
+                value={form.data.demo_pin}
+                isSet={app.demo_pin_set}
+                onChange={(v) => form.setData('demo_pin', v)}
+                hint="4–6 digits shared by demo accounts."
+              />
+            </div>
+
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
                 Public URL (share links)
@@ -115,13 +181,74 @@ export default function AppSettings() {
                 type="url"
                 value={form.data.public_url}
                 onChange={(e) => form.setData('public_url', e.target.value)}
-                placeholder="https://reton.ng"
+                placeholder="https://retonpay.com"
                 className="field w-full px-4 py-3 text-sm"
               />
               <span className="mt-1 block text-xs text-muted">
                 Used for marketplace share links and deep links. Leave blank to use APP_URL.
               </span>
             </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Listing path</span>
+                <input
+                  type="text"
+                  value={form.data.listing_path}
+                  onChange={(e) => form.setData('listing_path', e.target.value)}
+                  className="field w-full px-4 py-3 font-mono text-sm"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">App scheme</span>
+                <input
+                  type="text"
+                  value={form.data.app_scheme}
+                  onChange={(e) => form.setData('app_scheme', e.target.value)}
+                  className="field w-full px-4 py-3 font-mono text-sm"
+                />
+              </label>
+            </div>
+
+            <h3 className="pt-2 text-sm font-semibold">Mobile deep linking</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">iOS bundle ID</span>
+                <input
+                  type="text"
+                  value={form.data.ios_bundle_id}
+                  onChange={(e) => form.setData('ios_bundle_id', e.target.value)}
+                  className="field w-full px-4 py-3 font-mono text-sm"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Apple team ID</span>
+                <input
+                  type="text"
+                  value={form.data.apple_team_id}
+                  onChange={(e) => form.setData('apple_team_id', e.target.value)}
+                  className="field w-full px-4 py-3 font-mono text-sm"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Android package</span>
+                <input
+                  type="text"
+                  value={form.data.android_package}
+                  onChange={(e) => form.setData('android_package', e.target.value)}
+                  className="field w-full px-4 py-3 font-mono text-sm"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Android SHA-256</span>
+                <input
+                  type="text"
+                  value={form.data.android_sha256}
+                  onChange={(e) => form.setData('android_sha256', e.target.value)}
+                  className="field w-full px-4 py-3 font-mono text-sm"
+                />
+              </label>
+            </div>
 
             <Button type="submit" loading={form.processing}>
               Save application settings
@@ -142,20 +269,14 @@ export default function AppSettings() {
         </Card>
 
         <Card>
-          <h2 className="font-display text-lg font-semibold">KYC tier limits</h2>
-          <p className="mt-1 text-xs text-muted">Read-only — defined in config/reton.php. Shown for reference.</p>
-          <div className="mt-4 space-y-4">
-            {Object.entries(kyc).map(([tier, limits]) => (
-              <div key={tier} className="rounded-xl border border-line p-4">
-                <div className="text-sm font-semibold">Tier {tier}</div>
-                <ul className="mt-2 space-y-1 text-xs text-muted">
-                  <li>Single transaction max: {ngn(limits.single_transaction_max)}</li>
-                  <li>Daily inflow max: {ngn(limits.daily_inflow_max)}</li>
-                  <li>Wallet balance max: {ngn(limits.wallet_balance_max)}</li>
-                </ul>
-              </div>
-            ))}
-          </div>
+          <h2 className="font-display text-lg font-semibold">KYC & business rules</h2>
+          <p className="mt-1 text-sm text-muted">
+            Tier limits, fraud scoring, callback windows, and marketplace timing are managed under{' '}
+            <Link href={`${adminUrl()}/platform`} className="text-mint hover:underline">
+              Platform settings
+            </Link>
+            .
+          </p>
         </Card>
       </div>
     </AdminLayout>

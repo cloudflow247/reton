@@ -21,9 +21,34 @@ function setAdminPath(string $path): void
 {
     app(PlatformSettingsService::class)->updateGroup('app', [
         'demo_enabled' => false,
+        'demo_password' => 'demo1234',
+        'demo_pin' => '1234',
         'public_url' => '',
         'admin_path' => $path,
+        'listing_path' => '/l',
+        'app_scheme' => 'reton',
+        'ios_bundle_id' => 'ng.reton.app',
+        'apple_team_id' => '',
+        'android_package' => 'ng.reton.app',
+        'android_sha256' => '',
     ], adminUser());
+}
+
+function appSettingsPayload(array $overrides = []): array
+{
+    return array_merge([
+        'demo_enabled' => false,
+        'demo_password' => '',
+        'demo_pin' => '',
+        'public_url' => '',
+        'admin_path' => 'admin',
+        'listing_path' => '/l',
+        'app_scheme' => 'reton',
+        'ios_bundle_id' => 'ng.reton.app',
+        'apple_team_id' => '',
+        'android_package' => 'ng.reton.app',
+        'android_sha256' => '',
+    ], $overrides);
 }
 
 it('forbids non-admins from the admin panel', function () {
@@ -173,11 +198,9 @@ it('merges database settings into runtime config', function () {
 it('allows customizing the admin panel URL from app settings', function () {
     $admin = adminUser();
 
-    $this->actingAs($admin)->put(AdminPath::url('app-settings'), [
-        'demo_enabled' => false,
-        'public_url' => '',
+    $this->actingAs($admin)->put(AdminPath::url('app-settings'), appSettingsPayload([
         'admin_path' => 'reton-control-x7k9',
-    ])->assertRedirect('/reton-control-x7k9/app-settings');
+    ]))->assertRedirect('/reton-control-x7k9/app-settings');
 
     expect(AdminPath::current())->toBe('reton-control-x7k9');
 
@@ -191,11 +214,9 @@ it('allows customizing the admin panel URL from app settings', function () {
 it('rejects reserved admin path segments', function () {
     $admin = adminUser();
 
-    $this->actingAs($admin)->put(AdminPath::url('app-settings'), [
-        'demo_enabled' => false,
-        'public_url' => '',
+    $this->actingAs($admin)->put(AdminPath::url('app-settings'), appSettingsPayload([
         'admin_path' => 'dashboard',
-    ])->assertSessionHasErrors('admin_path');
+    ]))->assertSessionHasErrors('admin_path');
 });
 
 it('shares the admin path only with administrators', function () {
@@ -211,4 +232,61 @@ it('shares the admin path only with administrators', function () {
     $this->actingAs($user)->get('/dashboard')
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('adminPath', null));
+});
+
+it('does not override env config when no database row exists for a group', function () {
+    config(['services.alatpay.driver' => 'fake']);
+
+    app(PlatformSettingsService::class)->bustCache();
+    app(PlatformSettingsService::class)->applyToConfig();
+
+    expect(config('services.alatpay.driver'))->toBe('fake');
+});
+
+it('allows admins to update kyc tier limits from the platform panel', function () {
+    $admin = adminUser();
+
+    $this->actingAs($admin)->put('/admin/platform', [
+        'group' => 'kyc',
+        'tier1_single_max' => 50_000_00,
+        'tier1_daily_in_max' => 200_000_00,
+        'tier1_balance_max' => 300_000_00,
+        'tier2_single_max' => 500_000_00,
+        'tier2_daily_in_max' => 2_000_000_00,
+        'tier2_balance_max' => 5_000_000_00,
+        'tier3_single_max' => 5_000_000_00,
+        'tier3_daily_in_max' => 20_000_000_00,
+        'tier3_balance_max' => 50_000_000_00,
+    ])->assertRedirect();
+
+    expect(config('reton.kyc.tiers.1.single_transaction_max'))->toBe(50_000_00);
+
+    $this->actingAs($admin)->get('/admin/platform')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Platform')
+            ->has('groups.kyc'));
+});
+
+it('stores dojah credentials encrypted in admin settings', function () {
+    $admin = adminUser();
+
+    $this->actingAs($admin)->post('/admin/integrations/save', [
+        'integration' => 'dojah',
+        'driver' => 'http',
+        'base_url' => 'https://api.dojah.io',
+        'app_id' => 'dojah_app_secret_id',
+        'secret_key' => 'dojah_live_secret_key',
+        'timeout' => 20,
+    ])->assertRedirect();
+
+    $row = PlatformSetting::query()->find('dojah');
+    expect($row)->not->toBeNull()
+        ->and($row->payload_encrypted)->not->toContain('dojah_live_secret_key');
+
+    app(PlatformSettingsService::class)->bustCache();
+    app(PlatformSettingsService::class)->applyToConfig();
+
+    expect(config('services.dojah.secret_key'))->toBe('dojah_live_secret_key')
+        ->and(app(PlatformSettingsService::class)->isDojahReady())->toBeTrue();
 });

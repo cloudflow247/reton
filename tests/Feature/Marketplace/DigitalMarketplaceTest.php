@@ -374,12 +374,12 @@ it('builds stable listing share urls for web and mobile deep links', function ()
     ['listing' => $listing] = seedActiveListing();
 
     config([
-        'reton.links.public_base' => 'https://reton.ng',
+        'reton.links.public_base' => 'https://retonpay.com',
         'reton.links.listing_path' => '/l',
         'reton.links.app_scheme' => 'reton',
     ]);
 
-    expect(ListingLinks::web($listing))->toBe('https://reton.ng/l/'.$listing->item_code)
+    expect(ListingLinks::web($listing))->toBe('https://retonpay.com/l/'.$listing->item_code)
         ->and(ListingLinks::app($listing))->toBe('reton://l/'.$listing->item_code);
 });
 

@@ -38,8 +38,8 @@ return [
         'password' => env('RETON_DEMO_PASSWORD', 'demo1234'),
         'pin' => env('RETON_DEMO_PIN', '1234'),
         'accounts' => [
-            ['name' => 'Ada Obi', 'email' => 'ada@demo.reton.ng', 'phone' => '+2348000000001', 'fund' => 750_000_00],
-            ['name' => 'Bola Ade', 'email' => 'bola@demo.reton.ng', 'phone' => '+2348000000002', 'fund' => 120_000_00],
+            ['name' => 'Ada Obi', 'email' => 'ada@demo.retonpay.com', 'phone' => '+2348000000001', 'fund' => 750_000_00],
+            ['name' => 'Bola Ade', 'email' => 'bola@demo.retonpay.com', 'phone' => '+2348000000002', 'fund' => 120_000_00],
         ],
     ],
 
@@ -271,6 +271,82 @@ return [
         // Retail rate: 1 USD = X NGN (major units, e.g. 1600 = ₦1,600/$)
         'usd_ngn_rate' => (float) env('RETON_FX_USD_NGN', 1600),
         'spread_bps' => (int) env('RETON_FX_SPREAD_BPS', 150),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Horizon queue dashboard access
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated admin emails allowed to view Horizon outside local.
+    | Override via admin → Platform → Operations or HORIZON_ALLOWED_EMAILS.
+    |
+    */
+
+    'horizon' => [
+        'allowed_emails' => (string) env('HORIZON_ALLOWED_EMAILS', ''),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email notifications
+    |--------------------------------------------------------------------------
+    |
+    | Configure via admin → Site → Email. SMTP credentials are encrypted at rest.
+    |
+    */
+
+    'mail' => [
+        'notifications_enabled' => (bool) env('RETON_MAIL_NOTIFICATIONS_ENABLED', true),
+        'mailer' => env('RETON_MAIL_MAILER', env('MAIL_MAILER', 'log')),
+        'from_address' => env('RETON_MAIL_FROM_ADDRESS', env('MAIL_FROM_ADDRESS', 'support@retonpay.com')),
+        'from_name' => env('RETON_MAIL_FROM_NAME', env('MAIL_FROM_NAME', 'Reton')),
+        'support_address' => env('RETON_MAIL_SUPPORT_ADDRESS', 'support@retonpay.com'),
+        'reply_to_address' => env('RETON_MAIL_REPLY_TO', 'support@retonpay.com'),
+        'notify_on_support_ticket' => (bool) env('RETON_MAIL_NOTIFY_SUPPORT_TICKET', true),
+        'notify_user_on_ticket' => (bool) env('RETON_MAIL_NOTIFY_USER_TICKET', true),
+        'smtp_host' => env('RETON_MAIL_SMTP_HOST', env('MAIL_HOST', '')),
+        'smtp_port' => (int) env('RETON_MAIL_SMTP_PORT', env('MAIL_PORT', 587)),
+        'smtp_username' => env('RETON_MAIL_SMTP_USERNAME', env('MAIL_USERNAME', '')),
+        'smtp_password' => env('RETON_MAIL_SMTP_PASSWORD', env('MAIL_PASSWORD', '')),
+        'smtp_encryption' => env('RETON_MAIL_SMTP_ENCRYPTION', 'tls'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | SEO & social previews
+    |--------------------------------------------------------------------------
+    */
+
+    'seo' => [
+        'site_name' => env('RETON_SEO_SITE_NAME', 'Reton'),
+        'title' => env('RETON_SEO_TITLE', 'Reton — payments you can take back'),
+        'description' => env('RETON_SEO_DESCRIPTION', 'Reton is Africa\'s trust-first wallet with Callback Protection, wrong-transfer recovery, and real-time fraud checks — settled on ALAT by Wema.'),
+        'keywords' => env('RETON_SEO_KEYWORDS', 'fintech, nigeria, wallet, callback protection, wrong transfer recovery, ALATPay, trust-first payments'),
+        'og_image' => env('RETON_SEO_OG_IMAGE', '/og-banner.svg'),
+        'twitter_site' => env('RETON_SEO_TWITTER', '@retonpay'),
+        'robots' => env('RETON_SEO_ROBOTS', 'index,follow'),
+        'google_site_verification' => env('RETON_SEO_GOOGLE_VERIFICATION', ''),
+        'locale' => env('RETON_SEO_LOCALE', 'en_NG'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Platform security headers
+    |--------------------------------------------------------------------------
+    */
+
+    'security' => [
+        'force_https' => (bool) env('RETON_SECURITY_FORCE_HTTPS', false),
+        'hsts_enabled' => (bool) env('RETON_SECURITY_HSTS', true),
+        'hsts_max_age' => (int) env('RETON_SECURITY_HSTS_MAX_AGE', 31536000),
+        'frame_options' => env('RETON_SECURITY_FRAME_OPTIONS', 'DENY'),
+        'referrer_policy' => env('RETON_SECURITY_REFERRER_POLICY', 'strict-origin-when-cross-origin'),
+        'permissions_policy' => env('RETON_SECURITY_PERMISSIONS_POLICY', 'camera=(), microphone=(), geolocation=()'),
+        'csp_enabled' => (bool) env('RETON_SECURITY_CSP_ENABLED', true),
+        'csp_report_only' => (bool) env('RETON_SECURITY_CSP_REPORT_ONLY', true),
+        'session_secure_cookie' => (bool) env('RETON_SECURITY_SECURE_COOKIES', false),
+        'auth_rate_limit' => (int) env('RETON_SECURITY_AUTH_RATE_LIMIT', 10),
     ],
 
     'fraud' => [

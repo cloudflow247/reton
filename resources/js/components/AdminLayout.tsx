@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, router, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
-import { BoltIcon, GridIcon, ShieldIcon } from '@/components/icons'
+import { ActivityIcon, BoltIcon, GridIcon, MailIcon, ShieldIcon } from '@/components/icons'
 import { Wordmark } from '@/components/ui'
 import type { SharedProps } from '@/types'
 import { useAdminBase } from '@/lib/admin'
@@ -20,7 +20,9 @@ function useAdminNav(): NavItem[] {
   return [
     { to: base, label: 'Overview', end: true, Icon: GridIcon },
     { to: `${base}/integrations`, label: 'Integrations', Icon: BoltIcon },
+    { to: `${base}/platform`, label: 'Platform', Icon: ActivityIcon },
     { to: `${base}/app-settings`, label: 'App', Icon: ShieldIcon },
+    { to: `${base}/site`, label: 'Site', Icon: MailIcon },
   ]
 }
 

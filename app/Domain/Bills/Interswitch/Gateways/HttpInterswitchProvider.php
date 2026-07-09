@@ -43,7 +43,7 @@ class HttpInterswitchProvider implements BillProviderGateway
             'paymentCode' => $instruction->paymentCode,
             'customerId' => $this->customerId($instruction->customerReference, $mobile),
             'customerMobile' => $mobile,
-            'customerEmail' => $instruction->customerEmail ?? 'noreply@reton.ng',
+            'customerEmail' => $instruction->customerEmail ?? 'noreply@retonpay.com',
             'amount' => (string) $instruction->amount->amount,
             'requestReference' => $requestRef,
         ]);
