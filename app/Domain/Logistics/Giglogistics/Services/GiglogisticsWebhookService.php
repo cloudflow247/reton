@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Logistics\Giglogistics\Services;
 
-use App\Domain\Logistics\Giglogistics\Data\ShipmentStatusResponse;
 use App\Domain\Marketplace\Enums\HubVerificationStatus;
 use App\Domain\Marketplace\Enums\ShipmentStatus;
 use App\Domain\Marketplace\Models\MarketplaceShipment;

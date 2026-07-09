@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Domain\Wallet\Services\WalletService;
 use App\Mail\VerifyEmailMail;
 use App\Models\User;
-use App\Domain\Wallet\Services\WalletService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;

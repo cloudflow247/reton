@@ -6,6 +6,7 @@ use App\Domain\Notifications\Services\OtpService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
 use App\Domain\Settings\Services\PlatformSettingsService;
+use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -45,7 +46,7 @@ it('blocks deposits without verified bvn', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     $user = User::factory()->create(['email_verified_at' => now()]);
     $user->forceFill(['transaction_pin' => bcrypt('1234')])->save();
-    $wallet = app(\App\Domain\Wallet\Services\WalletService::class)->open($user, 'NGN');
+    $wallet = app(WalletService::class)->open($user, 'NGN');
 
     $this->actingAs($user)->post('/deposits', [
         'wallet_id' => $wallet->id,

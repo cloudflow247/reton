@@ -2,13 +2,16 @@
 
 namespace App\Providers;
 
+use App\Domain\Bills\Interswitch\Gateways\HttpInterswitchProvider;
 use App\Domain\Bills\Models\BillPayment;
 use App\Domain\Bills\Policies\BillPaymentPolicy;
-use App\Domain\Bills\Interswitch\Gateways\HttpInterswitchProvider;
 use App\Domain\Bills\Remita\Contracts\BillProviderGateway;
 use App\Domain\Bills\Remita\Gateways\FakeBillProvider;
 use App\Domain\Bills\Remita\Gateways\HttpRemitaProvider;
 use App\Domain\Bills\Services\BillPaymentService;
+use App\Domain\Callback\Models\Callback;
+use App\Domain\Callback\Policies\CallbackPolicy;
+use App\Domain\Callback\Services\CallbackService;
 use App\Domain\Cards\Bridgecard\Gateways\FakeBridgecardVirtualCardGateway;
 use App\Domain\Cards\Bridgecard\Gateways\HttpBridgecardVirtualCardGateway;
 use App\Domain\Cards\Contracts\VirtualCardGateway;
@@ -17,9 +20,6 @@ use App\Domain\Cards\Policies\VirtualCardPolicy;
 use App\Domain\Cards\Services\CardFundingService;
 use App\Domain\Cards\Services\FxQuoteService;
 use App\Domain\Cards\Services\VirtualCardService;
-use App\Domain\Callback\Models\Callback;
-use App\Domain\Callback\Policies\CallbackPolicy;
-use App\Domain\Callback\Services\CallbackService;
 use App\Domain\Fraud\Contracts\FraudScorer;
 use App\Domain\Fraud\Rules\FailedPinRule;
 use App\Domain\Fraud\Rules\LargeAmountRule;
@@ -28,24 +28,25 @@ use App\Domain\Fraud\Rules\NewDeviceRule;
 use App\Domain\Fraud\Rules\VelocityRule;
 use App\Domain\Fraud\Services\FraudService;
 use App\Domain\Fraud\Services\RuleBasedFraudScorer;
-use App\Domain\Marketplace\Models\DigitalListing;
-use App\Domain\Marketplace\Models\DigitalOrder;
-use App\Domain\Marketplace\Policies\DigitalListingPolicy;
-use App\Domain\Marketplace\Policies\DigitalOrderPolicy;
-use App\Domain\Logistics\Giglogistics\Contracts\GiglogisticsGateway;
-use App\Domain\Logistics\Giglogistics\Gateways\FakeGiglogisticsGateway;
-use App\Domain\Logistics\Giglogistics\Services\GiglogisticsWebhookService;
-use App\Domain\Notifications\Contracts\SmsGateway;
-use App\Domain\Notifications\Gateways\FakeTermiiGateway;
-use App\Domain\Notifications\Gateways\HttpTermiiGateway;
-use App\Domain\Marketplace\Services\HubVerificationService;
-use App\Domain\Marketplace\Services\ListingVerificationService;
-use App\Domain\Marketplace\Services\ShipmentService;
 use App\Domain\Kyc\Contracts\KycVerificationGateway;
 use App\Domain\Kyc\Gateways\FakeDojahGateway;
 use App\Domain\Kyc\Gateways\HttpDojahGateway;
 use App\Domain\Ledger\Services\LedgerService;
 use App\Domain\Ledger\Services\SystemAccountResolver;
+use App\Domain\Logistics\Giglogistics\Contracts\GiglogisticsGateway;
+use App\Domain\Logistics\Giglogistics\Gateways\FakeGiglogisticsGateway;
+use App\Domain\Logistics\Giglogistics\Services\GiglogisticsWebhookService;
+use App\Domain\Marketplace\Models\DigitalListing;
+use App\Domain\Marketplace\Models\DigitalOrder;
+use App\Domain\Marketplace\Policies\DigitalListingPolicy;
+use App\Domain\Marketplace\Policies\DigitalOrderPolicy;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
+use App\Domain\Marketplace\Services\HubVerificationService;
+use App\Domain\Marketplace\Services\ListingVerificationService;
+use App\Domain\Marketplace\Services\ShipmentService;
+use App\Domain\Notifications\Contracts\SmsGateway;
+use App\Domain\Notifications\Gateways\FakeTermiiGateway;
+use App\Domain\Notifications\Gateways\HttpTermiiGateway;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway;
@@ -64,13 +65,14 @@ use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Transfers\Policies\TransferPolicy;
 use App\Domain\Transfers\Services\TransferService;
-use App\Observers\TransferMarketplaceObserver;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Policies\WalletPolicy;
 use App\Domain\Wallet\Services\WalletService;
+use App\Observers\TransferMarketplaceObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -179,7 +181,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('auth', function (Request $request) {
             $limit = max(3, (int) config('reton.security.auth_rate_limit', 10));
 
-            return \Illuminate\Cache\RateLimiting\Limit::perMinute($limit)->by($request->ip());
+            return Limit::perMinute($limit)->by($request->ip());
         });
 
         $this->app->booted(function (): void {

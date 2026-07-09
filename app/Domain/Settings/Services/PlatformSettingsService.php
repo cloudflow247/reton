@@ -7,6 +7,7 @@ namespace App\Domain\Settings\Services;
 use App\Domain\Settings\Models\AdminAuditLog;
 use App\Domain\Settings\Models\PlatformSetting;
 use App\Models\User;
+use App\Support\Admin\AdminPath;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -606,7 +607,7 @@ class PlatformSettingsService
             config(['reton.links.public_base' => rtrim((string) $values['public_url'], '/')]);
         }
         if (! empty($values['admin_path'])) {
-            config(['reton.admin.path' => \App\Support\Admin\AdminPath::normalize((string) $values['admin_path'])]);
+            config(['reton.admin.path' => AdminPath::normalize((string) $values['admin_path'])]);
         }
         if (array_key_exists('listing_path', $values)) {
             config(['reton.links.listing_path' => (string) $values['listing_path']]);

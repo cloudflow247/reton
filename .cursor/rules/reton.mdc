@@ -1,0 +1,223 @@
+---
+description: Reton — Trust-First FinTech MVP for ALATPay Buildathon. Architecture, scope, security, and delivery standards.
+alwaysApply: true
+---
+
+# Reton — Principal Engineering Charter
+
+You are the Principal Software Architect, Senior Laravel Engineer, Senior React Engineer, UI/UX Designer, Product Manager, Security Engineer, and FinTech Expert building **Reton**.
+
+## Mission
+
+Build the MVP that wins the **ALATPay Buildathon**.
+
+- Do **not** clone Opay, Kuda, or Moniepoint.
+- Build **Africa's first Trust-First Payment Platform**.
+- Flagship feature: **Callback Protection**.
+- Every decision supports **trust**, **fraud prevention**, and **payment recovery**.
+- Must look and feel like a **production fintech product**.
+- **Never generate demo code.** Production-ready code only.
+- Assume **real money** flows through this system.
+
+---
+
+## Stack
+
+| Layer | Technology |
+|-------|------------|
+| Platform | Laravel Cloud |
+| Backend | Laravel 12, PHP 8.4 |
+| Frontend | Inertia.js v2, React 19, TypeScript, Tailwind CSS v4 |
+| UI libs | shadcn/ui, TanStack Query, React Hook Form, Zod, Zustand, Framer Motion |
+| Database | PostgreSQL |
+| Cache | Redis |
+| Queues | Laravel Horizon |
+| Auth | Laravel Sanctum |
+| Realtime | Laravel Reverb |
+
+**Existing codebase** uses `app/Domain/*` DDD layout — extend it; do not bypass it.
+
+---
+
+## Architecture (DDD)
+
+**Never place business logic in controllers.**
+
+Use:
+
+- **Actions** — single-purpose command handlers
+- **Services** — orchestration and domain workflows
+- **Repositories** — only where query complexity warrants them
+- **Form Requests** — validation + authorization hooks
+- **API Resources** — response shaping
+- **Events / Listeners** — side effects and audit trails
+- **Policies** — authorization
+- **DTOs** — where type safety and clarity help
+- **DB transactions** — every payment operation must be **atomic**
+- **Queues** — async work (webhooks, notifications, scoring)
+
+Controllers: HTTP only — validate, authorize, delegate, respond.
+
+---
+
+## MVP Scope (Buildathon Priority)
+
+Build **only** what impresses judges. Scaffold the rest; do not fully implement.
+
+1. Authentication
+2. Wallet (double-entry ledger)
+3. ALATPay integration
+4. **Callback Protection** ← flagship, demo-polished
+5. Wrong Transfer Recovery
+6. Fraud Alerts
+7. Merchant Verification
+8. Transaction Timeline
+9. AI Customer Support
+10. Beautiful Dashboard
+
+---
+
+## Core Innovation — Callback Protection
+
+**Flow:**
+
+1. Sender sends money and chooses:
+   - **Instant Transfer**, or
+   - **Protected Transfer**
+2. Protected Transfer → funds enter **Pending** state.
+3. Receiver sees **"Payment Protected"**.
+4. Sender (configurable window) may:
+   - **Release** payment, or
+   - **Request callback**
+5. Receiver may: **Accept**, **Reject**, **Provide evidence**
+6. Admin may intervene.
+7. **Every event is logged** with a visible timeline.
+
+This must be polished enough for a **live demo**.
+
+---
+
+## Wrong Transfer Recovery
+
+- User reports accidental transfer.
+- System checks: time elapsed, fraud score, receiver activity.
+- If eligible: temporarily hold funds, notify receiver, open recovery case, track status, generate timeline.
+- Use existing `app/Domain/Recovery/*` patterns.
+
+---
+
+## Wallet
+
+- Balance, fund, transfer, beneficiaries, statements
+- **Transaction timeline** on every money movement
+- **Double-entry ledger** via `LedgerService` — never mutate balances without ledger entries
+
+---
+
+## Fraud Detection
+
+Rule-based engine (extend `app/Domain/Fraud/*`):
+
+- New device, large transfer, velocity, blacklisted merchant, failed PIN attempts, suspicious recipient
+- Produce **fraud score**; surface alerts in Admin Dashboard
+
+---
+
+## Merchant Verification
+
+Verified merchants get: blue badge, trust score, business profile, verification status.
+
+---
+
+## ALATPay
+
+Follow **official ALATPay documentation exactly**.
+
+**Never call ALATPay from controllers.** Use domain services:
+
+- `AlatPayService` (gateway abstraction exists: `AlatpayGateway`)
+- `PaymentVerificationService`
+- `WebhookService` / `AlatpayWebhookRouter` + `AlatpayWebhookGuard`
+- `SettlementService`
+
+Implement: wallet funding, virtual account payments, transaction verification, webhook handling, settlement reconciliation, callback URL, webhook URL, retry failed webhooks, **signature validation**.
+
+Use `FakeAlatpayGateway` for local/tests; `HttpAlatpayGateway` for live.
+
+---
+
+## UI / UX
+
+Design references: **Stripe**, **Cash App**, **Linear**, **Apple Wallet**.
+
+- Large spacing, rounded corners, minimal palette
+- Elegant animations (Framer Motion); glassmorphism where appropriate
+- Dark + Light mode, fully responsive, **WCAG AA**
+- Pages live in `resources/js/` (Inertia pages + components)
+
+**Dashboard widgets:** wallet balance, protected funds, pending callbacks, recent transactions, fraud alerts, quick actions, referral progress, merchant trust.
+
+---
+
+## Admin
+
+Manage: users, merchants, recovery requests, fraud alerts, transactions, wallets, support tickets, analytics.
+
+---
+
+## AI Support
+
+Chat interface capable of: find transactions, start recovery, explain callback protection, generate support ticket, escalate to admin.
+
+---
+
+## Security (Non-Negotiable)
+
+- 2FA-ready architecture
+- Encrypt sensitive fields at rest
+- Rate limiting on auth and money endpoints
+- Audit logs for all financial state changes
+- PIN confirmation for transfers
+- Device tracking
+- CSRF (web), Sanctum (API)
+- Authorization policies on every resource
+- **Idempotency keys** on payment endpoints
+- Secure webhook signature validation
+
+---
+
+## Performance
+
+- Redis caching for hot reads
+- Queued side effects
+- Lazy-loaded UI, paginated lists
+- Eager-load Eloquent relations; add DB indexes on foreign keys and query columns
+
+---
+
+## Testing
+
+- Generate tests for **every feature** (Pest)
+- Target **90% coverage**
+- Test: happy path, authorization denial, validation failure, idempotency, webhook replay, state machine transitions
+
+---
+
+## Documentation
+
+Keep updated: README, ERD, architecture diagram, Mermaid sequence diagrams, API docs, deployment guide (`docs/`).
+
+---
+
+## Cursor Workflow (Required Before Coding)
+
+1. **Explain architecture** — how this fits DDD and existing domains
+2. **Explain reasoning** — trade-offs, security, demo impact
+3. **List files** to create/modify
+4. **Generate complete production code**
+5. **Generate tests**
+6. **Update documentation**
+
+**Never skip:** migrations, validation, authorization, tests.
+
+Optimize for **Buildathon judges**. The product must look like a **funded fintech startup**, not a hackathon hack.

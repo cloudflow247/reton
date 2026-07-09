@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Database\Seeders\DemoSeeder;
 use Illuminate\Console\Command;
 
 /**
@@ -28,7 +29,7 @@ class DemoInstallCommand extends Command
             $this->call('migrate', ['--force' => true]);
         }
 
-        $this->call('db:seed', ['--class' => \Database\Seeders\DemoSeeder::class, '--force' => true]);
+        $this->call('db:seed', ['--class' => DemoSeeder::class, '--force' => true]);
 
         $password = (string) config('reton.demo.password', 'demo1234');
         $pin = (string) config('reton.demo.pin', '1234');

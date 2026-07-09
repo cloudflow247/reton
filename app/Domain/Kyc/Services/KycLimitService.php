@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Domain\Kyc\Services;
 
 use App\Domain\Kyc\Exceptions\KycLimitExceededException;
-use App\Domain\Kyc\Models\UserKyc;
 use App\Domain\Payments\Enums\DepositStatus;
 use App\Domain\Payments\Models\Deposit;
 use App\Domain\Wallet\Models\Wallet;

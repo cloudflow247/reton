@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Web\Admin\AdminAppSettingsController;
-use App\Http\Controllers\Web\Admin\AdminDashboardController;
-use App\Http\Controllers\Web\Admin\AdminIntegrationsController;
 use App\Http\Controllers\Web\ActivityController;
 use App\Http\Controllers\Web\AddMoneyController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
@@ -14,21 +11,22 @@ use App\Http\Controllers\Web\Auth\NewPasswordController;
 use App\Http\Controllers\Web\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\Auth\VerifyEmailController;
-use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\BillsController;
 use App\Http\Controllers\Web\CardsController;
 use App\Http\Controllers\Web\DashboardController;
-use App\Http\Controllers\Web\MarketplaceController;
 use App\Http\Controllers\Web\KycController;
+use App\Http\Controllers\Web\MarketplaceController;
+use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\PinController;
 use App\Http\Controllers\Web\ProfileController;
-use App\Http\Controllers\Web\ReceiveController;
 use App\Http\Controllers\Web\ProtectionController;
+use App\Http\Controllers\Web\ReceiveController;
 use App\Http\Controllers\Web\SendController;
 use App\Http\Controllers\Web\SupportController;
 use App\Http\Controllers\Web\WalletLookupController;
 use App\Http\Controllers\Web\WellKnownController;
 use App\Http\Controllers\Web\WithdrawController;
+use App\Models\User;
 use App\Support\Admin\AdminPath;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -45,7 +43,7 @@ Route::get('/', function () {
         return Inertia::render('Public/Home');
     }
 
-    /** @var \App\Models\User $user */
+    /** @var User $user */
     $user = auth()->user();
 
     if (! $user->hasVerifiedEmail()) {

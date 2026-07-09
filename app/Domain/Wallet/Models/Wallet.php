@@ -12,6 +12,7 @@ use Database\Factories\WalletFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Wallet extends Model
@@ -70,8 +71,8 @@ class Wallet extends Model
         return $this->morphTo();
     }
 
-    /** @return \Illuminate\Database\Eloquent\Relations\HasOne<StaticAccount, $this> */
-    public function staticAccount(): \Illuminate\Database\Eloquent\Relations\HasOne
+    /** @return HasOne<StaticAccount, $this> */
+    public function staticAccount(): HasOne
     {
         return $this->hasOne(StaticAccount::class)->latestOfMany();
     }

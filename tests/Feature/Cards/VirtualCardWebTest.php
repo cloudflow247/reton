@@ -9,6 +9,7 @@ use App\Domain\Cards\Models\VirtualCard;
 use App\Domain\Cards\Services\VirtualCardService;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
+use App\Support\Money\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -27,7 +28,7 @@ function cardUser(string $pin = '1234'): array
         'transaction_pin' => Hash::make($pin),
     ]);
     $wallet = app(WalletService::class)->open($user, 'NGN');
-    app(WalletService::class)->fund($wallet, \App\Support\Money\Money::of(500_000_00, 'NGN'));
+    app(WalletService::class)->fund($wallet, Money::of(500_000_00, 'NGN'));
 
     return [$user, $wallet];
 }

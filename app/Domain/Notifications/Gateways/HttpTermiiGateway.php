@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Notifications\Gateways;
 
 use App\Domain\Notifications\Contracts\SmsGateway;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -73,7 +74,7 @@ final class HttpTermiiGateway implements SmsGateway
         }
     }
 
-    private function client(): \Illuminate\Http\Client\PendingRequest
+    private function client(): PendingRequest
     {
         return Http::baseUrl(rtrim((string) config('services.termii.base_url', 'https://api.ng.termii.com'), '/'))
             ->timeout((int) config('services.termii.timeout', 15))

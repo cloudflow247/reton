@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Middleware\ApplyPlatformSecurityHeaders;
+use App\Http\Middleware\EnsureAdminPath;
+use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Http\Middleware\EnsureOnboardingComplete;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\Exceptions\RenderableApiException;
 use App\Support\Http\ApiResponse;
@@ -28,15 +33,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // Inertia shares auth + flash on every web response and handles
         // asset-version reloads. Only the web group is server-rendered.
         $middleware->web(append: [
-            \App\Http\Middleware\ApplyPlatformSecurityHeaders::class,
+            ApplyPlatformSecurityHeaders::class,
             HandleInertiaRequests::class,
         ]);
 
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-            'admin.path' => \App\Http\Middleware\EnsureAdminPath::class,
-            'onboarding' => \App\Http\Middleware\EnsureOnboardingComplete::class,
-            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'admin.path' => EnsureAdminPath::class,
+            'onboarding' => EnsureOnboardingComplete::class,
+            'verified' => EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

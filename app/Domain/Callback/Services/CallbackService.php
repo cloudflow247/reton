@@ -6,13 +6,13 @@ namespace App\Domain\Callback\Services;
 
 use App\Domain\Callback\Enums\CallbackAction;
 use App\Domain\Callback\Enums\CallbackResolution;
-use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Exceptions\CallbackAlreadyOpenException;
 use App\Domain\Callback\Exceptions\CallbackNotOpenException;
 use App\Domain\Callback\Exceptions\CannotInitiateCallbackException;
 use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Models\CallbackEvent;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Transfers\Enums\HoldStatus;
 use App\Domain\Transfers\Enums\TransferStatus;
 use App\Domain\Transfers\Models\Transfer;

@@ -5,13 +5,13 @@ declare(strict_types=1);
 require __DIR__.'/../vendor/autoload.php';
 
 $app = require __DIR__.'/../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use App\Support\Money\Money;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Contracts\Console\Kernel;
 
 $ada = User::where('email', 'ada@demo.retonpay.com')->firstOrFail();
 $bola = User::where('email', 'bola@demo.retonpay.com')->firstOrFail();

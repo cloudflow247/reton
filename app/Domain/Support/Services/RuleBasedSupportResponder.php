@@ -170,7 +170,7 @@ class RuleBasedSupportResponder
         $summary = $this->dashboard->forUser($user);
 
         $body = sprintf(
-            "Your trust score is **%d/100**. Open items: %d pending callback(s), %d recovery case(s), %d fraud alert(s), %d protected transfer(s) awaiting release.",
+            'Your trust score is **%d/100**. Open items: %d pending callback(s), %d recovery case(s), %d fraud alert(s), %d protected transfer(s) awaiting release.',
             $summary->trust_score,
             $summary->pending_callbacks,
             $summary->open_recoveries,
@@ -340,7 +340,7 @@ class RuleBasedSupportResponder
         return $symbol.number_format($minor / 100, 2);
     }
 
-  /**
+    /**
      * @param  list<string>  $needles
      */
     private function matchesAny(string $haystack, array $needles): bool

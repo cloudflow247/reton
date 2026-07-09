@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Domain\Payments\Alatpay\AlatpaySignatureVerifier;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
+use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Enums\DepositStatus;
 use App\Domain\Payments\Exceptions\InvalidWebhookSignatureException;
 use App\Domain\Payments\Models\Deposit;
@@ -69,7 +70,7 @@ it('initiates an alatpay checkout deposit with a payment link', function () {
         $user,
         $wallet,
         Money::of(500_00, 'NGN'),
-        \App\Domain\Payments\Enums\DepositMethod::AlatpayCheckout,
+        DepositMethod::AlatpayCheckout,
     );
 
     expect($deposit->metadata['method'])->toBe('alatpay_checkout')
@@ -84,7 +85,7 @@ it('initiates a card-only deposit with channel 1', function () {
         $user,
         $wallet,
         Money::of(500_00, 'NGN'),
-        \App\Domain\Payments\Enums\DepositMethod::AlatpayCard,
+        DepositMethod::AlatpayCard,
     );
 
     expect($deposit->metadata['method'])->toBe('alatpay_card')
@@ -97,7 +98,7 @@ it('matches deposits by business reference on webhook', function () {
         $user,
         $wallet,
         Money::of(500_00, 'NGN'),
-        \App\Domain\Payments\Enums\DepositMethod::AlatpayCheckout,
+        DepositMethod::AlatpayCheckout,
     );
 
     [$payload, $signature] = signedPayload($deposit->reference, 50000);

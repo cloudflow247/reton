@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Domain\Marketplace\Enums\ItemCondition;
 use App\Domain\Marketplace\Models\DigitalListing;
 use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Models\User;
@@ -52,7 +53,7 @@ class DigitalMarketplaceDemoSeeder extends Seeder
                 'Wireless earbuds — Lagos edition',
                 'Barely used premium wireless earbuds with active noise cancellation, USB-C case, and 28-hour battery life. Ships in original box with all accessories.',
                 Money::of(45_000_00, 'NGN'),
-                \App\Domain\Marketplace\Enums\ItemCondition::LikeNew,
+                ItemCondition::LikeNew,
                 250,
                 ['brand' => 'SoundPro', 'detail' => 'Matte black, one size'],
                 'Fragile — handle with care. Giglogistics pickup from Lekki.',

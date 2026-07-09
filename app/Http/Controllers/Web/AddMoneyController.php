@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
 use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Models\Deposit;
-use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Payments\Services\AlatpayDepositService;
 use App\Domain\Wallet\Models\Wallet;

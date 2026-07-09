@@ -52,10 +52,10 @@ class BillsController extends Controller
             'categories' => collect(BillCategory::cases())
                 ->reject(fn (BillCategory $c) => $c === BillCategory::Rrr && ! $this->bills->rrrEnabled())
                 ->map(fn (BillCategory $c): array => [
-                'value' => $c->value,
-                'label' => $c->displayName(),
-                'fixed_amount' => $c->hasFixedAmount(),
-            ])->values()->all(),
+                    'value' => $c->value,
+                    'label' => $c->displayName(),
+                    'fixed_amount' => $c->hasFixedAmount(),
+                ])->values()->all(),
             'bills' => BillPaymentResource::collection($recent),
         ]);
     }

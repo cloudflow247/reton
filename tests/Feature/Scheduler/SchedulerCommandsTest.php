@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Domain\Marketplace\Enums\DigitalOrderStatus;
-use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Services\CallbackService;
+use App\Domain\Marketplace\Enums\DigitalOrderStatus;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Transfers\Enums\HoldStatus;
 use App\Domain\Transfers\Enums\TransferStatus;
 use App\Domain\Transfers\Models\Transfer;

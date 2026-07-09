@@ -6,9 +6,9 @@ namespace App\Console\Commands;
 
 use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Models\Callback;
+use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Transfers\Enums\HoldStatus;
 use App\Domain\Transfers\Enums\TransferStatus;
-use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Transfers\Models\Hold;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Transfers\Services\TransferService;

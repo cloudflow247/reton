@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
+use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Models\Deposit;
+use App\Domain\Payments\Services\AlatpayDepositService;
 use App\Domain\Wallet\Services\WalletService;
+use App\Mail\VerifyEmailMail;
 use App\Models\User;
 use App\Support\Money\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,7 +94,7 @@ it('registers a user, opens a wallet, and sends them to verify email', function 
     expect($user->wallets()->count())->toBe(1)
         ->and($user->email_verified_at)->toBeNull();
 
-    Mail::assertSent(\App\Mail\VerifyEmailMail::class);
+    Mail::assertSent(VerifyEmailMail::class);
 });
 
 it('logs in with valid credentials', function () {
@@ -235,11 +238,11 @@ it('shows the local demo checkout when alatpay driver is fake', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     [$user, $wallet] = webUser();
 
-    $deposit = app(\App\Domain\Payments\Services\AlatpayDepositService::class)->initiate(
+    $deposit = app(AlatpayDepositService::class)->initiate(
         $user,
         $wallet,
-        \App\Support\Money\Money::of(500_00, 'NGN'),
-        \App\Domain\Payments\Enums\DepositMethod::AlatpayCheckout,
+        Money::of(500_00, 'NGN'),
+        DepositMethod::AlatpayCheckout,
     );
 
     $this->actingAs($user)->get(route('deposits.pay', $deposit))
@@ -254,11 +257,11 @@ it('simulates a successful alatpay payment in demo mode', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     [$user, $wallet] = webUser();
 
-    $deposit = app(\App\Domain\Payments\Services\AlatpayDepositService::class)->initiate(
+    $deposit = app(AlatpayDepositService::class)->initiate(
         $user,
         $wallet,
-        \App\Support\Money\Money::of(500_00, 'NGN'),
-        \App\Domain\Payments\Enums\DepositMethod::AlatpayCard,
+        Money::of(500_00, 'NGN'),
+        DepositMethod::AlatpayCard,
     );
 
     $this->actingAs($user)->post(route('deposits.simulate-pay', $deposit))
@@ -272,10 +275,10 @@ it('restores a pending bank transfer after reload via reference', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     [$user, $wallet] = webUser();
 
-    $deposit = app(\App\Domain\Payments\Services\AlatpayDepositService::class)->initiate(
+    $deposit = app(AlatpayDepositService::class)->initiate(
         $user,
         $wallet,
-        \App\Support\Money\Money::of(500_00, 'NGN'),
+        Money::of(500_00, 'NGN'),
     );
 
     $this->actingAs($user)->get('/add-money?reference='.$deposit->reference)

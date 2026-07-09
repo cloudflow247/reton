@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Domain\Kyc\Services\KycLimitService;
 use App\Domain\Auth\Services\PinService;
 use App\Domain\Fraud\Data\FraudContext;
 use App\Domain\Fraud\Exceptions\FraudBlockedException;
 use App\Domain\Fraud\Services\FraudService;
+use App\Domain\Kyc\Services\KycLimitService;
 use App\Domain\Transfers\Enums\TransferType;
 use App\Domain\Transfers\Services\TransferService;
 use App\Domain\Wallet\Models\Wallet;

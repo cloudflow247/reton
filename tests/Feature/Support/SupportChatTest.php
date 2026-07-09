@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Domain\Support\Models\SupportMessage;
+use App\Domain\Support\Models\SupportTicket;
 use App\Domain\Support\Services\TransactionLookupService;
 use App\Domain\Transfers\Services\TransferService;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
+use App\Support\Money\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -18,7 +21,7 @@ function supportUser(int $fundMinor = 100_000_00): array
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     if ($fundMinor > 0) {
-        app(WalletService::class)->fund($wallet, \App\Support\Money\Money::of($fundMinor, 'NGN'));
+        app(WalletService::class)->fund($wallet, Money::of($fundMinor, 'NGN'));
         $wallet->refresh();
     }
 
@@ -48,9 +51,9 @@ it('responds to a protection question with guidance', function () {
         'message' => 'How does callback protection work?',
     ])->assertRedirect();
 
-    expect(\App\Domain\Support\Models\SupportMessage::query()->where('user_id', $user->id)->count())->toBe(2);
+    expect(SupportMessage::query()->where('user_id', $user->id)->count())->toBe(2);
 
-    $assistant = \App\Domain\Support\Models\SupportMessage::query()
+    $assistant = SupportMessage::query()
         ->where('user_id', $user->id)
         ->where('role', 'assistant')
         ->latest('created_at')
@@ -69,7 +72,7 @@ it('looks up a transfer reference scoped to the user', function () {
         $sender,
         $from,
         $to,
-        \App\Support\Money\Money::of(5_000_00, 'NGN'),
+        Money::of(5_000_00, 'NGN'),
         'Lunch',
         null,
     );
@@ -78,7 +81,7 @@ it('looks up a transfer reference scoped to the user', function () {
         'message' => 'Find '.$transfer->reference,
     ])->assertRedirect();
 
-    $assistant = \App\Domain\Support\Models\SupportMessage::query()
+    $assistant = SupportMessage::query()
         ->where('user_id', $sender->id)
         ->where('role', 'assistant')
         ->latest('created_at')
@@ -93,7 +96,7 @@ it('looks up a transfer reference scoped to the user', function () {
         'message' => 'Find '.$transfer->reference,
     ])->assertRedirect();
 
-    $foreignReply = \App\Domain\Support\Models\SupportMessage::query()
+    $foreignReply = SupportMessage::query()
         ->where('user_id', $stranger->id)
         ->where('role', 'assistant')
         ->latest('created_at')
@@ -117,7 +120,7 @@ it('escalates to a human support ticket', function () {
     ])->assertRedirect()
         ->assertSessionHas('support_ticket');
 
-    $ticket = \App\Domain\Support\Models\SupportTicket::query()->where('user_id', $user->id)->first();
+    $ticket = SupportTicket::query()->where('user_id', $user->id)->first();
 
     expect($ticket)->not->toBeNull()
         ->and($ticket->status->value)->toBe('escalated')
@@ -138,7 +141,7 @@ it('reports trust score from live dashboard summary', function () {
         'message' => 'What is my trust score?',
     ])->assertRedirect();
 
-    $assistant = \App\Domain\Support\Models\SupportMessage::query()
+    $assistant = SupportMessage::query()
         ->where('user_id', $user->id)
         ->where('role', 'assistant')
         ->latest('created_at')
@@ -155,7 +158,7 @@ it('suggests recovery when user reports a wrong transfer', function () {
         'message' => 'I sent money to the wrong person',
     ])->assertRedirect();
 
-    $assistant = \App\Domain\Support\Models\SupportMessage::query()
+    $assistant = SupportMessage::query()
         ->where('user_id', $user->id)
         ->where('role', 'assistant')
         ->latest('created_at')

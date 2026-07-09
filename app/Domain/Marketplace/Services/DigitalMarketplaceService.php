@@ -278,7 +278,7 @@ class DigitalMarketplaceService
             throw MarketplaceException::notDeliveredYet();
         }
 
-        return DB::transaction(function () use ($order, $buyer): DigitalOrder {
+        return DB::transaction(function () use ($order): DigitalOrder {
             $order = DigitalOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             $transfer = $order->transfer;
 

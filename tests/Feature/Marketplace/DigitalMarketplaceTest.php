@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 use App\Domain\Callback\Enums\CallbackResolution;
 use App\Domain\Callback\Services\CallbackDecisionEngine;
-use App\Domain\Callback\Services\CallbackService;
+use App\Domain\Logistics\Giglogistics\Contracts\GiglogisticsGateway;
 use App\Domain\Marketplace\Enums\DigitalDisputeCategory;
 use App\Domain\Marketplace\Enums\DigitalOrderStatus;
+use App\Domain\Marketplace\Enums\ItemCondition;
+use App\Domain\Marketplace\Enums\ShipmentStatus;
 use App\Domain\Marketplace\Exceptions\MarketplaceException;
 use App\Domain\Marketplace\Models\DigitalListing;
 use App\Domain\Marketplace\Models\DigitalOrder;
 use App\Domain\Marketplace\Services\DigitalEscrowJudgementService;
 use App\Domain\Marketplace\Services\DigitalMarketplaceService;
+use App\Domain\Marketplace\Services\ShipmentService;
 use App\Domain\Marketplace\Support\ListingItemCodes;
 use App\Domain\Marketplace\Support\ListingLinks;
 use App\Domain\Transfers\Enums\TransferStatus;
@@ -222,7 +225,7 @@ it('does not auto-refund physical orders that already have a booked shipment', f
         'carrier' => 'giglogistics',
         'external_id' => 'GL-TEST-1',
         'tracking_number' => 'GLTEST1',
-        'status' => \App\Domain\Marketplace\Enums\ShipmentStatus::AwaitingDropoff,
+        'status' => ShipmentStatus::AwaitingDropoff,
         'dropoff_code' => 'DROP1',
         'origin_address' => ['line1' => 'Hub'],
         'destination_address' => ['line1' => 'Buyer'],
@@ -245,7 +248,7 @@ it('allows generic not-delivered callbacks for shipped physical orders', functio
         ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
     );
 
-    app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+    app(ShipmentService::class)->scheduleHubDropoff(
         $order,
         $seller,
         ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
@@ -516,7 +519,7 @@ function seedPhysicalListing(): array
         'Wireless earbuds',
         'Premium wireless earbuds with active noise cancellation, USB-C charging case, and 28-hour battery life. Ships in original box.',
         Money::of(45_000_00, 'NGN'),
-        \App\Domain\Marketplace\Enums\ItemCondition::LikeNew,
+        ItemCondition::LikeNew,
         300,
         ['brand' => 'SoundPro', 'detail' => 'Matte black'],
         'Handle with care.',
@@ -560,7 +563,7 @@ it('books giglogistics hub drop-off and advances through verification to deliver
         ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
     );
 
-    $shipment = app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+    $shipment = app(ShipmentService::class)->scheduleHubDropoff(
         $order,
         $seller,
         ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
@@ -574,7 +577,7 @@ it('books giglogistics hub drop-off and advances through verification to deliver
     config(['services.giglogistics.fake_advance_minutes' => 0]);
 
     for ($i = 0; $i < 8; $i++) {
-        app(\App\Domain\Marketplace\Services\ShipmentService::class)->syncShipment($shipment->refresh());
+        app(ShipmentService::class)->syncShipment($shipment->refresh());
     }
 
     expect($order->refresh()->status)->toBe(DigitalOrderStatus::Delivered)
@@ -592,7 +595,7 @@ it('accepts giglogistics webhooks for hub events', function () {
         ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
     );
 
-    $shipment = app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+    $shipment = app(ShipmentService::class)->scheduleHubDropoff(
         $order,
         $seller,
         ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
@@ -624,7 +627,7 @@ it('auto-refunds when hub verification fails', function () {
 
     config(['services.giglogistics.fake_advance_minutes' => 0]);
 
-    $shipment = app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+    $shipment = app(ShipmentService::class)->scheduleHubDropoff(
         $order,
         $seller,
         ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
@@ -632,7 +635,7 @@ it('auto-refunds when hub verification fails', function () {
     );
 
     // Force a failed inspection on poll 3 (verification stage).
-    $gateway = app(\App\Domain\Logistics\Giglogistics\Contracts\GiglogisticsGateway::class);
+    $gateway = app(GiglogisticsGateway::class);
     $reflection = new ReflectionClass($gateway);
     $shipments = $reflection->getProperty('shipments');
     $shipments->setAccessible(true);
@@ -641,7 +644,7 @@ it('auto-refunds when hub verification fails', function () {
     $shipments->setValue($gateway, $records);
 
     for ($i = 0; $i < 3; $i++) {
-        app(\App\Domain\Marketplace\Services\ShipmentService::class)->syncShipment($shipment->refresh());
+        app(ShipmentService::class)->syncShipment($shipment->refresh());
     }
 
     expect($order->refresh()->status)->toBe(DigitalOrderStatus::Refunded)
@@ -656,7 +659,7 @@ it('rejects vague physical listings at publish', function () {
         'Shoe',
         'Nice shoe',
         Money::of(5_000_00, 'NGN'),
-        \App\Domain\Marketplace\Enums\ItemCondition::Good,
+        ItemCondition::Good,
         0,
         ['brand' => '', 'detail' => ''],
     ))->toThrow(MarketplaceException::class);

@@ -50,6 +50,7 @@ use App\Domain\Kyc\Enums\KycTier;
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
+use App\Support\Money\Money;
 use Illuminate\Support\Facades\Hash;
 
 function ensureVerifiedBvn(User $user, ?string $bvn = null): User
@@ -92,7 +93,7 @@ function readyUserWithWallet(array $attributes = [], int $fundMinor = 0, string 
     $wallet = app(WalletService::class)->open($user, 'NGN');
 
     if ($fundMinor > 0) {
-        app(WalletService::class)->fund($wallet, \App\Support\Money\Money::of($fundMinor, 'NGN'));
+        app(WalletService::class)->fund($wallet, Money::of($fundMinor, 'NGN'));
         $wallet->refresh();
     }
 

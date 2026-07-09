@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use App\Domain\Kyc\Models\UserKyc;
 use App\Domain\Auth\Models\Device;
+use App\Domain\Kyc\Models\UserKyc;
 use App\Domain\Wallet\Models\Wallet;
+use App\Mail\ResetPasswordMail;
+use App\Mail\VerifyEmailMail;
 use App\Support\Concerns\HasUuidKey;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use App\Mail\VerifyEmailMail;
-use App\Mail\ResetPasswordMail;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
@@ -79,8 +80,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Device::class);
     }
 
-    /** @return \Illuminate\Database\Eloquent\Relations\HasOne<UserKyc, $this> */
-    public function kyc(): \Illuminate\Database\Eloquent\Relations\HasOne
+    /** @return HasOne<UserKyc, $this> */
+    public function kyc(): HasOne
     {
         return $this->hasOne(UserKyc::class);
     }

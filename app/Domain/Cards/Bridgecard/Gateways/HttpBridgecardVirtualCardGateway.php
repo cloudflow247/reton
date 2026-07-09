@@ -13,7 +13,6 @@ use App\Domain\Cards\Data\VirtualCardBillingAddress;
 use App\Domain\Cards\Exceptions\VirtualCardException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 final class HttpBridgecardVirtualCardGateway implements VirtualCardGateway
 {

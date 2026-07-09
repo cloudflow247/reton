@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Admin;
 
-use App\Domain\Notifications\Contracts\SmsGateway;
 use App\Domain\Bills\Interswitch\Gateways\HttpInterswitchProvider;
 use App\Domain\Bills\Interswitch\Services\InterswitchTokenService;
 use App\Domain\Cards\Bridgecard\Gateways\HttpBridgecardVirtualCardGateway;
+use App\Domain\Notifications\Contracts\SmsGateway;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;

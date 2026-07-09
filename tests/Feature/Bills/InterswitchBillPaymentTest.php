@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Domain\Bills\Enums\BillCategory;
-use App\Domain\Bills\Interswitch\Gateways\HttpInterswitchProvider;
 use App\Domain\Bills\Remita\Contracts\BillProviderGateway;
 use App\Domain\Bills\Remita\Gateways\FakeBillProvider;
 use App\Domain\Bills\Services\BillPaymentService;

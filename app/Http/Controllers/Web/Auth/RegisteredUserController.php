@@ -6,9 +6,9 @@ namespace App\Http\Controllers\Web\Auth;
 
 use App\Domain\Auth\Data\DeviceContext;
 use App\Domain\Auth\Services\AuthService;
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\Web\Concerns\RedirectsAfterAuth;
 use App\Http\Controllers\Web\Concerns\RemembersRedirect;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,8 +18,8 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-    use RemembersRedirect;
     use RedirectsAfterAuth;
+    use RemembersRedirect;
 
     public function __construct(private readonly AuthService $auth) {}
 

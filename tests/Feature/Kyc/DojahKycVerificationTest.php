@@ -7,6 +7,7 @@ use App\Domain\Kyc\Services\KycService;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -35,13 +36,13 @@ it('rejects bvn when date of birth does not match dojah record', function () {
     $user = kycUser();
 
     app(KycService::class)->upgradeToTier2($user, '22334455667', '1999-01-01');
-})->throws(Illuminate\Validation\ValidationException::class);
+})->throws(ValidationException::class);
 
 it('rejects bvn when profile name does not match registry name', function () {
     $user = kycUser('Ada Obi');
 
     app(KycService::class)->upgradeToTier2($user, '22334455667', '1990-05-15');
-})->throws(Illuminate\Validation\ValidationException::class);
+})->throws(ValidationException::class);
 
 it('requires identity consent on tier 2 web upgrade', function () {
     $user = kycUser();

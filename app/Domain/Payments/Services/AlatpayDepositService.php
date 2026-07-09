@@ -17,6 +17,7 @@ use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use App\Support\Money\Money;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -112,8 +113,8 @@ class AlatpayDepositService
             ->first();
     }
 
-    /** @return \Illuminate\Database\Eloquent\Collection<int, Deposit> */
-    public function openDepositsFor(User $user, int $limit = 5): \Illuminate\Database\Eloquent\Collection
+    /** @return Collection<int, Deposit> */
+    public function openDepositsFor(User $user, int $limit = 5): Collection
     {
         return Deposit::query()
             ->where('user_id', $user->getKey())

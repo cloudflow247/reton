@@ -11,6 +11,7 @@ use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\StatementEntryResource;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -41,9 +42,9 @@ class DashboardController extends Controller
      * The latest few statement lines for the dashboard preview. Full history
      * lives on the Activity page.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, LedgerEntry>
+     * @return Collection<int, LedgerEntry>
      */
-    private function recentEntries(Wallet $wallet): \Illuminate\Database\Eloquent\Collection
+    private function recentEntries(Wallet $wallet): Collection
     {
         return LedgerEntry::where('ledger_account_id', $wallet->ledger_account_id)
             ->with('transaction')
