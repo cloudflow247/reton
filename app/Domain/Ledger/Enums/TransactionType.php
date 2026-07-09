@@ -19,4 +19,5 @@ enum TransactionType: string
     case RecoveryReturn = 'recovery_return';
     case Settlement = 'settlement';
     case BillPayment = 'bill_payment';
+    case CardFunding = 'card_funding';
 }

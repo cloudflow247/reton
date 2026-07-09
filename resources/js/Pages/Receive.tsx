@@ -4,13 +4,20 @@ import { Head, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { AppShell } from '@/components/AppShell'
-import { AmountField, Card } from '@/components/ui'
-import { CheckIcon, CopyIcon, PlusIcon, QrIcon, ShareIcon, ShieldIcon } from '@/components/icons'
+import { StaticWalletCard } from '@/components/StaticWalletCard'
+import { FormPanel, InfoStrip, Page, PageHero, pageItem } from '@/components/page-kit'
+import { AmountField } from '@/components/ui'
+import { CheckIcon, CopyIcon, PlusIcon, QrIcon, ReceiveIcon, ShareIcon, ShieldIcon } from '@/components/icons'
 import { ngn, toMinor } from '@/lib/format'
-import type { SharedProps } from '@/types'
+import type { KycProfile, PageProps, SharedProps, StaticAccount } from '@/types'
+
+type ReceiveProps = SharedProps & {
+  kyc: KycProfile
+  staticAccount: StaticAccount | null
+}
 
 export default function Receive() {
-  const { auth } = usePage<SharedProps>().props
+  const { auth, kyc, staticAccount } = usePage<ReceiveProps>().props
   const wallet = auth.wallets[0]
   const account = wallet?.account_number ?? ''
 
@@ -51,12 +58,18 @@ export default function Receive() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-5">
+    <Page narrow>
       <Head title="Receive" />
-      <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">Receive money</h1>
-        <p className="mt-1 text-sm text-muted">Share your account or QR — anyone on Reton can pay you instantly.</p>
-      </div>
+      <PageHero
+        icon={ReceiveIcon}
+        title="Receive money"
+        subtitle="Share your account or QR — bank transfers and Reton-to-Reton both work."
+        tone="mint"
+      />
+
+      <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />
+
+      <p className="text-center text-xs font-semibold uppercase tracking-wide text-muted">On Reton</p>
 
       {/* QR + account hero — a living emerald mesh with morphing light. */}
       <motion.div
@@ -119,7 +132,7 @@ export default function Receive() {
       </motion.div>
 
       {/* Optional: request a specific amount */}
-      <Card className="space-y-4">
+      <FormPanel className="space-y-4">
         <button
           type="button"
           onClick={() => {
@@ -150,12 +163,12 @@ export default function Receive() {
             </div>
           </motion.div>
         )}
-      </Card>
+      </FormPanel>
 
-      <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted">
-        <ShieldIcon size={13} /> Payments to you are screened by Reton’s fraud checks and recovery tools.
-      </p>
-    </div>
+      <InfoStrip tone="mint">
+        Payments to you are screened by Reton fraud checks and recovery tools.
+      </InfoStrip>
+    </Page>
   )
 }
 

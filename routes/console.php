@@ -7,6 +7,7 @@ use App\Console\Commands\ExpireUndeliveredDigitalOrders;
 use App\Console\Commands\PollStaticAccounts;
 use App\Console\Commands\ReconcileDeposits;
 use App\Console\Commands\ReconcilePayouts;
+use App\Console\Commands\SyncMarketplaceShipments;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -32,6 +33,10 @@ Schedule::command(ExpireCallbacks::class)
     ->withoutOverlapping();
 
 Schedule::command(ExpireUndeliveredDigitalOrders::class)
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+Schedule::command(SyncMarketplaceShipments::class)
     ->everyFiveMinutes()
     ->withoutOverlapping();
 

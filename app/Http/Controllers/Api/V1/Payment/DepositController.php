@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Payment;
 
+use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Models\Deposit;
 use App\Domain\Payments\Services\AlatpayDepositService;
 use App\Domain\Wallet\Models\Wallet;
@@ -38,10 +39,13 @@ class DepositController extends Controller
         $wallet = Wallet::findOrFail($request->string('wallet_id')->toString());
         $this->authorize('operate', $wallet);
 
+        $method = DepositMethod::tryFrom($request->string('method')->toString()) ?? DepositMethod::BankTransfer;
+
         $deposit = $this->deposits->initiate(
             $user,
             $wallet,
             Money::of($request->integer('amount'), $wallet->currency),
+            $method,
         );
 
         return ApiResponse::created(new DepositResource($deposit), 'Deposit initiated.');

@@ -16,8 +16,14 @@ use Inertia\Testing\AssertableInertia as Assert;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    config([
+        'reton.bills.provider' => 'interswitch',
+        'services.interswitch.driver' => 'fake',
+        'services.remita.driver' => 'fake',
+    ]);
     $this->gateway = new FakeBillProvider;
     $this->app->instance(BillProviderGateway::class, $this->gateway);
+    $this->app->instance(FakeBillProvider::class, $this->gateway);
 });
 
 /**
@@ -95,6 +101,22 @@ it('pays a Remita RRR for its looked-up amount, ignoring any client amount', fun
     ])->assertSessionHas('bill');
 
     expect($wallet->fresh()->balance)->toBe(100_000_00 - 25_000_00);
+});
+
+it('pays a betting wallet top-up via interswitch', function () {
+    [$user, $wallet] = billWebUser(1_000_00);
+
+    $this->actingAs($user)->post('/bills', [
+        'wallet_id' => $wallet->id,
+        'category' => 'betting',
+        'biller_code' => 'sportybet',
+        'biller_name' => 'SportyBet',
+        'customer_reference' => 'SB123456',
+        'amount' => 500_00,
+        'pin' => '1234',
+    ])->assertSessionHas('bill');
+
+    expect($wallet->fresh()->balance)->toBe(50000);
 });
 
 it('rejects a bill with the wrong pin and moves no money', function () {

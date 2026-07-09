@@ -28,6 +28,7 @@ class UserResource extends JsonResource
             'email_verified' => $this->email_verified_at !== null,
             'phone_verified' => $this->phone_verified_at !== null,
             'has_transaction_pin' => $this->hasTransactionPin(),
+            'is_admin' => (bool) $this->is_admin,
             'created_at' => $this->created_at,
         ];
     }

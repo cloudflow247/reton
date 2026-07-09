@@ -20,8 +20,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    config(['reton.bills.provider' => 'remita', 'services.remita.driver' => 'fake']);
     $this->gateway = new FakeBillProvider;
     $this->app->instance(BillProviderGateway::class, $this->gateway);
+    $this->app->instance(FakeBillProvider::class, $this->gateway);
 });
 
 function billService(): BillPaymentService

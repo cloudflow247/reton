@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Kyc\Models\UserKyc;
 use App\Domain\Auth\Models\Device;
 use App\Domain\Wallet\Models\Wallet;
 use App\Support\Concerns\HasUuidKey;
@@ -33,6 +34,7 @@ class User extends Authenticatable
         'country',
         'password',
         'status',
+        'is_admin',
     ];
 
     /**
@@ -55,6 +57,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'pin_locked_until' => 'datetime',
             'pin_attempts' => 'integer',
+            'is_admin' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -69,6 +72,12 @@ class User extends Authenticatable
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Relations\HasOne<UserKyc, $this> */
+    public function kyc(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserKyc::class);
     }
 
     public function hasTransactionPin(): bool

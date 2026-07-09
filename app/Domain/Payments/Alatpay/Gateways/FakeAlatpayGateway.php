@@ -69,7 +69,7 @@ class FakeAlatpayGateway implements AlatpayGateway
 
         return new PaymentLinkResponse(
             providerReference: $providerReference,
-            paymentLinkUrl: 'https://pay.alatpay.test/'.$request->reference,
+            paymentLinkUrl: 'https://pay.alatpay.test/'.$request->reference.($request->channel ? '?channel='.$request->channel : ''),
             expiresAt: $request->expiresAt,
         );
     }

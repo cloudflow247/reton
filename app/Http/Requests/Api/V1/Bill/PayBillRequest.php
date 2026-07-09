@@ -28,6 +28,7 @@ class PayBillRequest extends FormRequest
             // so they are only supplied by the payer for amount-entered bills.
             'biller_name' => ['required_unless:category,rrr', 'nullable', 'string', 'max:120'],
             'customer_reference' => ['required', 'string', 'max:64'],
+            'payment_code' => ['nullable', 'string', 'max:32'],
             'amount' => ['required_unless:category,rrr', 'nullable', 'integer', 'min:1'],
             'pin' => ['required', 'string'],
         ];

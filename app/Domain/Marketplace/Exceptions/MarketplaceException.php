@@ -66,6 +66,31 @@ final class MarketplaceException extends DomainException implements RenderableAp
         return new self('Choose a dispute reason (does not match, invalid item) instead of a generic callback.', 'use_structured_dispute');
     }
 
+    public static function buyerMustAcceptDescription(): self
+    {
+        return new self('Confirm you have read and accept the item description before paying.', 'buyer_description_acceptance_required');
+    }
+
+    public static function shippingAddressRequired(): self
+    {
+        return new self('A complete delivery address is required for physical items.', 'shipping_address_required');
+    }
+
+    public static function listingVerificationFailed(): self
+    {
+        return new self('This listing did not pass Reton verification. Update the description and try again.', 'listing_verification_failed');
+    }
+
+    public static function alreadyShipped(): self
+    {
+        return new self('This order has already been handed to Giglogistics.', 'already_shipped');
+    }
+
+    public static function notShippedYet(): self
+    {
+        return new self('The item must be delivered by Giglogistics before you can release payment.', 'awaiting_carrier_delivery');
+    }
+
     public function apiStatus(): int
     {
         return 422;

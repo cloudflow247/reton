@@ -25,7 +25,8 @@ class StaticAccountResource extends JsonResource
             'status' => $this->status->value,
             'account_number' => $this->account_number,
             'account_name' => $this->account_name,
-            'bank_name' => $this->bank_name,
+            'bank_name' => $this->bank_name ?? 'ALAT by Wema',
+            'needs_otp' => $this->status->value === 'pending_otp',
             'created_at' => $this->created_at,
         ];
     }

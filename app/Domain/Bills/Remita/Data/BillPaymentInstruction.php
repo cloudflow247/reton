@@ -22,5 +22,9 @@ final readonly class BillPaymentInstruction
         public string $customerReference,
         public Money $amount,
         public string $narration = 'Bill payment',
+        public ?string $paymentCode = null,
+        public ?string $customerMobile = null,
+        public ?string $customerEmail = null,
+        public ?string $requestReference = null,
     ) {}
 }

@@ -1,32 +1,26 @@
 import type { Biller } from '@/lib/billers'
+import { BillerBrandIcon } from '@/components/biller-icons'
 
-/** A brand-coloured biller tile (MTN, Glo, DStv, …). Pass `round` for the
- *  circular network-selector style used on the airtime/data flow. */
+/** Brand-accurate biller tile with SVG mark (MTN, T2, DStv, discos, …). */
 export function BillerLogo({
   biller,
   size = 44,
   round,
 }: {
-  biller: Biller
+  biller: Pick<Biller, 'brand' | 'code' | 'bg'> | { brand?: string; code: string; bg?: string }
   size?: number
   round?: boolean
 }) {
+  const brand = biller.brand ?? (biller.code === '9mobile' ? 't2' : biller.code)
+
   return (
     <span
-      className={`flex shrink-0 items-center justify-center font-display font-bold leading-none shadow-sm ${
-        round ? 'rounded-full' : 'rounded-xl'
-      }`}
+      className={`inline-flex shrink-0 transition-transform ${round ? 'rounded-full' : 'rounded-xl'}`}
       style={{
-        width: size,
-        height: size,
-        background: biller.bg,
-        color: biller.fg,
-        fontSize: Math.max(10, size * (biller.short.length > 3 ? 0.26 : 0.34)),
-        letterSpacing: '-0.02em',
+        filter: `drop-shadow(0 4px 12px ${(biller.bg ?? '#64748b')}55)`,
       }}
-      aria-hidden
     >
-      {biller.short}
+      <BillerBrandIcon brand={brand} size={size} round={round} />
     </span>
   )
 }

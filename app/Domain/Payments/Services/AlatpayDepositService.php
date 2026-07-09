@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Kyc\Services\KycLimitService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\CollectionRequest;
+use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
+use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Enums\DepositStatus;
 use App\Domain\Payments\Models\Deposit;
 use App\Domain\Payments\Models\WebhookEvent;
@@ -33,19 +36,22 @@ class AlatpayDepositService
         private readonly AlatpayGateway $gateway,
         private readonly WalletService $wallets,
         private readonly AlatpayWebhookGuard $guard,
+        private readonly KycLimitService $kycLimits,
     ) {}
 
-    public function initiate(User $user, Wallet $wallet, Money $amount): Deposit
+    public function initiate(User $user, Wallet $wallet, Money $amount, DepositMethod $method = DepositMethod::BankTransfer): Deposit
     {
-        $deposit = Deposit::create([
-            'reference' => 'DEP-'.Str::upper((string) Str::ulid()),
-            'user_id' => $user->getKey(),
-            'wallet_id' => $wallet->getKey(),
-            'provider' => self::PROVIDER,
-            'status' => DepositStatus::Pending,
-            'amount' => $amount->amount,
-            'currency' => $amount->currency,
-        ]);
+        $this->kycLimits->assertCanCredit($user, $wallet, $amount);
+
+        return match ($method) {
+            DepositMethod::BankTransfer => $this->initiateBankTransfer($user, $wallet, $amount),
+            DepositMethod::AlatpayCheckout, DepositMethod::AlatpayCard => $this->initiatePaymentLink($user, $wallet, $amount, $method),
+        };
+    }
+
+    public function initiateBankTransfer(User $user, Wallet $wallet, Money $amount): Deposit
+    {
+        $deposit = $this->createPendingDeposit($user, $wallet, $amount, DepositMethod::BankTransfer);
 
         $collection = $this->gateway->createCollection(new CollectionRequest(
             reference: $deposit->reference,
@@ -61,6 +67,53 @@ class AlatpayDepositService
         ]);
 
         return $deposit->refresh();
+    }
+
+    public function initiatePaymentLink(User $user, Wallet $wallet, Money $amount, DepositMethod $method): Deposit
+    {
+        $deposit = $this->createPendingDeposit($user, $wallet, $amount, $method);
+
+        $link = $this->gateway->createPaymentLink(new PaymentLinkRequest(
+            reference: $deposit->reference,
+            amount: $amount,
+            title: 'Fund Reton wallet',
+            description: 'Add money to your protected Reton wallet',
+            customerEmail: (string) $user->email,
+            customerName: (string) $user->name,
+            customerPhone: $user->phone,
+            redirectUrl: route('add-money.return', ['reference' => $deposit->reference]),
+            channel: $method->alatpayChannel(),
+        ));
+
+        $deposit->update([
+            'provider_reference' => $link->providerReference,
+            'metadata' => [
+                'method' => $method->value,
+                'payment_link_url' => $link->paymentLinkUrl,
+                'expires_at' => $link->expiresAt,
+            ],
+        ]);
+
+        return $deposit->refresh();
+    }
+
+    public function findForUser(User $user, string $reference): ?Deposit
+    {
+        return Deposit::query()
+            ->where('user_id', $user->getKey())
+            ->where('reference', $reference)
+            ->first();
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Collection<int, Deposit> */
+    public function openDepositsFor(User $user, int $limit = 5): \Illuminate\Database\Eloquent\Collection
+    {
+        return Deposit::query()
+            ->where('user_id', $user->getKey())
+            ->where('status', DepositStatus::Pending)
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 
     public function handleWebhook(string $rawPayload, ?string $signature): WebhookEvent
@@ -100,9 +153,7 @@ class AlatpayDepositService
     public function process(WebhookEvent $event, array $data): void
     {
         $reference = (string) ($data['reference'] ?? '');
-        $deposit = Deposit::where('provider', self::PROVIDER)
-            ->where('provider_reference', $reference)
-            ->first();
+        $deposit = $this->findDepositByWebhookReference($reference);
 
         if (! $deposit instanceof Deposit) {
             $event->update(['status' => 'ignored', 'processed_at' => now()]);
@@ -128,6 +179,35 @@ class AlatpayDepositService
 
         $this->creditDeposit($deposit);
         $event->update(['status' => 'processed', 'processed_at' => now()]);
+    }
+
+    private function createPendingDeposit(User $user, Wallet $wallet, Money $amount, DepositMethod $method): Deposit
+    {
+        return Deposit::create([
+            'reference' => 'DEP-'.Str::upper((string) Str::ulid()),
+            'user_id' => $user->getKey(),
+            'wallet_id' => $wallet->getKey(),
+            'provider' => self::PROVIDER,
+            'status' => DepositStatus::Pending,
+            'amount' => $amount->amount,
+            'currency' => $amount->currency,
+            'metadata' => ['method' => $method->value],
+        ]);
+    }
+
+    private function findDepositByWebhookReference(string $reference): ?Deposit
+    {
+        if ($reference === '') {
+            return null;
+        }
+
+        return Deposit::query()
+            ->where('provider', self::PROVIDER)
+            ->where(function ($query) use ($reference): void {
+                $query->where('provider_reference', $reference)
+                    ->orWhere('reference', $reference);
+            })
+            ->first();
     }
 
     private function creditDeposit(Deposit $deposit): void

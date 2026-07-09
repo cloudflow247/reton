@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { AppShell } from '@/components/AppShell'
 import { DigitalOrderEscrowCard } from '@/components/DigitalOrderEscrowCard'
+import { Page, PageHero } from '@/components/page-kit'
 import { RhfField } from '@/components/forms/RhfField'
 import { TrustProtectionListener } from '@/components/TrustProtectionListener'
 import { Button, Card, Modal, Pill } from '@/components/ui'
@@ -119,7 +120,7 @@ export default function Protection() {
   const showRecovery = filter === 'all' || filter === 'recovery' || filter === 'action'
 
   return (
-    <div className="space-y-5 pb-4">
+    <Page className="!pb-4">
       <Head title="Protection" />
       {auth.user?.id && (
         <TrustProtectionListener userId={auth.user.id} only={['callbacks', 'recoveries', 'transfers']} />
@@ -127,14 +128,14 @@ export default function Protection() {
 
       <SendProtectionTabs active="protection" />
 
-      <header className="space-y-1">
-        <h1 className="font-display text-2xl font-bold tracking-tight">Protection hub</h1>
-        <p className="max-w-lg text-sm text-muted">
-          Recall protected payments, settle disputes, and recover money sent by mistake — your undo button for money.
-        </p>
-        {flash.success && <p className="text-sm text-mint">{flash.success}</p>}
-        {flash.error && <p className="text-sm text-danger">{flash.error}</p>}
-      </header>
+      <PageHero
+        icon={ShieldIcon}
+        title="Protection hub"
+        subtitle="Recall payments, settle disputes, recover mistaken transfers — your undo button for money."
+        tone="amber"
+      />
+      {flash.success && <p className="text-sm text-mint">{flash.success}</p>}
+      {flash.error && <p className="text-sm text-danger">{flash.error}</p>}
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -498,7 +499,7 @@ export default function Protection() {
       </Card>
 
       {action && <ActionDialog action={action} onClose={() => setAction(null)} />}
-    </div>
+    </Page>
   )
 }
 

@@ -17,15 +17,27 @@ $queueCommand = $isWindows
 
 $queueName = $isWindows ? 'queue' : 'horizon';
 
-$concurrently = implode(' ', [
-    'npx concurrently',
-    '-c "#93c5fd,#c4b5fd,#fb7185,#fdba74,#86efac,#f472b6"',
+$processes = [
     '"php artisan serve"',
     '"'.$queueCommand.'"',
     '"php artisan reverb:start"',
-    '"php artisan pail --timeout=0"',
-    '"npm run dev"',
-    '--names=server,'.$queueName.',reverb,logs,vite',
+];
+
+if (! $isWindows) {
+    $processes[] = '"php artisan pail --timeout=0"';
+}
+
+$processes[] = '"npm run dev"';
+
+$names = $isWindows
+    ? 'server,'.$queueName.',reverb,vite'
+    : 'server,'.$queueName.',reverb,logs,vite';
+
+$concurrently = implode(' ', [
+    'npx concurrently',
+    '-c "#93c5fd,#c4b5fd,#fb7185,#fdba74,#86efac,#f472b6"',
+    ...$processes,
+    '--names='.$names,
     '--kill-others',
 ]);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Wallet\Models;
 
 use App\Domain\Ledger\Models\LedgerAccount;
+use App\Domain\Payments\Models\StaticAccount;
 use App\Support\Concerns\HasUuidKey;
 use App\Support\Money\Money;
 use Database\Factories\WalletFactory;
@@ -67,6 +68,12 @@ class Wallet extends Model
     public function owner(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Relations\HasOne<StaticAccount, $this> */
+    public function staticAccount(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(StaticAccount::class)->latestOfMany();
     }
 
     /** Funds in total balance that cannot be spent yet (pending sales, recovery holds). */

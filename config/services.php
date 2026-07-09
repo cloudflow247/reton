@@ -57,4 +57,57 @@ return [
         'timeout' => (int) env('REMITA_TIMEOUT', 15),
     ],
 
+    'giglogistics' => [
+        'driver' => env('GIGLOGISTICS_DRIVER', 'fake'),
+        'base_url' => env('GIGLOGISTICS_BASE_URL', 'https://api.giglogistics.com'),
+        'api_key' => env('GIGLOGISTICS_API_KEY'),
+        'webhook_secret' => env('GIGLOGISTICS_WEBHOOK_SECRET', ''),
+        'fake_advance_minutes' => (int) env('GIGLOGISTICS_FAKE_ADVANCE_MINUTES', 1),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Interswitch Quickteller (bill payments & airtime)
+    |--------------------------------------------------------------------------
+    | @see https://docs.interswitchgroup.com/docs/bills-payment-1
+    */
+    'interswitch' => [
+        'driver' => env('INTERSWITCH_DRIVER', 'http'),
+        'passport_url' => env('INTERSWITCH_PASSPORT_URL', 'https://qa.interswitchng.com/passport/oauth/token'),
+        'base_url' => env('INTERSWITCH_BASE_URL', 'https://qa.interswitchng.com/quicktellerservice/api/v5'),
+        'terminal_id' => env('INTERSWITCH_TERMINAL_ID'),
+        'client_id' => env('INTERSWITCH_CLIENT_ID'),
+        'client_secret' => env('INTERSWITCH_CLIENT_SECRET'),
+        'request_reference_prefix' => env('INTERSWITCH_REF_PREFIX', '1453'),
+        'timeout' => (int) env('INTERSWITCH_TIMEOUT', 15),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bridgecard Issuing (virtual NGN & USD cards)
+    |--------------------------------------------------------------------------
+    | @see https://docs.bridgecard.co/
+    */
+    'bridgecard' => [
+        'driver' => env('BRIDGECARD_DRIVER', 'fake'),
+        'base_url' => env('BRIDGECARD_BASE_URL', 'https://issuecards.api.bridgecard.co/v1/issuing/sandbox'),
+        'access_token' => env('BRIDGECARD_ACCESS_TOKEN'),
+        'secret_key' => env('BRIDGECARD_SECRET_KEY'),
+        'timeout' => (int) env('BRIDGECARD_TIMEOUT', 20),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dojah (BVN / NIN identity verification)
+    |--------------------------------------------------------------------------
+    | @see https://docs.dojah.io
+    */
+    'dojah' => [
+        'driver' => env('DOJAH_DRIVER', 'fake'),
+        'base_url' => env('DOJAH_BASE_URL', 'https://sandbox.dojah.io'),
+        'app_id' => env('DOJAH_APP_ID'),
+        'secret_key' => env('DOJAH_SECRET_KEY'),
+        'timeout' => (int) env('DOJAH_TIMEOUT', 20),
+    ],
+
 ];

@@ -18,6 +18,12 @@ class PurchaseDigitalListingRequest extends FormRequest
     {
         return [
             'pin' => ['required', 'string', 'min:4', 'max:6', 'regex:/^\d+$/'],
+            'buyer_accepts_description' => ['sometimes', 'boolean'],
+            'shipping_line1' => ['sometimes', 'string', 'max:120'],
+            'shipping_line2' => ['nullable', 'string', 'max:120'],
+            'shipping_city' => ['sometimes', 'string', 'max:80'],
+            'shipping_state' => ['sometimes', 'string', 'max:80'],
+            'shipping_phone' => ['sometimes', 'string', 'max:20'],
         ];
     }
 }

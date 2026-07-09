@@ -52,6 +52,9 @@
             "Composer\\Config::disableProcessTimeout",
             "@php scripts/dev.php"
         ],
+        "demo": [
+            "@php artisan reton:demo --fresh"
+        ],
         "lint": "pint --test",
         "lint:fix": "pint",
         "analyse": "phpstan analyse --memory-limit=512M",

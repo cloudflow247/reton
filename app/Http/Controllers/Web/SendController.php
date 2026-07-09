@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Kyc\Services\KycLimitService;
 use App\Domain\Auth\Services\PinService;
 use App\Domain\Fraud\Data\FraudContext;
 use App\Domain\Fraud\Exceptions\FraudBlockedException;
@@ -27,6 +28,7 @@ class SendController extends Controller
         private readonly TransferService $transfers,
         private readonly PinService $pins,
         private readonly FraudService $fraud,
+        private readonly KycLimitService $kycLimits,
     ) {}
 
     public function store(CreateTransferRequest $request): RedirectResponse
@@ -48,6 +50,8 @@ class SendController extends Controller
         $this->verifyPin($this->pins, $user, $request->string('pin')->toString());
 
         $amount = Money::of($request->integer('amount'), $from->currency);
+
+        $this->kycLimits->assertCanSpend($user, $from, $amount);
 
         $assessment = $this->fraud->evaluate(new FraudContext(
             user: $user,

@@ -11,9 +11,11 @@ namespace App\Domain\Bills\Remita\Data;
  */
 final readonly class BillProviderResult
 {
+    /** @param  array<string, mixed>  $metadata */
     public function __construct(
         public string $providerReference,
         public string $status,
+        public array $metadata = [],
     ) {}
 
     public function isCompleted(): bool

@@ -17,8 +17,9 @@ final class ListingLinks
     public static function path(DigitalListing $listing): string
     {
         $prefix = rtrim((string) config('reton.links.listing_path', '/l'), '/');
+        $segment = $listing->item_code ?? $listing->id;
 
-        return $prefix.'/'.$listing->id;
+        return $prefix.'/'.$segment;
     }
 
     public static function web(DigitalListing $listing): string
@@ -30,7 +31,8 @@ final class ListingLinks
     public static function app(DigitalListing $listing): string
     {
         $scheme = (string) config('reton.links.app_scheme', 'reton');
+        $segment = $listing->item_code ?? $listing->id;
 
-        return $scheme.'://l/'.$listing->id;
+        return $scheme.'://l/'.$segment;
     }
 }

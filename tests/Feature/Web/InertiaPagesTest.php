@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
+use App\Domain\Payments\Models\Deposit;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use App\Support\Money\Money;
@@ -132,6 +133,7 @@ it('renders each authenticated screen', function (string $path, string $componen
     'profile' => ['/profile', 'Profile'],
     'pin' => ['/pin', 'SetPin'],
     'protection' => ['/protection', 'Protection'],
+    'support' => ['/support', 'Support'],
 ]);
 
 it('shares the authenticated user and wallets with every page', function () {
@@ -143,7 +145,8 @@ it('shares the authenticated user and wallets with every page', function () {
             ->where('auth.user.email', $user->email)
             ->where('auth.wallets.0.id', $wallet->id)
             ->has('summary')
-            ->has('activity'));
+            ->has('activity')
+            ->has('kycTier'));
 });
 
 it('passes transfers, callbacks and recoveries to the protection page', function () {
@@ -203,7 +206,74 @@ it('initiates a deposit and flashes the virtual account', function () {
     $this->actingAs($user)->post('/deposits', [
         'wallet_id' => $wallet->id,
         'amount' => 500_00,
-    ])->assertSessionHas('deposit');
+        'method' => 'bank_transfer',
+    ])->assertRedirect(route('add-money', ['reference' => Deposit::latest()->first()->reference]));
+});
+
+it('redirects to the pay route for alatpay checkout', function () {
+    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    [$user, $wallet] = webUser();
+
+    $this->actingAs($user)->post('/deposits', [
+        'wallet_id' => $wallet->id,
+        'amount' => 500_00,
+        'method' => 'alatpay_checkout',
+    ])->assertRedirect(route('deposits.pay', Deposit::latest()->first()));
+});
+
+it('shows the local demo checkout when alatpay driver is fake', function () {
+    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    [$user, $wallet] = webUser();
+
+    $deposit = app(\App\Domain\Payments\Services\AlatpayDepositService::class)->initiate(
+        $user,
+        $wallet,
+        \App\Support\Money\Money::of(500_00, 'NGN'),
+        \App\Domain\Payments\Enums\DepositMethod::AlatpayCheckout,
+    );
+
+    $this->actingAs($user)->get(route('deposits.pay', $deposit))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Deposits/AlatpayDemoCheckout')
+            ->where('deposit.reference', $deposit->reference)
+            ->where('cardOnly', false));
+});
+
+it('simulates a successful alatpay payment in demo mode', function () {
+    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    [$user, $wallet] = webUser();
+
+    $deposit = app(\App\Domain\Payments\Services\AlatpayDepositService::class)->initiate(
+        $user,
+        $wallet,
+        \App\Support\Money\Money::of(500_00, 'NGN'),
+        \App\Domain\Payments\Enums\DepositMethod::AlatpayCard,
+    );
+
+    $this->actingAs($user)->post(route('deposits.simulate-pay', $deposit))
+        ->assertRedirect(route('add-money', ['reference' => $deposit->reference]));
+
+    expect($deposit->fresh()->status->value)->toBe('completed')
+        ->and($wallet->fresh()->balance)->toBe(50000);
+});
+
+it('restores a pending bank transfer after reload via reference', function () {
+    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    [$user, $wallet] = webUser();
+
+    $deposit = app(\App\Domain\Payments\Services\AlatpayDepositService::class)->initiate(
+        $user,
+        $wallet,
+        \App\Support\Money\Money::of(500_00, 'NGN'),
+    );
+
+    $this->actingAs($user)->get('/add-money?reference='.$deposit->reference)
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('AddMoney')
+            ->where('pendingDeposit.reference', $deposit->reference)
+            ->where('pendingDeposit.virtual_account.account_number', $deposit->virtual_account['account_number']));
 });
 
 it('sets a transaction pin', function () {

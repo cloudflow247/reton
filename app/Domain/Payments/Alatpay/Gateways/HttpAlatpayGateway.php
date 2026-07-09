@@ -59,17 +59,27 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     public function createPaymentLink(PaymentLinkRequest $request): PaymentLinkResponse
     {
-        $response = $this->client()->post('/payment-link/api/v1/links', [
+        $payload = [
             'businessId' => config('services.alatpay.business_id'),
             'amount' => $request->amount->amount,
             'currency' => $request->amount->currency,
             'orderId' => $request->reference,
             'title' => $request->title,
             'description' => $request->description,
-            'customer' => ['email' => $request->customerEmail],
+            'customer' => array_filter([
+                'email' => $request->customerEmail,
+                'name' => $request->customerName ?: null,
+                'phone' => $request->customerPhone,
+            ]),
             'redirectUrl' => $request->redirectUrl,
             'expiresAt' => $request->expiresAt,
-        ]);
+        ];
+
+        if ($request->channel !== null) {
+            $payload['channel'] = $request->channel;
+        }
+
+        $response = $this->client()->post('/payment-link/api/v1/links', $payload);
 
         if (! $response->successful()) {
             throw AlatpayException::requestFailed('createPaymentLink', $response->status());

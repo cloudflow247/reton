@@ -30,6 +30,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
+
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'admin.path' => \App\Http\Middleware\EnsureAdminPath::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Render every exception thrown on the API surface as Reton's standard

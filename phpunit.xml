@@ -34,6 +34,8 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="ALATPAY_DRIVER" value="fake"/>
         <env name="ALATPAY_WEBHOOK_SECRET" value="test-webhook-secret"/>
+        <env name="RETON_BILL_PROVIDER" value="remita"/>
         <env name="REMITA_DRIVER" value="fake"/>
+        <env name="INTERSWITCH_DRIVER" value="fake"/>
     </php>
 </phpunit>

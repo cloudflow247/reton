@@ -21,6 +21,26 @@ Trust-based African fintech platform — a Laravel + Inertia + React monolith.
 
 ## Getting started
 
+### Local demo (fastest)
+
+```bash
+composer install
+npm install
+cp .env.example .env && php artisan key:generate
+# Enable the Windows/SQLite block in .env (or use your existing .env with RETON_DEMO_MODE=true)
+composer demo          # migrate:fresh + Ada/Bola demo accounts + sample listings
+composer dev           # app, queue, reverb, vite
+```
+
+Open http://127.0.0.1:8000/login — tap **Ada Obi** or **Bola Ade**, or sign in manually:
+
+| | |
+|--|--|
+| Password | `demo1234` |
+| Transaction PIN | `1234` |
+
+### Standard setup
+
 ```bash
 composer install
 npm install

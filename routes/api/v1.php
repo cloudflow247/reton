@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\PinController;
 use App\Http\Controllers\Api\V1\Callback\CallbackController;
+use App\Http\Controllers\Api\V1\Logistics\GiglogisticsWebhookController;
 use App\Http\Controllers\Api\V1\Payment\AlatpayWebhookController;
 use App\Http\Controllers\Api\V1\Payment\DepositController;
 use App\Http\Controllers\Api\V1\Payment\PaymentRequestController;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public webhook receiver — authenticated by HMAC signature, not Sanctum.
 Route::post('webhooks/alatpay', [AlatpayWebhookController::class, 'handle'])->name('webhooks.alatpay');
+Route::post('webhooks/giglogistics', [GiglogisticsWebhookController::class, 'handle'])->name('webhooks.giglogistics');
 
 // Public payer-facing details for a payment request (no auth).
 Route::get('pay/{reference}', [PaymentRequestController::class, 'publicShow'])->name('pay.show');

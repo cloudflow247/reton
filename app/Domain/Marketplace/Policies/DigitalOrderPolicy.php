@@ -16,7 +16,12 @@ class DigitalOrderPolicy
 
     public function deliver(User $user, DigitalOrder $order): bool
     {
-        return (string) $user->getKey() === (string) $order->seller_id;
+        return (string) $user->getKey() === (string) $order->seller_id && ! $order->isPhysical();
+    }
+
+    public function ship(User $user, DigitalOrder $order): bool
+    {
+        return (string) $user->getKey() === (string) $order->seller_id && $order->isPhysical();
     }
 
     public function confirm(User $user, DigitalOrder $order): bool

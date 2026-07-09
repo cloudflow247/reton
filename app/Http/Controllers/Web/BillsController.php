@@ -47,11 +47,15 @@ class BillsController extends Controller
             ->get();
 
         return Inertia::render('Bills', [
-            'categories' => collect(BillCategory::cases())->map(fn (BillCategory $c): array => [
+            'billsProvider' => config('reton.bills.provider', 'interswitch'),
+            'rrrEnabled' => $this->bills->rrrEnabled(),
+            'categories' => collect(BillCategory::cases())
+                ->reject(fn (BillCategory $c) => $c === BillCategory::Rrr && ! $this->bills->rrrEnabled())
+                ->map(fn (BillCategory $c): array => [
                 'value' => $c->value,
                 'label' => $c->displayName(),
                 'fixed_amount' => $c->hasFixedAmount(),
-            ])->all(),
+            ])->values()->all(),
             'bills' => BillPaymentResource::collection($recent),
         ]);
     }
@@ -137,6 +141,7 @@ class BillsController extends Controller
             $billerName,
             $request->string('customer_reference')->toString(),
             $amount,
+            $request->input('payment_code') ? $request->string('payment_code')->toString() : null,
         );
 
         // Flash a receipt the Bills page shows as its outcome screen.

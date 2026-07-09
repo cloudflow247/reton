@@ -285,3 +285,9 @@ export const SnowIcon = (p: IconProps) => (
     <path d="M9 3.5 12 6l3-2.5M9 20.5 12 18l3 2.5M3.5 10 5 7.2 2.3 6.5M20.5 14 19 16.8l2.7.7M3.5 14 2.3 17.5 5 16.8M20.5 10l1.2-3.5L19 7.2" />
   </Svg>
 )
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m6 9 6 6 6-6" />
+  </Svg>
+)

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Kyc\Services\KycLimitService;
+use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
 use App\Domain\Payments\Alatpay\Data\StaticAccountTransaction;
@@ -20,6 +22,7 @@ use App\Support\Money\Money;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Provisions and funds permanent AlatPay static accounts.
@@ -39,7 +42,36 @@ class StaticAccountService
     public function __construct(
         private readonly AlatpayGateway $gateway,
         private readonly WalletService $wallets,
+        private readonly KycService $kyc,
+        private readonly KycLimitService $kycLimits,
     ) {}
+
+    /**
+     * Provision (or return) the wallet's ALATPay static account using the user's KYC tier.
+     */
+    public function provisionForWallet(User $user, Wallet $wallet): StaticAccount
+    {
+        $existing = StaticAccount::query()
+            ->where('wallet_id', $wallet->getKey())
+            ->latest()
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $profile = $this->kyc->forUser($user);
+        $type = $profile->staticWalletType();
+        $bvn = $type === StaticWalletType::Individual ? $profile->decryptedBvn() : null;
+
+        if ($type === StaticWalletType::Individual && $bvn === null) {
+            throw ValidationException::withMessages([
+                'kyc' => ['Verify your BVN (Tier 2) before opening an individual deposit account.'],
+            ]);
+        }
+
+        return $this->provision($user, $wallet, $type, $bvn);
+    }
 
     public function provision(User $user, Wallet $wallet, StaticWalletType $type, ?string $bvn = null): StaticAccount
     {
@@ -149,7 +181,10 @@ class StaticAccountService
     {
         DB::transaction(function () use ($account, $txn): void {
             $wallet = Wallet::findOrFail($account->wallet_id);
+            $user = User::findOrFail($account->user_id);
             $amount = Money::of($txn->amountMinor(), $wallet->currency);
+
+            $this->kycLimits->assertCanCredit($user, $wallet, $amount);
 
             $deposit = Deposit::create([
                 'reference' => 'SDEP-'.$txn->transactionId,

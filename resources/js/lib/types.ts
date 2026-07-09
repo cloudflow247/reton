@@ -8,6 +8,39 @@ export type User = {
   email_verified: boolean
   phone_verified: boolean
   has_transaction_pin: boolean
+  is_admin?: boolean
+}
+
+export type KycProfile = {
+  tier: 1 | 2 | 3
+  tier_label: string
+  bvn_verified: boolean
+  bvn_last4: string | null
+  nin_verified: boolean
+  nin_last4: string | null
+  date_of_birth: string | null
+  address_line1: string | null
+  city: string | null
+  state: string | null
+  limits: {
+    single_transaction_max: number
+    daily_inflow_max: number
+    wallet_balance_max: number
+    static_wallet_type: 'individual' | 'collection'
+  }
+  next_tier: 2 | 3 | null
+}
+
+export type StaticAccount = {
+  id: string
+  wallet_id: string
+  wallet_type: 'individual' | 'collection'
+  status: 'pending_otp' | 'active' | 'failed'
+  account_number: string | null
+  account_name: string | null
+  bank_name: string | null
+  needs_otp?: boolean
+  created_at: string
 }
 
 export type Wallet = {
@@ -56,10 +89,19 @@ export type Transfer = {
 
 export type DigitalListing = {
   id: string
+  item_code?: string
   seller_id: string
   seller_name?: string
+  item_type: 'digital' | 'physical'
   title: string
   description: string
+  condition?: string | null
+  condition_label?: string | null
+  weight_grams?: number | null
+  specs?: Record<string, string> | null
+  handling_notes?: string | null
+  verification_status?: string | null
+  verification_score?: number | null
   price: number
   currency: string
   status: string
@@ -76,7 +118,12 @@ export type DigitalOrder = {
   buyer_id: string
   seller_id: string
   transfer_id: string | null
-  status: 'paid_held' | 'delivered' | 'completed' | 'disputed' | 'refunded'
+  status: 'paid_held' | 'awaiting_verification' | 'shipped' | 'delivered' | 'completed' | 'disputed' | 'refunded'
+  listing_snapshot?: Record<string, unknown> | null
+  verification_status?: string | null
+  verification_score?: number | null
+  shipping_fee?: number
+  shipped_at: string | null
   delivered_at: string | null
   completed_at: string | null
   delivery_deadline_at: string | null
@@ -89,8 +136,15 @@ export type DigitalOrder = {
     title?: string
     content?: string
     description?: string
+    specs?: Record<string, string>
+    condition?: string | null
     delivered_at?: string
     integrity_verified?: boolean
+    shipment?: {
+      tracking_number: string
+      carrier: string
+      pod_reference?: string | null
+    } | null
   } | null
   escrow?: {
     step: number
@@ -104,7 +158,24 @@ export type DigitalOrder = {
     can_dispute_quality: boolean
     auto_refund_at: string | null
     seller_trust_score: number
+    verification_score?: number | null
+    item_type?: 'digital' | 'physical'
     listing_description: string | null
+    listing_snapshot?: Record<string, unknown> | null
+    shipment?: {
+      tracking_number: string
+      dropoff_code?: string | null
+      status: string
+      status_label: string
+      carrier: string
+      hub_name?: string | null
+      hub_address?: { line1?: string; city?: string; state?: string; phone?: string } | null
+      hub_verification_status?: string | null
+      hub_verification_score?: number | null
+      hub_verification_report?: Record<string, unknown> | null
+      events: { status: string; at: string; note: string }[]
+      estimated_delivery_at?: string | null
+    } | null
   } | null
 }
 
@@ -149,19 +220,37 @@ export type Deposit = {
   status: string
   amount: number
   currency: string
+  method?: 'bank_transfer' | 'alatpay_checkout' | 'alatpay_card'
   virtual_account: {
     account_number: string
     bank_name: string
     account_name: string
   } | null
+  payment_link_url?: string | null
 }
 
-export type BillCategory = 'airtime' | 'data' | 'electricity' | 'cable_tv' | 'rrr'
+export type BillCategory = 'airtime' | 'data' | 'electricity' | 'cable_tv' | 'betting' | 'rrr'
 
 export type BillCategoryOption = {
   value: BillCategory
   label: string
   fixed_amount: boolean
+}
+
+export type Payout = {
+  id: string
+  reference: string
+  provider: string
+  provider_reference: string | null
+  status: 'pending' | 'completed' | 'failed'
+  amount: number
+  currency: string
+  bank_code: string
+  account_number: string
+  account_name: string
+  failure_reason: string | null
+  processed_at: string | null
+  created_at: string
 }
 
 export type Bill = {

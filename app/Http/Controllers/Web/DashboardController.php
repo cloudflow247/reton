@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Domain\Dashboard\Services\DashboardSummaryService;
+use App\Domain\Kyc\Services\KycService;
 use App\Domain\Ledger\Models\LedgerEntry;
 use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
@@ -18,6 +19,7 @@ class DashboardController extends Controller
 {
     public function __construct(
         private readonly DashboardSummaryService $summary,
+        private readonly KycService $kyc,
     ) {}
 
     public function index(Request $request): Response
@@ -28,6 +30,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'summary' => $this->summary->forUser($user)->toArray(),
+            'kycTier' => $this->kyc->forUser($user)->tier->value,
             'activity' => $wallet instanceof Wallet
                 ? StatementEntryResource::collection($this->recentEntries($wallet))->resolve()
                 : [],

@@ -16,6 +16,7 @@ enum BillCategory: string
     case Data = 'data';
     case Electricity = 'electricity';
     case CableTv = 'cable_tv';
+    case Betting = 'betting';
     case Rrr = 'rrr';
 
     public function displayName(): string
@@ -25,6 +26,7 @@ enum BillCategory: string
             self::Data => 'Mobile Data',
             self::Electricity => 'Electricity',
             self::CableTv => 'Cable TV',
+            self::Betting => 'Betting',
             self::Rrr => 'Remita (RRR)',
         };
     }

@@ -9,10 +9,14 @@ use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Services\CallbackService;
 use App\Domain\Marketplace\Enums\DigitalDisputeCategory;
 use App\Domain\Marketplace\Enums\DigitalOrderStatus;
+use App\Domain\Marketplace\Enums\ItemCondition;
+use App\Domain\Marketplace\Enums\ItemType;
 use App\Domain\Marketplace\Enums\ListingStatus;
+use App\Domain\Marketplace\Enums\VerificationStatus;
 use App\Domain\Marketplace\Exceptions\MarketplaceException;
 use App\Domain\Marketplace\Models\DigitalListing;
 use App\Domain\Marketplace\Models\DigitalOrder;
+use App\Domain\Marketplace\Support\ListingItemCodes;
 use App\Domain\Transfers\Enums\TransferStatus;
 use App\Domain\Transfers\Models\Hold;
 use App\Domain\Transfers\Models\Transfer;
@@ -33,6 +37,7 @@ class DigitalMarketplaceService
     public function __construct(
         private readonly TransferService $transfers,
         private readonly DigitalEscrowJudgementService $escrow,
+        private readonly ListingVerificationService $verification,
     ) {}
 
     public function createListing(
@@ -42,8 +47,10 @@ class DigitalMarketplaceService
         Money $price,
         string $deliveryPayload,
     ): DigitalListing {
-        return DigitalListing::create([
+        $listing = DigitalListing::create([
+            'item_code' => ListingItemCodes::generate(),
             'seller_id' => $seller->getKey(),
+            'item_type' => ItemType::Digital,
             'title' => $title,
             'description' => $description,
             'price' => $price->amount,
@@ -51,10 +58,69 @@ class DigitalMarketplaceService
             'delivery_payload' => $deliveryPayload,
             'status' => ListingStatus::Active,
         ]);
+
+        $verified = $this->verification->verifyListing($listing);
+        $listing->update([
+            'verification_status' => $verified['status'],
+            'verification_score' => $verified['score'],
+        ]);
+
+        return $listing->refresh();
     }
 
-    public function purchase(User $buyer, DigitalListing $listing, Wallet $buyerWallet): DigitalOrder
-    {
+    /**
+     * @param  array<string, string>  $specs
+     */
+    public function createPhysicalListing(
+        User $seller,
+        string $title,
+        string $description,
+        Money $price,
+        ItemCondition $condition,
+        int $weightGrams,
+        array $specs,
+        ?string $handlingNotes = null,
+        ?array $dimensionsCm = null,
+    ): DigitalListing {
+        $listing = DigitalListing::create([
+            'item_code' => ListingItemCodes::generate(),
+            'seller_id' => $seller->getKey(),
+            'item_type' => ItemType::Physical,
+            'title' => $title,
+            'description' => $description,
+            'condition' => $condition,
+            'weight_grams' => $weightGrams,
+            'dimensions_cm' => $dimensionsCm,
+            'specs' => $specs,
+            'handling_notes' => $handlingNotes,
+            'price' => $price->amount,
+            'currency' => $price->currency,
+            'delivery_payload' => '',
+            'status' => ListingStatus::Active,
+        ]);
+
+        $verified = $this->verification->verifyListing($listing);
+
+        if ($verified['status'] === VerificationStatus::Flagged) {
+            $listing->delete();
+            throw MarketplaceException::listingVerificationFailed();
+        }
+
+        $listing->update([
+            'verification_status' => $verified['status'],
+            'verification_score' => $verified['score'],
+        ]);
+
+        return $listing->refresh();
+    }
+
+    public function purchase(
+        User $buyer,
+        DigitalListing $listing,
+        Wallet $buyerWallet,
+        bool $buyerAcceptsDescription = false,
+        ?array $shippingAddress = null,
+    ): DigitalOrder {
         if ((string) $buyer->getKey() === (string) $listing->seller_id) {
             throw MarketplaceException::cannotBuyOwnListing();
         }
@@ -73,40 +139,67 @@ class DigitalMarketplaceService
             throw MarketplaceException::listingUnavailable();
         }
 
+        if ($listing->isPhysical()) {
+            if (! $buyerAcceptsDescription) {
+                throw MarketplaceException::buyerMustAcceptDescription();
+            }
+
+            if (! is_array($shippingAddress) || empty($shippingAddress['line1']) || empty($shippingAddress['city'])) {
+                throw MarketplaceException::shippingAddressRequired();
+            }
+        }
+
         $amount = Money::of($listing->price, $listing->currency);
         $idempotencyKey = 'digital-purchase-'.$listing->id.'-'.$buyer->getKey();
-        $deliveryDeadlineHours = (int) config('reton.digital.delivery_deadline_hours', 72);
+        $isPhysical = $listing->isPhysical();
+        $deadlineHours = $isPhysical
+            ? (int) config('reton.physical.ship_deadline_hours', 48)
+            : (int) config('reton.digital.delivery_deadline_hours', 72);
 
-        return DB::transaction(function () use ($buyer, $listing, $buyerWallet, $sellerWallet, $amount, $idempotencyKey, $deliveryDeadlineHours): DigitalOrder {
+        return DB::transaction(function () use ($buyer, $listing, $buyerWallet, $sellerWallet, $amount, $idempotencyKey, $deadlineHours, $buyerAcceptsDescription, $shippingAddress, $isPhysical): DigitalOrder {
             $listing = DigitalListing::query()->whereKey($listing->id)->lockForUpdate()->firstOrFail();
 
             if (! $listing->isActive()) {
                 throw MarketplaceException::listingUnavailable();
             }
 
+            $snapshot = $listing->toSnapshot();
+
             $order = DigitalOrder::create([
                 'listing_id' => $listing->id,
                 'buyer_id' => $buyer->getKey(),
                 'seller_id' => $listing->seller_id,
                 'status' => DigitalOrderStatus::PaidHeld,
-                'delivery_deadline_at' => now()->addHours($deliveryDeadlineHours),
+                'listing_snapshot' => $snapshot,
+                'buyer_accepted_description_at' => $buyerAcceptsDescription ? now() : null,
+                'shipping_address' => $shippingAddress,
+                'delivery_deadline_at' => now()->addHours($deadlineHours),
             ]);
+
+            $orderVerification = $this->verification->verifyOrderSnapshot($order);
+            $order->update([
+                'verification_status' => $orderVerification['status'],
+                'verification_score' => $orderVerification['score'],
+            ]);
+
+            $purpose = $isPhysical ? 'physical_item' : 'digital_item';
 
             $transfer = $this->transfers->sendProtected(
                 $buyer,
                 $buyerWallet,
                 $sellerWallet,
                 $amount,
-                'Digital purchase: '.$listing->title,
+                ($isPhysical ? 'Physical' : 'Digital').' purchase: '.$listing->title,
                 $idempotencyKey,
             );
 
             $transfer->update([
                 'metadata' => [
-                    'purpose' => 'digital_item',
+                    'purpose' => $purpose,
                     'order_id' => $order->id,
                     'listing_id' => $listing->id,
                     'listing_title' => $listing->title,
+                    'listing_snapshot_checksum' => $snapshot['checksum'] ?? null,
                 ],
             ]);
 
@@ -127,6 +220,10 @@ class DigitalMarketplaceService
 
     public function deliver(DigitalOrder $order, User $seller, bool $attestMatchesListing): DigitalOrder
     {
+        if ($order->isPhysical()) {
+            throw MarketplaceException::wrongOrderState('physical_use_ship');
+        }
+
         if ((string) $seller->getKey() !== (string) $order->seller_id) {
             throw MarketplaceException::wrongOrderState('seller');
         }
@@ -251,6 +348,10 @@ class DigitalMarketplaceService
         if ($order->status !== DigitalOrderStatus::Delivered) {
             throw MarketplaceException::notDeliveredYet();
         }
+
+        if ($order->isPhysical() && ! $order->shipment?->isDelivered()) {
+            throw MarketplaceException::notShippedYet();
+        }
     }
 
     public function blocksAutoRelease(Hold $hold, Transfer $transfer): bool
@@ -259,7 +360,9 @@ class DigitalMarketplaceService
             return true;
         }
 
-        if (($transfer->metadata['purpose'] ?? null) === 'digital_item' && $hold->expires_at === null) {
+        $purpose = $transfer->metadata['purpose'] ?? null;
+
+        if (in_array($purpose, ['digital_item', 'physical_item'], true) && $hold->expires_at === null) {
             return true;
         }
 
@@ -290,7 +393,7 @@ class DigitalMarketplaceService
     {
         DigitalOrder::query()
             ->where('transfer_id', $transfer->id)
-            ->whereIn('status', [DigitalOrderStatus::PaidHeld->value, DigitalOrderStatus::Delivered->value])
+            ->whereIn('status', [DigitalOrderStatus::PaidHeld->value, DigitalOrderStatus::AwaitingVerification->value, DigitalOrderStatus::Shipped->value, DigitalOrderStatus::Delivered->value])
             ->update(['status' => DigitalOrderStatus::Disputed->value]);
     }
 
@@ -304,6 +407,10 @@ class DigitalMarketplaceService
             $order = DigitalOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
 
             if ($order->status !== DigitalOrderStatus::PaidHeld) {
+                return false;
+            }
+
+            if ($order->isPhysical() && $order->shipment()->exists() && $order->status !== DigitalOrderStatus::PaidHeld) {
                 return false;
             }
 
@@ -345,6 +452,26 @@ class DigitalMarketplaceService
     {
         if ((string) $viewer->getKey() !== (string) $order->buyer_id) {
             return null;
+        }
+
+        if ($order->isPhysical()) {
+            if (! $order->isDelivered()) {
+                return null;
+            }
+
+            return [
+                'title' => $order->listing_snapshot['title'] ?? $order->listing?->title,
+                'description' => $order->listing_snapshot['description'] ?? $order->listing?->description,
+                'specs' => $order->listing_snapshot['specs'] ?? [],
+                'condition' => $order->listing_snapshot['condition'] ?? null,
+                'delivered_at' => $order->delivered_at?->toIso8601String(),
+                'integrity_verified' => $this->verification->descriptionMatchScore($order) >= 80,
+                'shipment' => $order->shipment ? [
+                    'tracking_number' => $order->shipment->tracking_number,
+                    'carrier' => 'Giglogistics',
+                    'pod_reference' => $order->shipment->pod_reference,
+                ] : null,
+            ];
         }
 
         if (! $order->isDelivered()) {

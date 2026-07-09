@@ -6,9 +6,10 @@ import { motion } from 'framer-motion'
 import { Controller, useForm } from 'react-hook-form'
 import { AppShell } from '@/components/AppShell'
 import { FieldError, RhfField } from '@/components/forms/RhfField'
+import { FormPanel, InfoStrip, Page, PageHero, SuccessScreen } from '@/components/page-kit'
 import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
-import { AmountField, Button, Card } from '@/components/ui'
-import { CheckIcon, ClockIcon, LockIcon, ShieldIcon } from '@/components/icons'
+import { AmountField, Button } from '@/components/ui'
+import { CheckIcon, ClockIcon, LockIcon, SendIcon, ShieldIcon } from '@/components/icons'
 import { ngn, toMinor } from '@/lib/format'
 import { deviceHeaders } from '@/lib/device'
 import {
@@ -19,28 +20,21 @@ import {
 import type { SharedProps } from '@/types'
 
 export default function Send() {
-  return (
-    <div className="space-y-6">
-      <Head title="Send money" />
-      <div className="inline-flex rounded-full border border-line bg-surface-2 p-1">
-        <span className="relative rounded-full px-5 py-2 font-display text-sm font-semibold">
-          <motion.span
-            layoutId="send-tab"
-            className="absolute inset-0 rounded-full bg-mint shadow-sm"
-            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-          />
-          <span className="relative z-10 text-white">Send money</span>
-        </span>
-        <Link
-          href="/protection"
-          className="relative z-10 flex items-center gap-1.5 rounded-full px-5 py-2 font-display text-sm font-semibold text-muted transition-colors hover:text-text"
-        >
-          <ShieldIcon size={15} /> Protection
-        </Link>
-      </div>
+  const { auth } = usePage<SharedProps>().props
+  const wallet = auth.wallets[0]
 
-      <SendForm />
-    </div>
+  return (
+    <Page narrow>
+      <Head title="Send money" />
+      <PageHero
+        icon={SendIcon}
+        title="Send money"
+        subtitle="Protected by default — funds stay in escrow until you release. Switch to Standard for instant sends."
+        balance={wallet?.available_balance}
+        tone="mint"
+      />
+      <SendForm key="send" />
+    </Page>
   )
 }
 
@@ -108,7 +102,7 @@ function SendForm() {
       account: '',
       amount: '',
       pin: '',
-      type: 'normal',
+      type: 'protected',
     },
     mode: 'onBlur',
   })
@@ -193,7 +187,7 @@ function SendForm() {
             account: '',
             amount: '',
             pin: '',
-            type: values.type,
+            type: 'protected',
           })
           setRecipient(null)
         },
@@ -204,50 +198,38 @@ function SendForm() {
 
   if (done) {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
-        <Card className="mx-auto max-w-lg text-center shield-glow">
-          <div className="mx-auto mt-2 flex h-16 w-16 items-center justify-center rounded-full bg-mint/12 text-mint">
-            {done.type === 'protected' ? <ShieldIcon size={30} /> : <CheckIcon size={30} />}
+      <SuccessScreen
+        amount={done.amount}
+        title={done.type === 'protected' ? `Held for ${done.recipient_name}` : `Sent to ${done.recipient_name}`}
+        subtitle={done.type === 'protected' ? 'Funds are safely held until you release.' : 'Transfer settled instantly.'}
+        primaryLabel="Send again"
+        onPrimary={() => router.get('/send', {}, { preserveState: false })}
+        secondaryHref="/dashboard"
+      >
+        <div className="rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm">
+          <div className="flex justify-between gap-2">
+            <span className="text-muted">Reference</span>
+            <span className="truncate font-num text-xs">{done.reference}</span>
           </div>
-          <h2 className="mt-4 font-num text-3xl font-bold tracking-tight tabular-nums">{ngn(done.amount)}</h2>
-          <p className="mt-1 text-sm text-muted">
-            {done.type === 'protected' ? `held for ${done.recipient_name}` : `sent to ${done.recipient_name}`}
-          </p>
-          <p className="mt-4 text-sm leading-relaxed text-muted">
-            {done.type === 'protected'
-              ? 'The money is safely held. Release it or raise a callback any time from the Protection tab.'
-              : 'Your transfer settled instantly.'}
-          </p>
-          <p className="mt-3 font-num text-xs text-muted">Ref {done.reference}</p>
-          <Button className="mt-6" onClick={() => router.get('/send', {}, { preserveState: false })}>
-            Make another transfer
-          </Button>
-        </Card>
-      </motion.div>
+          {done.type === 'protected' && (
+            <p className="mt-2 text-xs text-muted">
+              Release or raise a callback anytime from{' '}
+              <Link href="/protection" className="font-semibold text-mint hover:underline">
+                Protection
+              </Link>
+              .
+            </p>
+          )}
+        </div>
+      </SuccessScreen>
     )
   }
 
   const canSend = !!recipient && minor > 0 && !overBalance && watch('pin').length >= 4
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="mx-auto max-w-lg"
-    >
-      <Card className="space-y-7">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold tracking-tight">Send money</h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-xs text-muted">
-            <span className="text-muted">Balance</span>
-            <span className="font-num font-semibold tabular-nums text-text">
-              {wallet ? ngn(wallet.available_balance) : '—'}
-            </span>
-          </span>
-        </div>
-
-        <form onSubmit={onSubmit} className="space-y-7" noValidate>
+    <FormPanel>
+        <form onSubmit={onSubmit} className="space-y-6" noValidate>
           <input type="hidden" {...register('from_wallet_id')} />
           <input type="hidden" {...register('to_wallet_id')} />
 
@@ -351,17 +333,17 @@ function SendForm() {
               <div className="space-y-2">
                 <span className="block text-xs font-medium uppercase tracking-wide text-muted">How to send</span>
                 <Option
+                  active={field.value === 'protected'}
+                  onClick={() => field.onChange('protected')}
+                  title="Protected"
+                  desc="Funds held in escrow — you can recall until you release."
+                  recommended
+                />
+                <Option
                   active={field.value === 'normal'}
                   onClick={() => field.onChange('normal')}
                   title="Standard"
                   desc="Arrives instantly. Final once sent."
-                />
-                <Option
-                  active={field.value === 'protected'}
-                  onClick={() => field.onChange('protected')}
-                  title="Protected"
-                  desc="They see pending funds; you can recall until you release."
-                  recommended
                 />
               </div>
             )}
@@ -393,8 +375,11 @@ function SendForm() {
             {minor > 0 ? ` ${ngn(minor)}` : ''}
           </Button>
         </form>
-      </Card>
-    </motion.div>
+
+        <InfoStrip tone="mint">
+          Protected transfers hold funds until you release — great for marketplace sales.
+        </InfoStrip>
+    </FormPanel>
   )
 }
 
@@ -429,7 +414,7 @@ function Option({
           <span className="font-display text-sm font-bold">{title}</span>
           {recommended && (
             <span className="rounded-full bg-mint/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-mint">
-              Recommended
+              {active ? 'Selected' : 'Default'}
             </span>
           )}
         </div>

@@ -1,4 +1,6 @@
-import type { Bill, Deposit, User, Wallet } from '@/lib/types'
+import type { Bill, Deposit, Payout, User, Wallet } from '@/lib/types'
+
+export type { KycProfile, StaticAccount } from '@/lib/types'
 
 export type TransferReceipt = {
   reference: string
@@ -28,12 +30,15 @@ export type SharedProps = {
     wallets: Wallet[]
   }
   demo: DemoInfo | null
+  /** Secret admin panel base path — only set for platform administrators. */
+  adminPath: string | null
   flash: {
     success: string | null
     error: string | null
     deposit: Deposit | null
     transfer: TransferReceipt | null
     bill: Bill | null
+    payout: Payout | null
   }
 }
 

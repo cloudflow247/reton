@@ -79,7 +79,7 @@ export function Logo({ size = 32 }: { size?: number }) {
 
 export function Wordmark({ light, size = 32 }: { light?: boolean; size?: number }) {
   return (
-    <span className="flex items-center gap-2.5">
+    <span className="flex items-center gap-2.5 pr-1">
       <Logo size={size} />
       <span className={`font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-text'}`}>
         Reton
@@ -94,15 +94,21 @@ export function AmountField({
   onChange,
   invalid,
   quick = [1000, 2000, 5000, 10000],
+  label = 'Amount',
+  hideLabel = false,
 }: {
   value: string
   onChange: (v: string) => void
   invalid?: boolean
   quick?: number[]
+  label?: string
+  hideLabel?: boolean
 }) {
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Amount</span>
+      {!hideLabel && (
+        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">{label}</span>
+      )}
       <div
         className={`field flex items-center px-4 focus-within:border-mint focus-within:ring-2 focus-within:ring-mint/15 ${
           invalid ? '!border-danger' : ''
@@ -161,19 +167,20 @@ export function CopyRow({ label, value, mono }: { label: string; value: string; 
 }
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'ghost' | 'danger'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   loading?: boolean
 }
 
 export function Button({ variant = 'primary', loading, children, className = '', ...props }: BtnProps) {
   const styles = {
-    primary: 'bg-mint text-white shadow-sm hover:bg-mint-strong',
+    primary: 'bg-mint text-white shadow-[0_10px_24px_-14px_rgba(9,79,57,0.65)] hover:bg-mint-strong',
+    secondary: 'border border-line bg-surface text-text hover:border-mint/35 hover:text-mint',
     ghost: 'bg-surface text-text border border-line hover:bg-surface-2',
     danger: 'bg-danger/10 text-danger border border-danger/25 hover:bg-danger/15',
   }[variant]
   return (
     <button
-      className={`btn px-5 py-3 text-sm ${styles} ${className}`}
+      className={`btn px-5 py-2.5 text-sm ${styles} ${className}`}
       disabled={loading || props.disabled}
       {...props}
     >

@@ -8,15 +8,19 @@ import { ShieldIcon } from '@/components/icons'
 import { shortDate } from '@/lib/format'
 import {
   confirmOrderSchema,
+  createListingSchema,
   deliverOrderSchema,
   disputeOrderSchema,
+  shipOrderSchema,
   type ConfirmOrderValues,
   type DeliverOrderValues,
   type DisputeOrderValues,
+  type ShipOrderValues,
 } from '@/lib/schemas/marketplace'
 import type { DigitalOrder } from '@/lib/types'
 
-const steps = ['Paid', 'Delivered', 'Confirmed'] as const
+const digitalSteps = ['Paid', 'Delivered', 'Confirmed'] as const
+const physicalSteps = ['Paid', 'Hub verify', 'In transit', 'Delivered', 'Confirmed'] as const
 
 type Props = {
   order: DigitalOrder
@@ -24,12 +28,14 @@ type Props = {
 }
 
 export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
-  const [mode, setMode] = useState<'deliver' | 'confirm' | 'dispute' | null>(null)
+  const [mode, setMode] = useState<'deliver' | 'ship' | 'confirm' | 'dispute' | null>(null)
   const isBuyer = order.role === 'buyer'
   const isSeller = order.role === 'seller'
-  const title = order.listing?.title ?? 'Digital item'
+  const isPhysical = order.escrow?.item_type === 'physical' || order.listing?.item_type === 'physical'
+  const title = order.listing?.title ?? (isPhysical ? 'Physical item' : 'Digital item')
   const escrow = order.escrow
   const step = escrow?.step ?? 1
+  const steps = isPhysical ? physicalSteps : digitalSteps
 
   return (
     <Card className={`${compact ? 'p-3' : 'p-4'} ${order.status === 'disputed' ? 'border-amber/30' : ''}`}>
@@ -52,15 +58,49 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
         )}
       </div>
 
-      <EscrowStepper current={step} disputed={order.status === 'disputed'} />
+      <EscrowStepper current={step} disputed={order.status === 'disputed'} steps={steps} />
 
-      {isBuyer && order.delivery?.content && (
-        <DeliveryPanel order={order} />
+      {isPhysical && escrow?.shipment && isSeller && order.status === 'awaiting_verification' && (
+        <HubDropoffPanel shipment={escrow.shipment} snapshot={escrow.listing_snapshot} />
+      )}
+
+      {isPhysical && escrow?.shipment && isSeller && order.status === 'paid_held' && !escrow.shipment.dropoff_code && (
+        <p className="mt-2 rounded-xl border border-amber/30 bg-amber/5 px-3 py-2 text-xs text-amber">
+          Schedule hub drop-off, then bring the item to Giglogistics for verification before it ships to the buyer.
+        </p>
+      )}
+
+      {escrow?.shipment && (
+        <ShipmentPanel shipment={escrow.shipment} showHubReport={isBuyer || order.status === 'delivered'} />
+      )}
+
+      {isBuyer && (order.delivery?.content || (isPhysical && order.delivery?.description)) && (
+        <DeliveryPanel order={order} isPhysical={isPhysical} />
       )}
 
       {order.status === 'paid_held' && isSeller && order.delivery_deadline_at && (
         <p className="mt-2 text-xs text-amber">
-          Deliver before {shortDate(order.delivery_deadline_at)} — otherwise the buyer is refunded automatically.
+          {isPhysical
+            ? `Schedule hub drop-off before ${shortDate(order.delivery_deadline_at)} — buyer is refunded if the item is not verified in time.`
+            : `Deliver before ${shortDate(order.delivery_deadline_at)} — otherwise the buyer is refunded automatically.`}
+        </p>
+      )}
+
+      {order.status === 'awaiting_verification' && isSeller && (
+        <p className="mt-2 text-xs text-muted">
+          Take the package to the Giglogistics hub with your drop-off code. They will verify it matches your listing before shipping.
+        </p>
+      )}
+
+      {order.status === 'awaiting_verification' && isBuyer && (
+        <p className="mt-2 text-xs text-muted">
+          Giglogistics is verifying the item against the description you accepted. You are only charged for delivery after it passes.
+        </p>
+      )}
+
+      {order.status === 'shipped' && isBuyer && (
+        <p className="mt-2 text-xs text-muted">
+          Hub verified — your package is on the way. Confirm only after you receive and inspect the item.
         </p>
       )}
 
@@ -86,7 +126,12 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
 
       {order.status !== 'completed' && order.status !== 'refunded' && (
         <div className="mt-3 flex flex-wrap gap-2">
-          {isSeller && order.status === 'paid_held' && (
+          {isSeller && order.status === 'paid_held' && isPhysical && (
+            <Button className="px-4 py-2" onClick={() => setMode('ship')}>
+              Schedule hub drop-off
+            </Button>
+          )}
+          {isSeller && order.status === 'paid_held' && !isPhysical && (
             <Button className="px-4 py-2" onClick={() => setMode('deliver')}>
               Mark delivered
             </Button>
@@ -101,12 +146,12 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
               </Button>
             </>
           )}
-          {isBuyer && order.status === 'paid_held' && escrow?.can_dispute_not_delivered && (
+          {isBuyer && (order.status === 'paid_held' || order.status === 'awaiting_verification' || order.status === 'shipped') && escrow?.can_dispute_not_delivered && (
             <Button variant="ghost" className="px-4 py-2" onClick={() => setMode('dispute')}>
               Item not delivered
             </Button>
           )}
-          {(order.status === 'paid_held' || order.status === 'delivered' || order.status === 'disputed') && (
+          {(order.status === 'paid_held' || order.status === 'awaiting_verification' || order.status === 'shipped' || order.status === 'delivered' || order.status === 'disputed') && (
             <Link href="/protection" className="btn inline-flex items-center bg-surface-2 px-4 py-2 text-sm text-mint">
               Protection hub
             </Link>
@@ -114,6 +159,7 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
         </div>
       )}
 
+      {mode === 'ship' && <ShipModal order={order} onClose={() => setMode(null)} />}
       {mode === 'deliver' && <DeliverModal order={order} onClose={() => setMode(null)} />}
       {mode === 'confirm' && <ConfirmModal order={order} onClose={() => setMode(null)} />}
       {mode === 'dispute' && <DisputeModal order={order} onClose={() => setMode(null)} />}
@@ -121,13 +167,21 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
   )
 }
 
-function EscrowStepper({ current, disputed }: { current: number; disputed: boolean }) {
+function EscrowStepper({
+  current,
+  disputed,
+  steps,
+}: {
+  current: number
+  disputed: boolean
+  steps: readonly string[]
+}) {
   return (
     <ol className="mt-3 flex items-center gap-1">
       {steps.map((label, i) => {
         const n = i + 1
-        const done = disputed ? n < 3 : n < current
-        const active = !disputed && n === Math.min(current, 3)
+        const done = disputed ? n < steps.length : n < current
+        const active = !disputed && n === Math.min(current, steps.length)
         return (
           <li key={label} className="flex flex-1 items-center gap-1">
             <span
@@ -151,25 +205,168 @@ function EscrowStepper({ current, disputed }: { current: number; disputed: boole
   )
 }
 
-function DeliveryPanel({ order }: { order: DigitalOrder }) {
+function HubDropoffPanel({
+  shipment,
+  snapshot,
+}: {
+  shipment: NonNullable<NonNullable<DigitalOrder['escrow']>['shipment']>
+  snapshot?: Record<string, unknown> | null
+}) {
+  const hub = shipment.hub_address
+
+  return (
+    <div className="mt-3 space-y-3 rounded-xl border border-mint/30 bg-mint/[0.06] p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-mint">Take item to Giglogistics hub</p>
+      <div className="rounded-lg border border-line bg-surface p-3">
+        <p className="font-display text-lg font-bold tracking-widest text-text">{shipment.dropoff_code ?? '—'}</p>
+        <p className="mt-1 text-[11px] text-muted">Show this drop-off code at the hub</p>
+      </div>
+      <div className="text-sm">
+        <p className="font-semibold text-text">{shipment.hub_name}</p>
+        {hub && (
+          <p className="mt-1 text-xs text-muted">
+            {hub.line1}, {hub.city}, {hub.state}
+            {hub.phone ? ` · ${hub.phone}` : ''}
+          </p>
+        )}
+      </div>
+      {snapshot && (
+        <div className="rounded-lg border border-line/80 bg-surface-2 px-3 py-2 text-[11px] text-muted">
+          <p className="font-semibold text-text">Hub will verify against</p>
+          <p className="mt-1 line-clamp-3">{String(snapshot.description ?? '')}</p>
+          {snapshot.specs && typeof snapshot.specs === 'object' && (
+            <ul className="mt-1 space-y-0.5">
+              {Object.entries(snapshot.specs as Record<string, string>).map(([k, v]) => (
+                <li key={k}>
+                  <span className="capitalize">{k}:</span> {v}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ShipmentPanel({
+  shipment,
+  showHubReport = false,
+}: {
+  shipment: NonNullable<NonNullable<DigitalOrder['escrow']>['shipment']>
+  showHubReport?: boolean
+}) {
+  const hubPassed = shipment.hub_verification_status === 'passed'
+  const hubFailed = shipment.hub_verification_status === 'failed'
+
+  return (
+    <div className="mt-3 space-y-2 rounded-xl border border-line bg-surface-2 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-mint">
+          {shipment.carrier} · {shipment.tracking_number}
+        </p>
+        {hubPassed && (
+          <span className="rounded-full bg-mint/15 px-2 py-0.5 text-[10px] font-semibold text-mint">Hub verified</span>
+        )}
+        {hubFailed && (
+          <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-semibold text-danger">Hub failed</span>
+        )}
+      </div>
+      <p className="text-sm font-medium text-text">{shipment.status_label}</p>
+      <ol className="space-y-1.5 border-l-2 border-mint/20 pl-3">
+        {(shipment.events ?? []).map((event) => (
+          <li key={`${event.at}-${event.status}`} className="text-[11px] text-muted">
+            <span className="font-medium text-text">{event.status.replace(/_/g, ' ')}</span>
+            <span className="mx-1">·</span>
+            {shortDate(event.at)}
+            <span className="mt-0.5 block">{event.note}</span>
+          </li>
+        ))}
+      </ol>
+      {showHubReport && shipment.hub_verification_report && (
+        <div className="mt-2 rounded-lg border border-line bg-surface px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase text-muted">
+            Hub inspection {shipment.hub_verification_score ?? 0}/100
+          </p>
+          <p className="mt-1 text-xs text-text">
+            {(shipment.hub_verification_report as { inspector_notes?: string }).inspector_notes}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DeliveryPanel({ order, isPhysical }: { order: DigitalOrder; isPhysical: boolean }) {
   return (
     <div className="mt-3 space-y-2 rounded-xl border border-mint/25 bg-mint/[0.06] p-3">
       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-mint">
-        <ShieldIcon size={14} /> What you received
+        <ShieldIcon size={14} /> {isPhysical ? 'Compare to your order' : 'What you received'}
       </p>
       {order.escrow?.listing_description && (
         <div className="rounded-lg border border-line bg-surface p-2">
-          <p className="text-[10px] font-semibold uppercase text-muted">Listing promised</p>
+          <p className="text-[10px] font-semibold uppercase text-muted">Locked order description</p>
           <p className="mt-1 text-xs text-text">{order.escrow.listing_description}</p>
         </div>
       )}
-      <pre className="whitespace-pre-wrap break-all rounded-lg border border-line bg-surface p-2 font-mono text-xs text-text">
-        {order.delivery?.content}
-      </pre>
+      {!isPhysical && order.delivery?.content && (
+        <pre className="whitespace-pre-wrap break-all rounded-lg border border-line bg-surface p-2 font-mono text-xs text-text">
+          {order.delivery.content}
+        </pre>
+      )}
       {order.delivery?.integrity_verified && (
-        <p className="text-[11px] text-mint">Delivery verified — matches what the seller attested.</p>
+        <p className="text-[11px] text-mint">
+          {isPhysical
+            ? 'Description integrity verified against your purchase snapshot.'
+            : 'Delivery verified — matches what the seller attested.'}
+        </p>
       )}
     </div>
+  )
+}
+
+function ShipModal({ order, onClose }: { order: DigitalOrder; onClose: () => void }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ShipOrderValues>({
+    resolver: zodResolver(shipOrderSchema),
+  })
+
+  return (
+    <Modal title="Schedule Giglogistics hub drop-off" onClose={onClose} wide>
+      <p className="text-sm text-muted">
+        After scheduling, take the physical item to our Giglogistics partner hub. They verify it matches the locked
+        order description before it ships to the buyer. Funds stay in escrow until verification passes.
+      </p>
+      <form
+        onSubmit={handleSubmit((values) => {
+          router.post(`/marketplace/orders/${order.id}/ship`, values, {
+            preserveScroll: true,
+            onSuccess: () => onClose(),
+          })
+        })}
+        className="mt-4 space-y-3"
+      >
+        <RhfField label="Pickup street" error={errors.pickup_line1?.message} {...register('pickup_line1')} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <RhfField label="City" error={errors.pickup_city?.message} {...register('pickup_city')} />
+          <RhfField label="State" error={errors.pickup_state?.message} {...register('pickup_state')} />
+        </div>
+        <RhfField label="Pickup phone" error={errors.pickup_phone?.message} {...register('pickup_phone')} />
+        <label className="flex items-start gap-2 rounded-xl border border-line bg-surface-2 p-3 text-sm">
+          <input type="checkbox" className="mt-1" {...register('attest_matches_listing')} />
+          <span>The package matches my listing description exactly — brand, condition, and specs.</span>
+        </label>
+        {errors.attest_matches_listing && (
+          <p className="text-sm text-danger">{errors.attest_matches_listing.message}</p>
+        )}
+        <Button type="submit" loading={isSubmitting} className="w-full">
+          Schedule hub drop-off
+        </Button>
+      </form>
+    </Modal>
   )
 }
 

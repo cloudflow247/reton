@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Domain\Marketplace\Models;
 
 use App\Domain\Marketplace\Enums\DigitalOrderStatus;
+use App\Domain\Marketplace\Enums\ItemType;
+use App\Domain\Marketplace\Enums\VerificationStatus;
 use App\Domain\Transfers\Models\Transfer;
 use App\Models\User;
 use App\Support\Concerns\HasUuidKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DigitalOrder extends Model
 {
@@ -21,7 +24,15 @@ class DigitalOrder extends Model
         'seller_id',
         'transfer_id',
         'status',
+        'listing_snapshot',
+        'buyer_accepted_description_at',
+        'verification_status',
+        'verification_score',
+        'shipping_address',
+        'shipping_fee',
         'delivered_at',
+        'shipped_at',
+        'received_at',
         'completed_at',
         'delivery_deadline_at',
         'seller_attested_at',
@@ -33,11 +44,19 @@ class DigitalOrder extends Model
 
     protected $casts = [
         'status' => DigitalOrderStatus::class,
+        'listing_snapshot' => 'array',
+        'verification_status' => VerificationStatus::class,
+        'shipping_address' => 'array',
+        'shipping_fee' => 'integer',
+        'verification_score' => 'integer',
         'delivered_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'received_at' => 'datetime',
         'completed_at' => 'datetime',
         'delivery_deadline_at' => 'datetime',
         'seller_attested_at' => 'datetime',
         'buyer_reviewed_at' => 'datetime',
+        'buyer_accepted_description_at' => 'datetime',
         'buyer_satisfied' => 'boolean',
     ];
 
@@ -65,11 +84,29 @@ class DigitalOrder extends Model
         return $this->belongsTo(Transfer::class);
     }
 
+    /** @return HasOne<MarketplaceShipment, $this> */
+    public function shipment(): HasOne
+    {
+        return $this->hasOne(MarketplaceShipment::class, 'order_id');
+    }
+
+    public function isPhysical(): bool
+    {
+        $type = $this->listing_snapshot['item_type'] ?? $this->listing?->item_type?->value ?? ItemType::Digital->value;
+
+        return $type === ItemType::Physical->value;
+    }
+
     public function isDelivered(): bool
     {
         return in_array($this->status, [
             DigitalOrderStatus::Delivered,
             DigitalOrderStatus::Completed,
         ], true);
+    }
+
+    public function isInTransit(): bool
+    {
+        return $this->status === DigitalOrderStatus::Shipped;
     }
 }

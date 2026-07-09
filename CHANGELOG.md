@@ -4,10 +4,29 @@ All notable changes to Reton are documented here. Format follows [Keep a Changel
 
 ## [Unreleased]
 
+### Added
+- **Dojah KYC verification** — BVN and NIN identity checks via `KycVerificationGateway` (fake sandbox + HTTP production), name/DOB matching, consent requirement, rate limiting, and audit logs without storing raw identifiers.
+- **AI Customer Support** — in-app chat at `/support` with rule-based assistant: transaction lookup by reference (TRF-, DEP-, CBK-, RCV-, BILL-, PO-), callback protection explanations, wrong-transfer recovery guidance, live trust score, and human escalation via support tickets (`TKT-…`). Open tickets surface on the admin dashboard.
+- **Platform admin** — secret admin path, encrypted integration settings, audit logs, promote/revoke admins, and control-center dashboard (ALATPay, Interswitch, Giglogistics, Dojah health).
+- **Virtual cards** — Bridgecard/Interswitch gateway abstraction, issue/fund/freeze flows, and Cards UI.
+- **Physical marketplace** — shipments, hub verification, item codes, and Giglogistics webhook sync.
+- **Withdraw & receive** — dedicated web flows for bank cash-out and inbound funding.
+- **Dashboard UI refresh** — shadcn-style cards, responsive 8/4 desktop grid, mobile-first balance hero, KYC tier badge, compliance posture strip, and trust sidebar.
+- **Explanatory desktop nav** — labeled primary actions (Home, Send, Withdraw, Bills, Cards), nested **More** menu (Activity, Shop, Protection), and top-right **profile avatar menu** with Profile, PIN, and Sign out.
+
+### Configuration
+- `DOJAH_DRIVER`, `DOJAH_BASE_URL`, `DOJAH_APP_ID`, `DOJAH_SECRET_KEY` — identity verification (see `.env.example`).
+- Bridgecard, Interswitch, Giglogistics, and admin-path settings documented in `.env.example` / admin Integrations.
+
+### Fixed
+- Profile KYC forms no longer crash for Tier 1 users (Inertia `useForm` instead of react-hook-form `register`).
+- Bill payment RRR tests now respect injected fake provider instances.
+- Buttons no longer stack icon above label — shared `.btn` uses horizontal flex, consistent radius, and focus rings.
+- Header nav no longer overlaps the Reton wordmark; Sign out no longer wraps onto two lines.
+
 ## [2026-06-30]
 
 ### Added
-
 #### Digital marketplace
 - **Protected digital sales** — sellers list digital items; buyers pay with Reton protection until delivery is confirmed or a dispute is resolved.
 - **Order lifecycle** — `paid_held` → seller delivers → buyer confirms → `completed`, with structured dispute paths (`not_delivered`, `not_as_described`, `invalid_item`).

@@ -92,6 +92,16 @@ input[type='number'] {
     0 10px 30px -20px rgba(16, 40, 33, 0.16);
 }
 
+/* Form & content panel — softer than .card, used by PageKit. */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgba(16, 40, 33, 0.03),
+    0 8px 24px -18px rgba(16, 40, 33, 0.12);
+}
+
 /* Subtle green elevation for the hero / emphasis cards — never neon. */
 .shield-glow {
   box-shadow:
@@ -108,15 +118,28 @@ input[type='number'] {
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.01em;
-  border-radius: 999px;
+  border-radius: 0.75rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
   transition:
     transform 0.12s ease,
     background 0.18s ease,
     box-shadow 0.18s ease,
-    opacity 0.18s ease;
+    opacity 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+.btn > svg {
+  display: inline-block;
+  flex-shrink: 0;
 }
 .btn:active {
   transform: translateY(1px) scale(0.99);
@@ -124,6 +147,10 @@ input[type='number'] {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(11, 122, 87, 0.28);
 }
 
 .field {

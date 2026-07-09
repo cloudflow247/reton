@@ -27,6 +27,8 @@ class DigitalOrderResource extends JsonResource
             ? $marketplace->deliveryPayloadForBuyer($this->resource, $viewer)
             : null;
 
+        $this->resource->loadMissing('shipment');
+
         return [
             'id' => $this->id,
             'listing_id' => $this->listing_id,
@@ -34,6 +36,11 @@ class DigitalOrderResource extends JsonResource
             'seller_id' => $this->seller_id,
             'transfer_id' => $this->transfer_id,
             'status' => $this->status->value,
+            'listing_snapshot' => $this->listing_snapshot,
+            'verification_status' => $this->verification_status?->value,
+            'verification_score' => $this->verification_score,
+            'shipping_fee' => $this->shipping_fee,
+            'shipped_at' => $this->shipped_at,
             'delivered_at' => $this->delivered_at,
             'completed_at' => $this->completed_at,
             'delivery_deadline_at' => $this->delivery_deadline_at,

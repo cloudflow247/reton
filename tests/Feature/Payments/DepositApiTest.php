@@ -36,6 +36,7 @@ it('initiates a deposit and returns the virtual account to pay into', function (
     $this->actingAs($user)->postJson('/api/v1/deposits', [
         'wallet_id' => $wallet->id,
         'amount' => 500_00,
+        'method' => 'bank_transfer',
     ])->assertCreated()
         ->assertJsonPath('data.status', 'pending')
         ->assertJsonPath('data.amount', 50000)

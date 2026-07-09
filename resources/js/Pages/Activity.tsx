@@ -3,8 +3,9 @@ import { useMemo, useState } from 'react'
 import { Head, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
-import { Card, Pill } from '@/components/ui'
-import { ReceiveIcon, SendIcon, ShieldIcon, TrendIcon } from '@/components/icons'
+import { ActivityIcon, ReceiveIcon, SendIcon, TrendIcon } from '@/components/icons'
+import { FormPanel, MorphTabs, Page, PageHero, pageItem } from '@/components/page-kit'
+import { Pill } from '@/components/ui'
 import { ngn, shortDate } from '@/lib/format'
 import type { StatementEntry, Transfer } from '@/lib/types'
 import type { PageProps } from '@/types'
@@ -12,9 +13,7 @@ import type { PageProps } from '@/types'
 type Tab = 'statement' | 'transfers'
 
 export default function Activity() {
-  const { transfers, statement } = usePage<
-    PageProps<{ transfers: Transfer[]; statement: StatementEntry[] }>
-  >().props
+  const { transfers, statement } = usePage<PageProps<{ transfers: Transfer[]; statement: StatementEntry[] }>>().props
   const [tab, setTab] = useState<Tab>('statement')
 
   const flow = useMemo(() => {
@@ -26,95 +25,77 @@ export default function Activity() {
   }, [statement])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="space-y-6"
-    >
+    <Page>
       <Head title="Activity" />
-      <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">Activity</h1>
-        <p className="text-sm text-muted">Every movement in and out of your wallet.</p>
-      </div>
+      <PageHero
+        icon={ActivityIcon}
+        title="Activity"
+        subtitle="Every movement in and out of your wallet — tap a row for details."
+        tone="sky"
+      />
 
-      {/* Money-flow summary */}
-      <div className="card p-5">
+      <FormPanel className="!space-y-4">
         <span className="inline-flex items-center gap-2 text-sm font-semibold">
           <TrendIcon size={16} className="text-mint" /> Money flow
         </span>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FlowBar label="Money in" value={ngn(flow.inflow)} pct={flow.inPct} tone="mint" />
           <FlowBar label="Money out" value={ngn(flow.outflow)} pct={flow.outPct} tone="muted" />
         </div>
-      </div>
+      </FormPanel>
 
-      {/* Segmented filter */}
-      <div className="inline-flex rounded-full border border-line bg-surface-2 p-1">
-        {(['statement', 'transfers'] as Tab[]).map((t) => {
-          const on = tab === t
-          return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className="relative rounded-full px-5 py-2 font-display text-sm font-semibold"
-            >
-              {on && (
-                <motion.span
-                  layoutId="activity-tab"
-                  className="absolute inset-0 rounded-full bg-mint shadow-sm"
-                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                />
-              )}
-              <span className={`relative z-10 ${on ? 'text-white' : 'text-muted'}`}>
-                {t === 'statement' ? 'Statement' : 'Transfers'}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      <MorphTabs
+        layoutId="activity-tab"
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { id: 'statement', label: 'Statement' },
+          { id: 'transfers', label: 'Transfers', count: transfers?.length },
+        ]}
+      />
 
-      {tab === 'transfers' ? (
-        <Card className="divide-y divide-line p-0">
-          {(transfers ?? []).map((t) => (
-            <Row
-              key={t.id}
-              icon={t.type === 'protected' ? <ShieldIcon size={16} /> : <SendIcon size={16} />}
-              accent={t.type === 'protected'}
-              title={t.note || (t.type === 'protected' ? 'Protected transfer' : 'Transfer')}
-              sub={`${shortDate(t.created_at)} · ${t.status}`}
-              right={
-                <div className="flex items-center gap-2">
-                  {t.type === 'protected' && <Pill tone="mint">protected</Pill>}
-                  <span className="font-num text-sm">{ngn(t.amount)}</span>
-                </div>
-              }
-            />
-          ))}
-          {transfers && transfers.length === 0 && <Empty>No transfers yet.</Empty>}
-        </Card>
-      ) : (
-        <Card className="divide-y divide-line p-0">
-          {(statement ?? []).map((e) => (
-            <Row
-              key={e.id}
-              icon={e.direction === 'credit' ? <ReceiveIcon size={16} /> : <SendIcon size={16} />}
-              accent={e.direction === 'credit'}
-              title={e.transaction?.description ?? e.transaction?.type ?? 'Movement'}
-              sub={shortDate(e.created_at)}
-              right={
-                <span className={`font-num text-sm font-semibold ${e.direction === 'credit' ? 'text-mint' : 'text-text'}`}>
-                  {e.direction === 'credit' ? '+' : '−'}
-                  {ngn(e.amount)}
-                </span>
-              }
-            />
-          ))}
-          {statement && statement.length === 0 && <Empty>No movements yet.</Empty>}
-        </Card>
-      )}
-    </motion.div>
+      <motion.div variants={pageItem} className="panel divide-y divide-line overflow-hidden p-0">
+        {tab === 'transfers' ? (
+          <>
+            {(transfers ?? []).map((t) => (
+              <Row
+                key={t.id}
+                icon={<SendIcon size={16} />}
+                accent={t.type === 'protected'}
+                title={t.note || (t.type === 'protected' ? 'Protected transfer' : 'Transfer')}
+                sub={`${shortDate(t.created_at)} · ${t.status}`}
+                right={
+                  <div className="flex items-center gap-2">
+                    {t.type === 'protected' && <Pill tone="mint">protected</Pill>}
+                    <span className="font-num text-sm font-semibold">{ngn(t.amount)}</span>
+                  </div>
+                }
+              />
+            ))}
+            {transfers && transfers.length === 0 && <Empty>No transfers yet.</Empty>}
+          </>
+        ) : (
+          <>
+            {(statement ?? []).map((e) => (
+              <Row
+                key={e.id}
+                icon={e.direction === 'credit' ? <ReceiveIcon size={16} /> : <SendIcon size={16} />}
+                accent={e.direction === 'credit'}
+                title={e.transaction?.description ?? e.transaction?.type ?? 'Movement'}
+                sub={shortDate(e.created_at)}
+                right={
+                  <span className={`font-num text-sm font-semibold ${e.direction === 'credit' ? 'text-mint' : 'text-text'}`}>
+                    {e.direction === 'credit' ? '+' : '−'}
+                    {ngn(e.amount)}
+                  </span>
+                }
+              />
+            ))}
+            {statement && statement.length === 0 && <Empty>No movements yet.</Empty>}
+          </>
+        )}
+      </motion.div>
+    </Page>
   )
 }
 
@@ -134,10 +115,10 @@ function Row({
   right: ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-surface-2/60">
+    <div className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-surface-2/50 sm:px-5">
       <div className="flex min-w-0 items-center gap-3">
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
             accent ? 'bg-mint/10 text-mint' : 'bg-surface-2 text-muted'
           }`}
         >
@@ -175,7 +156,7 @@ function FlowBar({
           className={`h-full rounded-full ${tone === 'mint' ? 'bg-mint' : 'bg-muted/50'}`}
           initial={{ width: 0 }}
           animate={{ width: `${Math.max(pct, 3)}%` }}
-          transition={{ type: 'spring', stiffness: 120, damping: 22, delay: 0.15 }}
+          transition={{ type: 'spring', stiffness: 120, damping: 22, delay: 0.1 }}
         />
       </div>
     </div>
@@ -183,5 +164,5 @@ function FlowBar({
 }
 
 function Empty({ children }: { children: ReactNode }) {
-  return <div className="px-5 py-8 text-center text-sm text-muted">{children}</div>
+  return <div className="px-5 py-10 text-center text-sm text-muted">{children}</div>
 }

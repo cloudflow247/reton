@@ -45,6 +45,57 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin panel URL
+    |--------------------------------------------------------------------------
+    |
+    | First path segment for the platform admin (e.g. /your-secret-path). Override
+    | via the admin dashboard or RETON_ADMIN_PATH; stored settings take precedence.
+    |
+    */
+
+    'admin' => [
+        'path' => env('RETON_ADMIN_PATH', 'admin'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bill payments (Interswitch Quickteller VAS)
+    |--------------------------------------------------------------------------
+    |
+    | Payment codes are Interswitch Quickteller identifiers per biller. Update
+    | these from your merchant dashboard for production — QA sandbox often uses
+    | 10903 for mobile recharge test scenarios.
+    |
+    | @see https://docs.interswitchgroup.com/docs/bills-payment-1
+    */
+
+    'bills' => [
+        'provider' => env('RETON_BILL_PROVIDER', 'interswitch'),
+        'payment_codes' => [
+            'mtn' => ['airtime' => '628051043', 'data' => '10903', 'default' => '628051043'],
+            'glo' => ['airtime' => '6280510420', 'data' => '10906', 'default' => '6280510420'],
+            'airtel' => ['airtime' => '6280510425', 'data' => '10904', 'default' => '6280510425'],
+            't2' => ['airtime' => '6280510426', 'data' => '10905', 'default' => '6280510426'],
+            '9mobile' => ['airtime' => '6280510426', 'data' => '10905', 'default' => '6280510426'],
+            'dstv' => ['cable_tv' => '051758901', 'default' => '051758901'],
+            'gotv' => ['cable_tv' => '051758902', 'default' => '051758902'],
+            'startimes' => ['cable_tv' => '051758903', 'default' => '051758903'],
+            'showmax' => ['cable_tv' => '051758904', 'default' => '051758904'],
+            'ikedc' => ['electricity' => '628051043', 'default' => '628051043'],
+            'ekedc' => ['electricity' => '628051043', 'default' => '628051043'],
+            'ibedc' => ['electricity' => '628051043', 'default' => '628051043'],
+            'aedc' => ['electricity' => '628051043', 'default' => '628051043'],
+            'phed' => ['electricity' => '628051043', 'default' => '628051043'],
+            'kedco' => ['electricity' => '628051043', 'default' => '628051043'],
+            'sportybet' => ['betting' => '10907', 'default' => '10907'],
+            'bet9ja' => ['betting' => '10908', 'default' => '10908'],
+            'betking' => ['betting' => '10909', 'default' => '10909'],
+            'nairabet' => ['betting' => '10910', 'default' => '10910'],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Transaction PIN
     |--------------------------------------------------------------------------
     |
@@ -107,6 +158,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Physical marketplace (Giglogistics)
+    |--------------------------------------------------------------------------
+    */
+
+    'physical' => [
+        'ship_deadline_hours' => (int) env('RETON_PHYSICAL_SHIP_DEADLINE_HOURS', 48),
+        'confirm_hours' => (int) env('RETON_PHYSICAL_CONFIRM_HOURS', 72),
+        'dispute_grace_hours' => (int) env('RETON_PHYSICAL_DISPUTE_GRACE_HOURS', 48),
+        'verification_pass_score' => (int) env('RETON_PHYSICAL_VERIFICATION_PASS_SCORE', 70),
+        'hub_verification_pass_score' => (int) env('RETON_PHYSICAL_HUB_PASS_SCORE', 80),
+        'default_hub_name' => env('RETON_GIGLOGISTICS_HUB_NAME', 'Giglogistics Verification Hub — Lekki'),
+        'default_hub_address' => [
+            'line1' => env('RETON_GIGLOGISTICS_HUB_LINE1', '12 Admiralty Way'),
+            'city' => env('RETON_GIGLOGISTICS_HUB_CITY', 'Lekki'),
+            'state' => env('RETON_GIGLOGISTICS_HUB_STATE', 'Lagos'),
+            'phone' => env('RETON_GIGLOGISTICS_HUB_PHONE', '+234 700 GIG LOG'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Shareable links & mobile deep linking
     |--------------------------------------------------------------------------
     |
@@ -148,15 +220,58 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Fraud scoring
+    | KYC tiers (CBN-style limits + ALATPay static wallet mapping)
     |--------------------------------------------------------------------------
     |
-    | Per-signal point weights and the thresholds that map a 0-100 score to a
-    | risk level and action. Defaults are deliberately lenient so ordinary
-    | activity is allowed; tune per risk appetite. A future Go scorer can honour
-    | the same knobs.
+    | Tier 1 — basic: collection static wallet (business BVN on ALATPay).
+    | Tier 2 — BVN verified: individual static wallet.
+    | Tier 3 — NIN + address: highest limits.
+    | Amounts are in minor units (kobo).
     |
     */
+
+    'kyc' => [
+        'tiers' => [
+            1 => [
+                'single_transaction_max' => (int) env('RETON_KYC_T1_SINGLE_MAX', 50_000_00),
+                'daily_inflow_max' => (int) env('RETON_KYC_T1_DAILY_IN_MAX', 200_000_00),
+                'wallet_balance_max' => (int) env('RETON_KYC_T1_BALANCE_MAX', 300_000_00),
+            ],
+            2 => [
+                'single_transaction_max' => (int) env('RETON_KYC_T2_SINGLE_MAX', 500_000_00),
+                'daily_inflow_max' => (int) env('RETON_KYC_T2_DAILY_IN_MAX', 2_000_000_00),
+                'wallet_balance_max' => (int) env('RETON_KYC_T2_BALANCE_MAX', 5_000_000_00),
+            ],
+            3 => [
+                'single_transaction_max' => (int) env('RETON_KYC_T3_SINGLE_MAX', 5_000_000_00),
+                'daily_inflow_max' => (int) env('RETON_KYC_T3_DAILY_IN_MAX', 20_000_000_00),
+                'wallet_balance_max' => (int) env('RETON_KYC_T3_BALANCE_MAX', 50_000_000_00),
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Virtual cards (Bridgecard Issuing)
+    |--------------------------------------------------------------------------
+    | @see https://docs.bridgecard.co/
+    */
+
+    'cards' => [
+        'provider' => env('RETON_CARD_PROVIDER', 'bridgecard'),
+        'currencies' => ['NGN', 'USD'],
+        'min_funding_minor' => [
+            'NGN' => (int) env('RETON_CARD_MIN_FUNDING_NGN', 1_000_00),
+            'USD' => (int) env('RETON_CARD_MIN_FUNDING_USD', 300),
+        ],
+        'default_usd_limit' => env('RETON_CARD_USD_LIMIT', '500000'),
+    ],
+
+    'fx' => [
+        // Retail rate: 1 USD = X NGN (major units, e.g. 1600 = ₦1,600/$)
+        'usd_ngn_rate' => (float) env('RETON_FX_USD_NGN', 1600),
+        'spread_bps' => (int) env('RETON_FX_SPREAD_BPS', 150),
+    ],
 
     'fraud' => [
         'velocity_window_minutes' => (int) env('RETON_FRAUD_VELOCITY_WINDOW_MINUTES', 10),

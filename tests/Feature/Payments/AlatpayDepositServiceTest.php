@@ -57,7 +57,53 @@ it('initiates a deposit and returns a virtual account', function () {
     expect($deposit->status)->toBe(DepositStatus::Pending)
         ->and($deposit->amount)->toBe(50000)
         ->and($deposit->provider_reference)->not->toBeNull()
-        ->and($deposit->virtual_account['account_number'])->not->toBeEmpty();
+        ->and($deposit->virtual_account['account_number'])->not->toBeEmpty()
+        ->and($deposit->metadata['method'])->toBe('bank_transfer');
+});
+
+it('initiates an alatpay checkout deposit with a payment link', function () {
+    [$user, $wallet] = depositor();
+
+    $deposit = deposits()->initiate(
+        $user,
+        $wallet,
+        Money::of(500_00, 'NGN'),
+        \App\Domain\Payments\Enums\DepositMethod::AlatpayCheckout,
+    );
+
+    expect($deposit->metadata['method'])->toBe('alatpay_checkout')
+        ->and($deposit->metadata['payment_link_url'])->toContain('pay.alatpay.test')
+        ->and($deposit->virtual_account)->toBeNull();
+});
+
+it('initiates a card-only deposit with channel 1', function () {
+    [$user, $wallet] = depositor();
+
+    $deposit = deposits()->initiate(
+        $user,
+        $wallet,
+        Money::of(500_00, 'NGN'),
+        \App\Domain\Payments\Enums\DepositMethod::AlatpayCard,
+    );
+
+    expect($deposit->metadata['method'])->toBe('alatpay_card')
+        ->and($deposit->metadata['payment_link_url'])->toContain('channel=1');
+});
+
+it('matches deposits by business reference on webhook', function () {
+    [$user, $wallet] = depositor();
+    $deposit = deposits()->initiate(
+        $user,
+        $wallet,
+        Money::of(500_00, 'NGN'),
+        \App\Domain\Payments\Enums\DepositMethod::AlatpayCheckout,
+    );
+
+    [$payload, $signature] = signedPayload($deposit->reference, 50000);
+    deposits()->handleWebhook($payload, $signature);
+
+    expect($deposit->fresh()->status)->toBe(DepositStatus::Completed)
+        ->and($wallet->fresh()->balance)->toBe(50000);
 });
 
 it('credits the wallet when a valid completion webhook arrives', function () {

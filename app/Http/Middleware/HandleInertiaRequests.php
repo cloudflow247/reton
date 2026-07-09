@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Http\Resources\Api\V1\WalletResource;
 use App\Models\User;
+use App\Support\Admin\AdminPath;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -53,6 +54,8 @@ class HandleInertiaRequests extends Middleware
                     (array) config('reton.demo.accounts', []),
                 ),
             ] : null,
+            // Only expose the secret admin URL to administrators.
+            'adminPath' => ($user !== null && $user->is_admin) ? AdminPath::url() : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
@@ -61,6 +64,8 @@ class HandleInertiaRequests extends Middleware
                 'deposit' => fn () => $request->session()->get('deposit'),
                 'transfer' => fn () => $request->session()->get('transfer'),
                 'bill' => fn () => $request->session()->get('bill'),
+                'payout' => fn () => $request->session()->get('payout'),
+                'support_ticket' => fn () => $request->session()->get('support_ticket'),
             ],
         ];
     }

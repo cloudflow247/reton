@@ -7,6 +7,19 @@ export function ngn(minor: number): string {
   }).format(minor / 100)
 }
 
+/** Format integer minor units (cents) as US Dollars. */
+export function usd(minor: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+  }).format(minor / 100)
+}
+
+export function money(minor: number, currency: string): string {
+  return currency === 'USD' ? usd(minor) : ngn(minor)
+}
+
 /** Parse a Naira input string into integer minor units. */
 export function toMinor(value: string): number {
   return Math.round(parseFloat(value || '0') * 100)

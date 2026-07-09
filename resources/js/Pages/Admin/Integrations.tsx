@@ -1,0 +1,392 @@
+import type { FormEvent } from 'react'
+import { useState } from 'react'
+import { Head, router, useForm, usePage } from '@inertiajs/react'
+import { AdminLayout } from '@/components/AdminLayout'
+import { Button, Card, CopyRow, Field, Pill } from '@/components/ui'
+import { CheckIcon } from '@/components/icons'
+import { adminUrl } from '@/lib/admin'
+import type { PageProps } from '@/types'
+
+type IntegrationGroup = 'alatpay' | 'interswitch' | 'bridgecard' | 'giglogistics'
+
+type GroupValues = Record<string, string | number | boolean>
+
+type IntegrationsProps = PageProps<{
+  integrations: Record<IntegrationGroup, GroupValues & { ready: boolean }>
+  webhookUrls: Record<string, string>
+  docsUrls?: Record<string, string>
+}>
+
+const tabs: { id: IntegrationGroup; label: string }[] = [
+  { id: 'alatpay', label: 'ALATPay' },
+  { id: 'interswitch', label: 'Interswitch (Bills)' },
+  { id: 'bridgecard', label: 'Bridgecard (Cards)' },
+  { id: 'giglogistics', label: 'Giglogistics' },
+]
+
+function SecretField({
+  label,
+  name,
+  value,
+  isSet,
+  onChange,
+  hint,
+}: {
+  label: string
+  name: string
+  value: string
+  isSet?: boolean
+  onChange: (v: string) => void
+  hint?: string
+}) {
+  const [show, setShow] = useState(false)
+
+  return (
+    <label className="block">
+      <span className="mb-1.5 flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted">
+        {label}
+        {isSet && (
+          <button type="button" onClick={() => setShow((s) => !s)} className="normal-case text-mint hover:underline">
+            {show ? 'Hide' : 'Replace'}
+          </button>
+        )}
+      </span>
+      <input
+        type={show ? 'text' : 'password'}
+        name={name}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={isSet && !show ? '•••••••• (saved — type to replace)' : 'Enter secret'}
+        className="field w-full px-4 py-3 font-mono text-sm"
+        autoComplete="off"
+      />
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+    </label>
+  )
+}
+
+function cleanInitial(values: GroupValues & { ready: boolean }, group: IntegrationGroup): GroupValues {
+  const { ready: _r, ...rest } = values
+  const out: GroupValues = { integration: group }
+
+  for (const [key, val] of Object.entries(rest)) {
+    if (key.endsWith('_set')) continue
+    if (typeof val === 'string' && val.includes('••••')) {
+      out[key] = ''
+    } else {
+      out[key] = val
+    }
+  }
+
+  return out
+}
+
+function IntegrationForm({
+  group,
+  initial,
+  webhookUrl,
+}: {
+  group: IntegrationGroup
+  initial: GroupValues & { ready: boolean }
+  webhookUrl?: string
+}) {
+  const form = useForm(cleanInitial(initial, group))
+  const { flash } = usePage<IntegrationsProps>().props
+  const base = adminUrl()
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    form.post(`${base}/integrations/save`, { preserveScroll: true })
+  }
+
+  function testConnection() {
+    router.post(`${base}/integrations/${group}/test`, {}, { preserveScroll: true })
+  }
+
+  const driver = String(form.data.driver ?? 'fake')
+
+  return (
+    <form onSubmit={submit} className="space-y-5">
+      <div className="flex flex-wrap items-center gap-2">
+        {initial.ready ? (
+          <Pill tone="mint">
+            <CheckIcon size={12} /> Ready
+          </Pill>
+        ) : (
+          <Pill tone="amber">Incomplete</Pill>
+        )}
+        <Pill tone="muted">{driver} driver</Pill>
+      </div>
+
+      {flash.success && (
+        <p className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
+      )}
+      {flash.error && (
+        <p className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
+      )}
+
+      <label className="block">
+        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Driver</span>
+        <select
+          value={driver}
+          onChange={(e) => form.setData('driver', e.target.value)}
+          className="field w-full px-4 py-3 text-sm"
+        >
+          <option value="fake">Demo / fake (no live API)</option>
+          <option value="http">Live HTTP API</option>
+        </select>
+      </label>
+
+      <Field
+        label="Base URL"
+        value={String(form.data.base_url ?? '')}
+        onChange={(e) => form.setData('base_url', e.target.value)}
+      />
+
+      {group === 'alatpay' && (
+        <>
+          <SecretField
+            label="API key"
+            name="api_key"
+            value={String(form.data.api_key ?? '')}
+            isSet={!!form.data.api_key_set}
+            onChange={(v) => form.setData('api_key', v)}
+          />
+          <Field
+            label="Business ID"
+            value={String(form.data.business_id ?? '')}
+            onChange={(e) => form.setData('business_id', e.target.value)}
+          />
+          <SecretField
+            label="Business BVN"
+            name="business_bvn"
+            value={String(form.data.business_bvn ?? '')}
+            isSet={!!form.data.business_bvn_set}
+            onChange={(v) => form.setData('business_bvn', v)}
+            hint="Required for static wallet provisioning on live ALATPay."
+          />
+          <SecretField
+            label="Webhook secret"
+            name="webhook_secret"
+            value={String(form.data.webhook_secret ?? '')}
+            isSet={!!form.data.webhook_secret_set}
+            onChange={(v) => form.setData('webhook_secret', v)}
+          />
+          <Field
+            label="Timeout (seconds)"
+            type="number"
+            min={5}
+            max={120}
+            value={String(form.data.timeout ?? 15)}
+            onChange={(e) => form.setData('timeout', Number(e.target.value))}
+          />
+          {webhookUrl && (
+            <div className="rounded-xl border border-line bg-surface-2/50 px-4">
+              <CopyRow label="Webhook URL (register in ALATPay)" value={webhookUrl} mono />
+            </div>
+          )}
+        </>
+      )}
+
+        {group === 'interswitch' && (
+          <>
+            <Field
+              label="OAuth / Passport URL"
+              value={String(form.data.passport_url ?? '')}
+              onChange={(e) => form.setData('passport_url', e.target.value)}
+              hint="Production: https://passport.interswitchng.com/passport/oauth/token"
+            />
+            <Field
+              label="Quickteller VAS base URL"
+              value={String(form.data.base_url ?? '')}
+              onChange={(e) => form.setData('base_url', e.target.value)}
+              hint="Production: https://interswitchng.com/quicktellerservice/api/v5"
+            />
+            <Field
+              label="Terminal ID"
+              value={String(form.data.terminal_id ?? '')}
+              onChange={(e) => form.setData('terminal_id', e.target.value)}
+            />
+            <SecretField
+              label="Client ID"
+              name="client_id"
+              value={String(form.data.client_id ?? '')}
+              isSet={!!form.data.client_id_set}
+              onChange={(v) => form.setData('client_id', v)}
+            />
+            <SecretField
+              label="Client secret"
+              name="client_secret"
+              value={String(form.data.client_secret ?? '')}
+              isSet={!!form.data.client_secret_set}
+              onChange={(v) => form.setData('client_secret', v)}
+            />
+            <Field
+              label="Request reference prefix"
+              value={String(form.data.request_reference_prefix ?? '1453')}
+              onChange={(e) => form.setData('request_reference_prefix', e.target.value)}
+              hint="Max 20-char transaction refs for Quickteller (e.g. 1453)."
+            />
+            <Field
+              label="Timeout (seconds)"
+              type="number"
+              min={5}
+              max={120}
+              value={String(form.data.timeout ?? 15)}
+              onChange={(e) => form.setData('timeout', Number(e.target.value))}
+            />
+            <p className="text-xs text-muted">
+              Bill payments only — airtime, data, power, TV & betting via{' '}
+              <a
+                href="https://docs.interswitchgroup.com/docs/bills-payment-1"
+                target="_blank"
+                rel="noreferrer"
+                className="text-mint hover:underline"
+              >
+                Quickteller VAS
+              </a>
+              . Virtual cards are issued via Bridgecard.
+            </p>
+          </>
+        )}
+
+        {group === 'bridgecard' && (
+          <>
+            <Field
+              label="Issuing API base URL"
+              value={String(form.data.base_url ?? '')}
+              onChange={(e) => form.setData('base_url', e.target.value)}
+              hint="Sandbox: https://issuecards.api.bridgecard.co/v1/issuing/sandbox"
+            />
+            <SecretField
+              label="Access token"
+              name="access_token"
+              value={String(form.data.access_token ?? '')}
+              isSet={!!form.data.access_token_set}
+              onChange={(v) => form.setData('access_token', v)}
+            />
+            <SecretField
+              label="Secret key (PIN encryption)"
+              name="secret_key"
+              value={String(form.data.secret_key ?? '')}
+              isSet={!!form.data.secret_key_set}
+              onChange={(v) => form.setData('secret_key', v)}
+              hint="Test keys start with test — used to AES-encrypt card PINs."
+            />
+            <Field
+              label="Timeout (seconds)"
+              type="number"
+              min={5}
+              max={120}
+              value={String(form.data.timeout ?? 20)}
+              onChange={(e) => form.setData('timeout', Number(e.target.value))}
+            />
+            <p className="text-xs text-muted">
+              NGN & USD virtual cards, FX wallet funding, freeze/unfreeze —{' '}
+              <a href="https://docs.bridgecard.co/" target="_blank" rel="noreferrer" className="text-mint hover:underline">
+                Bridgecard Issuing API
+              </a>
+              .
+            </p>
+          </>
+        )}
+
+        {group === 'giglogistics' && (
+        <>
+          <SecretField
+            label="API key"
+            name="api_key"
+            value={String(form.data.api_key ?? '')}
+            isSet={!!form.data.api_key_set}
+            onChange={(v) => form.setData('api_key', v)}
+          />
+          <SecretField
+            label="Webhook secret"
+            name="webhook_secret"
+            value={String(form.data.webhook_secret ?? '')}
+            isSet={!!form.data.webhook_secret_set}
+            onChange={(v) => form.setData('webhook_secret', v)}
+          />
+          <Field
+            label="Fake advance minutes (demo driver)"
+            type="number"
+            min={0}
+            max={1440}
+            value={String(form.data.fake_advance_minutes ?? 1)}
+            onChange={(e) => form.setData('fake_advance_minutes', Number(e.target.value))}
+            hint="Only used when driver is fake — simulates shipment stages."
+          />
+          {webhookUrl && (
+            <div className="rounded-xl border border-line bg-surface-2/50 px-4">
+              <CopyRow label="Webhook URL" value={webhookUrl} mono />
+            </div>
+          )}
+        </>
+      )}
+
+      <div className="flex flex-wrap gap-3 pt-2">
+        <Button type="submit" loading={form.processing}>
+          Save {group}
+        </Button>
+        {group === 'alatpay' && driver === 'http' && (
+          <Button type="button" variant="ghost" onClick={testConnection}>
+            Test connection
+          </Button>
+        )}
+        {group === 'interswitch' && driver === 'http' && (
+          <Button type="button" variant="ghost" onClick={testConnection}>
+            Test Quickteller
+          </Button>
+        )}
+        {group === 'bridgecard' && driver === 'http' && (
+          <Button type="button" variant="ghost" onClick={testConnection}>
+            Test Bridgecard
+          </Button>
+        )}
+      </div>
+    </form>
+  )
+}
+
+export default function Integrations() {
+  const { integrations, webhookUrls } = usePage<IntegrationsProps>().props
+  const [tab, setTab] = useState<IntegrationGroup>('alatpay')
+
+  return (
+    <AdminLayout>
+      <Head title="Integrations" />
+
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Integrations</h1>
+          <p className="mt-1 text-sm text-muted">
+            Store ALATPay, Interswitch Quickteller (bills), Bridgecard (virtual cards), and Giglogistics credentials securely. Values are encrypted at rest.
+          </p>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
+                tab === t.id ? 'bg-mint text-white' : 'bg-surface-2 text-muted hover:text-text'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <Card className="shield-glow">
+          <IntegrationForm
+            group={tab}
+            initial={integrations[tab]}
+            webhookUrl={webhookUrls[tab]}
+          />
+        </Card>
+      </div>
+    </AdminLayout>
+  )
+}

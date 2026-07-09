@@ -12,6 +12,7 @@ use App\Domain\Marketplace\Models\DigitalListing;
 use App\Domain\Marketplace\Models\DigitalOrder;
 use App\Domain\Marketplace\Services\DigitalEscrowJudgementService;
 use App\Domain\Marketplace\Services\DigitalMarketplaceService;
+use App\Domain\Marketplace\Support\ListingItemCodes;
 use App\Domain\Marketplace\Support\ListingLinks;
 use App\Domain\Transfers\Enums\TransferStatus;
 use App\Domain\Transfers\Services\TransferService;
@@ -234,7 +235,27 @@ it('scores seller trust from completed orders', function () {
     expect(app(DigitalEscrowJudgementService::class)->sellerTrustScore($seller))->toBe(70);
 });
 
-it('renders the marketplace page with listings', function () {
+it('refunds invalid-item disputes by default when callback expires', function () {
+    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = seedDigitalOrder();
+
+    app(DigitalMarketplaceService::class)->deliver($order->fresh(), $seller, true);
+
+    $callback = app(DigitalMarketplaceService::class)->raiseDispute(
+        $order->fresh(),
+        $buyer,
+        DigitalDisputeCategory::InvalidItem,
+        'License key is rejected by the vendor.',
+    );
+
+    $resolution = app(DigitalEscrowJudgementService::class)->resolveOnCallbackExpiry(
+        $callback->fresh(),
+        $order->fresh(),
+    );
+
+    expect($resolution)->toBe(CallbackResolution::Refund);
+});
+
+it('does not expose a public listing catalog on the marketplace page', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
 
@@ -250,7 +271,9 @@ it('renders the marketplace page with listings', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Marketplace')
-            ->has('listings', 1));
+            ->missing('listings')
+            ->has('myListings', 0)
+            ->has('orders', 0));
 });
 
 it('confirms an order over the web with a pin', function () {
@@ -290,8 +313,31 @@ it('builds stable listing share urls for web and mobile deep links', function ()
         'reton.links.app_scheme' => 'reton',
     ]);
 
-    expect(ListingLinks::web($listing))->toBe('https://reton.ng/l/'.$listing->id)
-        ->and(ListingLinks::app($listing))->toBe('reton://l/'.$listing->id);
+    expect(ListingLinks::web($listing))->toBe('https://reton.ng/l/'.$listing->item_code)
+        ->and(ListingLinks::app($listing))->toBe('reton://l/'.$listing->item_code);
+});
+
+it('opens a listing by item code on the share route', function () {
+    ['listing' => $listing] = seedActiveListing();
+
+    $this->get('/l/'.$listing->item_code)
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Marketplace/ListingShow')
+            ->where('listing.id', $listing->id)
+            ->where('listing.item_code', $listing->item_code));
+});
+
+it('normalizes item codes for lookup', function () {
+    expect(ListingItemCodes::normalize('rtn-7k3m9p'))->toBe('RTN-7K3M9P')
+        ->and(ListingItemCodes::normalize('RTN7K3M9P'))->toBe('RTN-7K3M9P')
+        ->and(ListingItemCodes::normalize('7K3M9P'))->toBe('RTN-7K3M9P');
+});
+
+it('assigns a unique item code when creating listings', function () {
+    ['listing' => $listing] = seedActiveListing();
+
+    expect($listing->item_code)->toMatch('/^RTN-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/');
 });
 
 it('shows a shareable listing page to guests with purchase disabled', function () {
@@ -365,6 +411,7 @@ it('redirects to the share page after publishing a listing', function () {
     ['seller' => $seller] = seedActiveListing();
 
     $response = $this->actingAs($seller)->post('/marketplace/listings', [
+        'item_type' => 'digital',
         'title' => 'UI kit bundle',
         'description' => 'Figma components for mobile banking apps.',
         'price' => 5_000_00,
@@ -387,4 +434,164 @@ it('serves mobile association files for listing deep links', function () {
         ->assertOk()
         ->assertJsonPath('applinks.details.0.appID', 'TEAM123.ng.reton.app')
         ->assertJsonPath('applinks.details.0.paths.0', '/l/*');
+});
+
+function seedPhysicalListing(): array
+{
+    $seller = User::factory()->create(['transaction_pin' => Hash::make('1234')]);
+    $buyer = User::factory()->create(['transaction_pin' => Hash::make('1234')]);
+
+    app(WalletService::class)->open($seller, 'NGN');
+    $buyerWallet = app(WalletService::class)->open($buyer, 'NGN');
+    app(WalletService::class)->fund($buyerWallet, Money::of(100_000_00, 'NGN'));
+
+    $listing = app(DigitalMarketplaceService::class)->createPhysicalListing(
+        $seller,
+        'Wireless earbuds',
+        'Premium wireless earbuds with active noise cancellation, USB-C charging case, and 28-hour battery life. Ships in original box.',
+        Money::of(45_000_00, 'NGN'),
+        \App\Domain\Marketplace\Enums\ItemCondition::LikeNew,
+        300,
+        ['brand' => 'SoundPro', 'detail' => 'Matte black'],
+        'Handle with care.',
+    );
+
+    return compact('seller', 'buyer', 'buyerWallet', 'listing');
+}
+
+it('requires buyer description acceptance for physical purchases', function () {
+    ['buyer' => $buyer, 'buyerWallet' => $buyerWallet, 'listing' => $listing] = seedPhysicalListing();
+
+    expect(fn () => app(DigitalMarketplaceService::class)->purchase($buyer, $listing, $buyerWallet->refresh()))
+        ->toThrow(MarketplaceException::class);
+});
+
+it('purchases a physical listing with locked snapshot', function () {
+    ['buyer' => $buyer, 'buyerWallet' => $buyerWallet, 'listing' => $listing] = seedPhysicalListing();
+
+    $order = app(DigitalMarketplaceService::class)->purchase(
+        $buyer,
+        $listing,
+        $buyerWallet->refresh(),
+        true,
+        ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
+    );
+
+    expect($order->listing_snapshot)->not->toBeNull()
+        ->and($order->listing_snapshot['item_type'])->toBe('physical')
+        ->and($order->buyer_accepted_description_at)->not->toBeNull()
+        ->and($order->verification_score)->toBeGreaterThanOrEqual(70);
+});
+
+it('books giglogistics hub drop-off and advances through verification to delivered', function () {
+    ['seller' => $seller, 'buyer' => $buyer, 'buyerWallet' => $buyerWallet, 'listing' => $listing] = seedPhysicalListing();
+
+    $order = app(DigitalMarketplaceService::class)->purchase(
+        $buyer,
+        $listing,
+        $buyerWallet->refresh(),
+        true,
+        ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
+    );
+
+    $shipment = app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+        $order,
+        $seller,
+        ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
+        true,
+    );
+
+    expect($order->refresh()->status)->toBe(DigitalOrderStatus::AwaitingVerification)
+        ->and($shipment->tracking_number)->toStartWith('GL')
+        ->and($shipment->dropoff_code)->not->toBeEmpty();
+
+    config(['services.giglogistics.fake_advance_minutes' => 0]);
+
+    for ($i = 0; $i < 8; $i++) {
+        app(\App\Domain\Marketplace\Services\ShipmentService::class)->syncShipment($shipment->refresh());
+    }
+
+    expect($order->refresh()->status)->toBe(DigitalOrderStatus::Delivered)
+        ->and($shipment->refresh()->hub_verification_status?->value)->toBe('passed');
+});
+
+it('accepts giglogistics webhooks for hub events', function () {
+    ['seller' => $seller, 'buyer' => $buyer, 'buyerWallet' => $buyerWallet, 'listing' => $listing] = seedPhysicalListing();
+
+    $order = app(DigitalMarketplaceService::class)->purchase(
+        $buyer,
+        $listing,
+        $buyerWallet->refresh(),
+        true,
+        ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
+    );
+
+    $shipment = app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+        $order,
+        $seller,
+        ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
+        true,
+    );
+
+    config(['services.giglogistics.webhook_secret' => '']);
+
+    $this->postJson('/api/v1/webhooks/giglogistics', [
+        'event' => 'shipment.at_hub',
+        'shipment_id' => $shipment->external_id,
+        'event_id' => 'evt-hub-1',
+        'status' => 'at_hub',
+    ])->assertOk();
+
+    expect($shipment->refresh()->status->value)->toBe('at_hub');
+});
+
+it('auto-refunds when hub verification fails', function () {
+    ['seller' => $seller, 'buyer' => $buyer, 'buyerWallet' => $buyerWallet, 'listing' => $listing] = seedPhysicalListing();
+
+    $order = app(DigitalMarketplaceService::class)->purchase(
+        $buyer,
+        $listing,
+        $buyerWallet->refresh(),
+        true,
+        ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
+    );
+
+    config(['services.giglogistics.fake_advance_minutes' => 0]);
+
+    $shipment = app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+        $order,
+        $seller,
+        ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
+        true,
+    );
+
+    // Force a failed inspection on poll 3 (verification stage).
+    $gateway = app(\App\Domain\Logistics\Giglogistics\Contracts\GiglogisticsGateway::class);
+    $reflection = new ReflectionClass($gateway);
+    $shipments = $reflection->getProperty('shipments');
+    $shipments->setAccessible(true);
+    $records = $shipments->getValue($gateway);
+    $records[$shipment->external_id]['simulate_fail'] = true;
+    $shipments->setValue($gateway, $records);
+
+    for ($i = 0; $i < 3; $i++) {
+        app(\App\Domain\Marketplace\Services\ShipmentService::class)->syncShipment($shipment->refresh());
+    }
+
+    expect($order->refresh()->status)->toBe(DigitalOrderStatus::Refunded)
+        ->and($shipment->refresh()->hub_verification_status?->value)->toBe('failed');
+});
+
+it('rejects vague physical listings at publish', function () {
+    $seller = User::factory()->create();
+
+    expect(fn () => app(DigitalMarketplaceService::class)->createPhysicalListing(
+        $seller,
+        'Shoe',
+        'Nice shoe',
+        Money::of(5_000_00, 'NGN'),
+        \App\Domain\Marketplace\Enums\ItemCondition::Good,
+        0,
+        ['brand' => '', 'detail' => ''],
+    ))->toThrow(MarketplaceException::class);
 });
