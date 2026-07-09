@@ -30,6 +30,10 @@ class EnsureOnboardingComplete
     {
         $user = $request->user();
 
+        if ($user !== null && $user->is_admin) {
+            return $next($request);
+        }
+
         if ($user !== null && ! $user->hasTransactionPin()) {
             foreach (self::EXEMPT as $name) {
                 if ($request->routeIs($name)) {

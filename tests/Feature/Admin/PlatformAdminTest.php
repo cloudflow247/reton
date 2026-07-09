@@ -51,6 +51,15 @@ function appSettingsPayload(array $overrides = []): array
     ], $overrides);
 }
 
+it('redirects administrators to the admin panel after login', function () {
+    $admin = readyUser(['is_admin' => true, 'password' => bcrypt('password')]);
+
+    $this->post('/login', ['email' => $admin->email, 'password' => 'password'])
+        ->assertRedirect(AdminPath::url());
+
+    $this->assertAuthenticatedAs($admin);
+});
+
 it('forbids non-admins from the admin panel', function () {
     $user = User::factory()->create(['is_admin' => false]);
 

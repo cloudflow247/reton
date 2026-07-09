@@ -56,7 +56,13 @@ class PromoteAdminCommand extends Command
             return self::SUCCESS;
         }
 
-        $user->update(['is_admin' => true]);
+        $updates = ['is_admin' => true];
+
+        if ($user->email_verified_at === null) {
+            $updates['email_verified_at'] = now();
+        }
+
+        $user->update($updates);
         $this->info("{$user->email} is now a platform administrator.");
         $this->line('Open '.AdminPath::url().' after signing in to configure ALATPay and other integrations.');
 

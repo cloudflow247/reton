@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Head, Link, router, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, type FieldErrors } from 'react-hook-form'
 import { AuthLayout } from '@/components/AuthLayout'
 import { RhfField } from '@/components/forms/RhfField'
 import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
@@ -18,6 +18,11 @@ const slide = {
   exit: { opacity: 0, x: -24 },
 }
 
+function firstError(value?: string | string[]): string | undefined {
+  if (!value) return undefined
+  return Array.isArray(value) ? value[0] : value
+}
+
 export default function Login() {
   const { demo } = usePage<SharedProps>().props
   const [step, setStep] = useState(0)
@@ -29,6 +34,7 @@ export default function Login() {
     handleSubmit,
     trigger,
     getValues,
+    watch,
     setError,
     resetField,
     formState: { errors },
@@ -36,14 +42,22 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
     mode: 'onBlur',
+    shouldUnregister: false,
   })
 
   useServerErrors(serverErrors, setError)
 
+  const email = watch('email')
+
   const postLogin = (values: LoginFormValues) => {
+    const payload = {
+      email: values.email || email || getValues('email'),
+      password: values.password,
+    }
+
     setProcessing(true)
     setServerErrors({})
-    router.post('/login', values, {
+    router.post('/login', payload, {
       headers: deviceHeaders(),
       preserveScroll: true,
       onError: (errs) => setServerErrors(errs as Record<string, string>),
@@ -54,9 +68,15 @@ export default function Login() {
     })
   }
 
-  const signInAs = (email: string) => {
+  const onInvalid = (formErrors: FieldErrors<LoginFormValues>) => {
+    if (formErrors.email && step === 1) {
+      setStep(0)
+    }
+  }
+
+  const signInAs = (demoEmail: string) => {
     if (!demo) return
-    postLogin({ email, password: demo.password })
+    postLogin({ email: demoEmail, password: demo.password })
   }
 
   async function nextStep() {
@@ -65,11 +85,24 @@ export default function Login() {
   }
 
   const titles = ['Welcome back', 'Enter your password']
-  const subs = ['Sign in to your Reton wallet.', `Signing in as ${getValues('email') || 'you'}.`]
+  const subs = ['Sign in to your Reton wallet.', `Signing in as ${email || 'you'}.`]
+  const authError =
+    firstError(serverErrors.password) ??
+    firstError(serverErrors.email) ??
+    (step === 1 ? errors.email?.message : undefined)
 
   return (
     <AuthLayout title={titles[step]} sub={subs[step]} step={step} totalSteps={2}>
       <Head title="Sign in" />
+
+      {authError && (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+        >
+          {authError}
+        </div>
+      )}
 
       {demo && step === 0 && (
         <motion.div
@@ -104,7 +137,8 @@ export default function Login() {
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit(postLogin)} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit(postLogin, onInvalid)} className="space-y-4" noValidate>
+        <input type="hidden" {...register('email')} />
         <AnimatePresence mode="wait">
           {step === 0 ? (
             <motion.div key="email" {...slide} transition={{ duration: 0.22 }} className="space-y-4">

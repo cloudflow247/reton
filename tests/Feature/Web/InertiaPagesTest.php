@@ -109,7 +109,7 @@ it('rejects a login with the wrong password', function () {
     $this->from('/login')
         ->post('/login', ['email' => $user->email, 'password' => 'wrong'])
         ->assertRedirect('/login')
-        ->assertSessionHasErrors('email');
+        ->assertSessionHasErrors('password');
 
     $this->assertGuest();
 });

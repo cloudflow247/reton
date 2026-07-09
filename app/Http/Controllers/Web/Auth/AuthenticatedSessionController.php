@@ -44,7 +44,7 @@ class AuthenticatedSessionController extends Controller
             );
         } catch (InvalidCredentialsException $e) {
             throw ValidationException::withMessages([
-                'email' => $e->getMessage(),
+                'password' => $e->getMessage(),
             ]);
         }
 

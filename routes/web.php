@@ -27,6 +27,7 @@ use App\Http\Controllers\Web\SupportController;
 use App\Http\Controllers\Web\WalletLookupController;
 use App\Http\Controllers\Web\WellKnownController;
 use App\Http\Controllers\Web\WithdrawController;
+use App\Support\Admin\AdminPath;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -47,6 +48,10 @@ Route::get('/', function () {
 
     if (! $user->hasVerifiedEmail()) {
         return redirect()->route('verification.notice');
+    }
+
+    if ($user->is_admin) {
+        return redirect(AdminPath::url());
     }
 
     if (! $user->hasTransactionPin()) {
