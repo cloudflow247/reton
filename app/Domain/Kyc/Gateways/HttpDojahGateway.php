@@ -22,7 +22,7 @@ class HttpDojahGateway implements KycVerificationGateway
 {
     public function verifyBvn(string $bvn): BvnIdentity
     {
-        $bvn = preg_replace('/\D/', '', $bvn) ?? '';
+        $bvn = (string) preg_replace('/\D/', '', $bvn);
 
         $response = $this->client()->get('/api/v1/kyc/bvn/full', ['bvn' => $bvn]);
 
@@ -53,7 +53,7 @@ class HttpDojahGateway implements KycVerificationGateway
 
     public function verifyNin(string $nin): NinIdentity
     {
-        $nin = preg_replace('/\D/', '', $nin) ?? '';
+        $nin = (string) preg_replace('/\D/', '', $nin);
 
         $response = $this->client()->get('/api/v1/kyc/nin', ['nin' => $nin]);
 

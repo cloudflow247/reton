@@ -410,7 +410,9 @@ class DigitalMarketplaceService
                 return false;
             }
 
-            if ($order->isPhysical() && $order->shipment()->exists() && $order->status !== DigitalOrderStatus::PaidHeld) {
+            // Physical orders with a booked shipment are in transit — do not
+            // auto-refund as "undelivered"; hub/dispute flows own those cases.
+            if ($order->isPhysical() && $order->shipment()->exists()) {
                 return false;
             }
 

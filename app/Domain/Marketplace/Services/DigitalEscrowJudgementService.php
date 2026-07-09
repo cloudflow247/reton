@@ -110,7 +110,12 @@ class DigitalEscrowJudgementService
             throw MarketplaceException::wrongOrderState('buyer');
         }
 
-        if (! in_array($order->status, [DigitalOrderStatus::PaidHeld, DigitalOrderStatus::Delivered], true)) {
+        if (! in_array($order->status, [
+            DigitalOrderStatus::PaidHeld,
+            DigitalOrderStatus::AwaitingVerification,
+            DigitalOrderStatus::Shipped,
+            DigitalOrderStatus::Delivered,
+        ], true)) {
             throw MarketplaceException::disputeNotAllowed();
         }
 
@@ -141,12 +146,8 @@ class DigitalEscrowJudgementService
             throw MarketplaceException::useStructuredDispute();
         }
 
-        if ($order->status === DigitalOrderStatus::Shipped || $order->status === DigitalOrderStatus::AwaitingVerification) {
-            $this->assertCanRaiseDispute($order, $buyer, DigitalDisputeCategory::NotDelivered);
-
-            return DigitalDisputeCategory::NotDelivered;
-        }
-
+        // PaidHeld, Shipped, and AwaitingVerification all allow NotDelivered
+        // via assertCanRaiseDispute + DigitalDisputeCategory::forOrderStatus.
         $this->assertCanRaiseDispute($order, $buyer, DigitalDisputeCategory::NotDelivered);
 
         return DigitalDisputeCategory::NotDelivered;

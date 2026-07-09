@@ -23,6 +23,10 @@ All notable changes to Reton are documented here. Format follows [Keep a Changel
 - Bill payment RRR tests now respect injected fake provider instances.
 - Buttons no longer stack icon above label — shared `.btn` uses horizontal flex, consistent radius, and focus rings.
 - Header nav no longer overlaps the Reton wordmark; Sign out no longer wraps onto two lines.
+- Auto-refund no longer skips the physical-shipment guard (unreachable `PaidHeld` double-check removed).
+- Bill `reconcile()` routes Remita RRR bills to the Remita gateway instead of the default Interswitch provider.
+- Generic callbacks on shipped / awaiting-verification physical orders no longer always throw `disputeNotAllowed()`.
+- Redundant `preg_replace(...) ?? ''` coalescing removed from KYC and Interswitch phone/reference helpers.
 
 ## [2026-06-30]
 

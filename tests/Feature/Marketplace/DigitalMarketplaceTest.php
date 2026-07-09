@@ -205,6 +205,72 @@ it('does not auto-refund when an open callback is handling the order', function 
         ->and($order->transfer?->fresh()->status)->toBe(TransferStatus::Held);
 });
 
+it('does not auto-refund physical orders that already have a booked shipment', function () {
+    ['seller' => $seller, 'buyer' => $buyer, 'buyerWallet' => $buyerWallet, 'listing' => $listing] = seedPhysicalListing();
+
+    $order = app(DigitalMarketplaceService::class)->purchase(
+        $buyer,
+        $listing,
+        $buyerWallet->refresh(),
+        true,
+        ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
+    );
+
+    // Keep PaidHeld but attach a shipment row so the transit guard applies.
+    $order->forceFill(['status' => DigitalOrderStatus::PaidHeld->value])->save();
+    $order->shipment()->create([
+        'carrier' => 'giglogistics',
+        'external_id' => 'GL-TEST-1',
+        'tracking_number' => 'GLTEST1',
+        'status' => \App\Domain\Marketplace\Enums\ShipmentStatus::AwaitingDropoff,
+        'dropoff_code' => 'DROP1',
+        'origin_address' => ['line1' => 'Hub'],
+        'destination_address' => ['line1' => 'Buyer'],
+    ]);
+
+    $this->travel(73)->hours();
+
+    expect(app(DigitalMarketplaceService::class)->refundOverdueUndelivered($order->fresh()))->toBeFalse()
+        ->and($order->fresh()->status)->toBe(DigitalOrderStatus::PaidHeld);
+});
+
+it('allows generic not-delivered callbacks for shipped physical orders', function () {
+    ['seller' => $seller, 'buyer' => $buyer, 'buyerWallet' => $buyerWallet, 'listing' => $listing] = seedPhysicalListing();
+
+    $order = app(DigitalMarketplaceService::class)->purchase(
+        $buyer,
+        $listing,
+        $buyerWallet->refresh(),
+        true,
+        ['line1' => '12 Admiralty Way', 'city' => 'Lekki', 'state' => 'Lagos', 'phone' => '+2348000000002'],
+    );
+
+    app(\App\Domain\Marketplace\Services\ShipmentService::class)->scheduleHubDropoff(
+        $order,
+        $seller,
+        ['line1' => '5 Ozumba Mbadiwe', 'city' => 'Victoria Island', 'state' => 'Lagos', 'phone' => '+2348000000001'],
+        true,
+    );
+
+    expect($order->refresh()->status)->toBe(DigitalOrderStatus::AwaitingVerification);
+
+    $this->travel(25)->hours();
+
+    expect(fn () => app(DigitalMarketplaceService::class)->assertCanInitiateGenericCallback(
+        $order->fresh(),
+        $buyer,
+        'Package never reached the hub.',
+    ))->not->toThrow(MarketplaceException::class);
+
+    $category = app(DigitalEscrowJudgementService::class)->assertCanInitiateGenericCallback(
+        $order->fresh(),
+        $buyer,
+        'Package never reached the hub.',
+    );
+
+    expect($category)->toBe(DigitalDisputeCategory::NotDelivered);
+});
+
 it('exposes auto-refund timing in escrow guidance for buyers waiting on delivery', function () {
     ['buyer' => $buyer, 'order' => $order] = seedDigitalOrder();
 

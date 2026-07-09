@@ -50,8 +50,11 @@ class BillPaymentService
     private function rrrGateway(): BillProviderGateway
     {
         if (config('services.remita.driver') === 'fake') {
-            // Reuse the injected fake when tests (or local dev) bind a shared instance.
-            if ($this->gateway instanceof FakeBillProvider) {
+            // When Remita is the default provider, reuse the injected fake so
+            // Remita-mode tests share one in-memory store. When Interswitch is
+            // default, resolve a dedicated Remita fake so RRR pay/reconcile
+            // never hit the Interswitch instance.
+            if ($this->providerName() === 'remita' && $this->gateway instanceof FakeBillProvider) {
                 return $this->gateway;
             }
 
@@ -194,7 +197,10 @@ class BillPaymentService
             return false;
         }
 
-        $remote = $this->gateway->fetchBill($bill->provider_reference);
+        // Remita RRR bills must be checked against Remita, not the default
+        // Interswitch/airtime gateway that was injected for other categories.
+        $gateway = $bill->provider === 'remita' ? $this->rrrGateway() : $this->gateway;
+        $remote = $gateway->fetchBill($bill->provider_reference);
 
         if ($remote === null) {
             return false;

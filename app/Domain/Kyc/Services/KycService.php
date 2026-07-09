@@ -39,7 +39,7 @@ class KycService
 
     public function upgradeToTier2(User $user, string $bvn, string $dateOfBirth, ?string $ipAddress = null): UserKyc
     {
-        $bvn = preg_replace('/\D/', '', $bvn) ?? '';
+        $bvn = (string) preg_replace('/\D/', '', $bvn);
 
         if (strlen($bvn) !== 11) {
             throw ValidationException::withMessages(['bvn' => ['Enter a valid 11-digit BVN.']]);
@@ -110,7 +110,7 @@ class KycService
             throw KycLimitExceededException::tierRequired(KycTier::Tier2->value);
         }
 
-        $nin = preg_replace('/\D/', '', $nin) ?? '';
+        $nin = (string) preg_replace('/\D/', '', $nin);
 
         if (strlen($nin) !== 11) {
             throw ValidationException::withMessages(['nin' => ['Enter a valid 11-digit NIN.']]);

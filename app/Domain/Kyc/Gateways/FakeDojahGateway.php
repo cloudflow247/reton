@@ -31,7 +31,7 @@ class FakeDojahGateway implements KycVerificationGateway
 
     public function verifyBvn(string $bvn): BvnIdentity
     {
-        $bvn = preg_replace('/\D/', '', $bvn) ?? '';
+        $bvn = (string) preg_replace('/\D/', '', $bvn);
 
         if (strlen($bvn) !== 11) {
             throw KycVerificationException::notFound('BVN');
@@ -48,7 +48,7 @@ class FakeDojahGateway implements KycVerificationGateway
 
     public function verifyNin(string $nin): NinIdentity
     {
-        $nin = preg_replace('/\D/', '', $nin) ?? '';
+        $nin = (string) preg_replace('/\D/', '', $nin);
 
         if (strlen($nin) !== 11) {
             throw KycVerificationException::notFound('NIN');

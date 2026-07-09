@@ -141,3 +141,27 @@ it('pays a Remita RRR for its looked-up amount', function () {
         ->and($bill->biller_name)->toBe('LASG Land Use Charge')
         ->and($wallet->fresh()->balance)->toBe(100_000_00 - 30_000_00);
 });
+
+it('reconciles pending Remita RRR bills against the Remita gateway even when Interswitch is default', function () {
+    config(['reton.bills.provider' => 'interswitch', 'services.remita.driver' => 'fake']);
+
+    $remita = new FakeBillProvider;
+    $remita->willReturn('pending');
+    $this->app->instance(FakeBillProvider::class, $remita);
+    // Default injected gateway is a separate Interswitch-facing fake with no Remita bill records.
+    $this->app->instance(BillProviderGateway::class, new FakeBillProvider);
+
+    [$user, $wallet] = billPayer(100_000_00);
+    $remita->registerRrr('100000000003', 'FIRS Tax', 15_000_00);
+
+    $inquiry = billService()->lookupRrr('100000000003');
+    $bill = billService()->pay($user, $wallet, BillCategory::Rrr, 'remita', $inquiry->billerName, '100000000003', $inquiry->amount);
+
+    expect($bill->status)->toBe(BillStatus::Pending)
+        ->and($bill->provider)->toBe('remita');
+
+    $remita->markBill($bill->provider_reference, 'completed');
+
+    expect(billService()->reconcile($bill->fresh()))->toBeTrue()
+        ->and($bill->fresh()->status)->toBe(BillStatus::Completed);
+});

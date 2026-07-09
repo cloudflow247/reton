@@ -137,7 +137,7 @@ class HttpInterswitchProvider implements BillProviderGateway
 
     private function normalizePhone(string $phone): string
     {
-        $digits = preg_replace('/\D/', '', $phone) ?? '';
+        $digits = (string) preg_replace('/\D/', '', $phone);
 
         if (str_starts_with($digits, '0')) {
             return '234'.substr($digits, 1);
@@ -152,7 +152,7 @@ class HttpInterswitchProvider implements BillProviderGateway
 
     private function customerId(string $reference, string $mobile): string
     {
-        $digits = preg_replace('/\D/', '', $reference) ?? '';
+        $digits = (string) preg_replace('/\D/', '', $reference);
 
         if (strlen($digits) >= 10 && (str_starts_with($digits, '0') || str_starts_with($digits, '234'))) {
             return $this->normalizePhone($reference);
