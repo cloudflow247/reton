@@ -2,6 +2,8 @@ import { useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type Rea
 import { motion } from 'framer-motion'
 import { CheckIcon, CopyIcon } from './icons'
 
+export { Logo, Wordmark } from './AuthBrand'
+
 export function Modal({
   title,
   onClose,
@@ -38,53 +40,6 @@ export function Modal({
         {children}
       </motion.div>
     </motion.div>
-  )
-}
-
-/**
- * The Reton mark: a shield (protection) holding a return-arrow (reversibility),
- * set in a bold emerald tile so it reads strongly at any size — the same glyph
- * as the favicon, for a consistent brand.
- */
-export function Logo({ size = 32 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
-      <defs>
-        <linearGradient id="reton-logo" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#0e7e5c" />
-          <stop offset="1" stopColor="#094f39" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="9" fill="url(#reton-logo)" />
-      <path
-        d="M16 4.8l8.4 2.9v6.7c0 5.3-3.6 9-8.4 10.8-4.8-1.8-8.4-5.5-8.4-10.8V7.7L16 4.8z"
-        fill="#ffffff"
-        fillOpacity="0.14"
-        stroke="#ffffff"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M19.4 13.9a3.9 3.9 0 1 0 .5 4.8" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
-      <path
-        d="M19.9 10.2l.2 3.9-3.8-.4"
-        fill="none"
-        stroke="#ffffff"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-export function Wordmark({ light, size = 32 }: { light?: boolean; size?: number }) {
-  return (
-    <span className="flex items-center gap-2.5 pr-1">
-      <Logo size={size} />
-      <span className={`font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-text'}`}>
-        Reton
-      </span>
-    </span>
   )
 }
 

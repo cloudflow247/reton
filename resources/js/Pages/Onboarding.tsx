@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AuthStepIndicator } from '@/components/AuthStepIndicator'
-import { Logo, Wordmark, Button, Field } from '@/components/ui'
+import { AuthBrand } from '@/components/AuthBrand'
+import { Button, Field } from '@/components/ui'
 import {
   ArrowRightIcon,
   CheckIcon,
@@ -45,8 +46,7 @@ export default function Onboarding() {
         <Head title="Welcome to Reton" />
 
         <div className="flex flex-col items-center text-center">
-          <Logo size={48} />
-          <Wordmark size={28} />
+          <AuthBrand size="lg" layout="stacked" />
         </div>
 
         <div className="card shield-glow mt-8 p-7 sm:p-8">

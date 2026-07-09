@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import { useForm, type FieldErrors } from 'react-hook-form'
+import { AuthAlert } from '@/components/AuthAlert'
 import { AuthLayout } from '@/components/AuthLayout'
 import { RhfField } from '@/components/forms/RhfField'
 import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
@@ -11,16 +12,24 @@ import { ArrowRightIcon, SparkleIcon } from '@/components/icons'
 import { deviceHeaders } from '@/lib/device'
 import { loginSchema, type LoginFormValues } from '@/lib/schemas/auth'
 import type { SharedProps } from '@/types'
+import { cn } from '@/lib/utils'
 
 const slide = {
-  initial: { opacity: 0, x: 24 },
+  initial: { opacity: 0, x: 20 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -24 },
+  exit: { opacity: 0, x: -20 },
 }
 
 function firstError(value?: string | string[]): string | undefined {
   if (!value) return undefined
   return Array.isArray(value) ? value[0] : value
+}
+
+function syncLoginEmail(form: HTMLFormElement, setValue: (v: string) => void) {
+  const email = form.elements.namedItem('email')
+  if (email instanceof HTMLInputElement && email.value) {
+    setValue(email.value)
+  }
 }
 
 export default function Login() {
@@ -34,6 +43,7 @@ export default function Login() {
     handleSubmit,
     trigger,
     getValues,
+    setValue,
     watch,
     setError,
     resetField,
@@ -50,6 +60,11 @@ export default function Login() {
   const email = watch('email')
 
   const postLogin = (values: LoginFormValues) => {
+    const form = document.getElementById('login-form')
+    if (form instanceof HTMLFormElement) {
+      syncLoginEmail(form, (v) => setValue('email', v, { shouldDirty: true }))
+    }
+
     const payload = {
       email: values.email || email || getValues('email'),
       password: values.password,
@@ -69,9 +84,7 @@ export default function Login() {
   }
 
   const onInvalid = (formErrors: FieldErrors<LoginFormValues>) => {
-    if (formErrors.email && step === 1) {
-      setStep(0)
-    }
+    if (formErrors.email && step === 1) setStep(0)
   }
 
   const signInAs = (demoEmail: string) => {
@@ -80,6 +93,10 @@ export default function Login() {
   }
 
   async function nextStep() {
+    const form = document.getElementById('login-form')
+    if (form instanceof HTMLFormElement) {
+      syncLoginEmail(form, (v) => setValue('email', v, { shouldDirty: true }))
+    }
     const ok = await trigger('email')
     if (ok) setStep(1)
   }
@@ -95,14 +112,7 @@ export default function Login() {
     <AuthLayout title={titles[step]} sub={subs[step]} step={step} totalSteps={2}>
       <Head title="Sign in" />
 
-      {authError && (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
-        >
-          {authError}
-        </div>
-      )}
+      <AuthAlert message={authError} />
 
       {demo && step === 0 && (
         <motion.div
@@ -137,53 +147,69 @@ export default function Login() {
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit(postLogin, onInvalid)} className="space-y-4" noValidate>
-        <input type="hidden" {...register('email')} />
+      <form id="login-form" onSubmit={handleSubmit(postLogin, onInvalid)} className="space-y-4" noValidate>
         <AnimatePresence mode="wait">
-          {step === 0 ? (
-            <motion.div key="email" {...slide} transition={{ duration: 0.22 }} className="space-y-4">
-              <RhfField
-                label="Email"
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
-                autoFocus
-                error={fieldErrorMessage(errors.email, serverErrors.email)}
-                {...register('email')}
-              />
-              <Button type="button" onClick={nextStep} className="group mt-1 w-full">
-                <span className="inline-flex items-center justify-center gap-2">
-                  Continue
-                  <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />
-                </span>
-              </Button>
-            </motion.div>
-          ) : (
-            <motion.div key="password" {...slide} transition={{ duration: 0.22 }} className="space-y-4">
-              <RhfField
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="current-password"
-                autoFocus
-                error={fieldErrorMessage(errors.password, serverErrors.password)}
-                {...register('password')}
-              />
-              <Button type="submit" loading={processing} className="group mt-1 w-full">
-                <span className="inline-flex items-center justify-center gap-2">
-                  Sign in
-                  <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />
-                </span>
-              </Button>
-              <button
-                type="button"
-                onClick={() => setStep(0)}
-                className="w-full text-center text-sm text-muted transition hover:text-mint"
-              >
-                ← Use a different email
-              </button>
-            </motion.div>
-          )}
+          <motion.div
+            key={step}
+            {...slide}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-4"
+          >
+            <div className={cn(step !== 0 && 'hidden')} aria-hidden={step !== 0}>
+              <div className="space-y-4">
+                <RhfField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  autoFocus={step === 0}
+                  valid={!!email && !errors.email && !serverErrors.email}
+                  error={fieldErrorMessage(errors.email, serverErrors.email)}
+                  {...register('email')}
+                />
+                <Button type="button" onClick={nextStep} className="group mt-1 w-full">
+                  <span className="inline-flex items-center justify-center gap-2">
+                    Continue
+                    <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Button>
+              </div>
+            </div>
+
+            <div className={cn(step !== 1 && 'hidden')} aria-hidden={step !== 1}>
+              <div className="space-y-4">
+                <RhfField
+                  label="Password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  autoFocus={step === 1}
+                  error={fieldErrorMessage(errors.password, serverErrors.password)}
+                  {...register('password')}
+                />
+                <div className="flex justify-end">
+                  <Link href="/forgot-password" className="text-xs font-semibold text-mint hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+                <Button type="submit" loading={processing} className="group mt-1 w-full">
+                  <span className="inline-flex items-center justify-center gap-2">
+                    Sign in
+                    <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setStep(0)}
+                  className="w-full text-center text-sm text-muted transition hover:text-mint"
+                >
+                  ← Use a different email
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </AnimatePresence>
       </form>
 
