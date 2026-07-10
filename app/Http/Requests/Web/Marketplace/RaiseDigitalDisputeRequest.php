@@ -19,7 +19,7 @@ class RaiseDigitalDisputeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pin' => ['required', 'string', 'regex:/^\d{4,6}$/'],
+            'pin' => ['required', 'string', 'regex:/^\d{4}$/'],
             'category' => ['required', 'string', Rule::enum(DigitalDisputeCategory::class)],
             'details' => ['required', 'string', 'min:10', 'max:1000'],
         ];

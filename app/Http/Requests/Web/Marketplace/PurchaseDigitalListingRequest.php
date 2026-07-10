@@ -17,7 +17,7 @@ class PurchaseDigitalListingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pin' => ['required', 'string', 'min:4', 'max:6', 'regex:/^\d+$/'],
+            'pin' => ['required', 'string', 'digits:4'],
             'buyer_accepts_description' => ['sometimes', 'boolean'],
             'shipping_line1' => ['sometimes', 'string', 'max:120'],
             'shipping_line2' => ['nullable', 'string', 'max:120'],

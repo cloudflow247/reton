@@ -595,7 +595,7 @@ export default function Cards({ cards, cardsReady, cardsDriver, fx, minFunding }
               <input
                 type="password"
                 inputMode="numeric"
-                maxLength={6}
+                maxLength={4}
                 autoFocus
                 placeholder="••••"
                 value={pinValue}

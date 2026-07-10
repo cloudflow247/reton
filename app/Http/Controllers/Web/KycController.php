@@ -23,6 +23,7 @@ class KycController extends Controller
             'bvn' => ['required', 'string', 'digits:11'],
             'date_of_birth' => ['required', 'date', 'before:today'],
             'identity_consent' => ['accepted'],
+            'return_to' => ['nullable', 'string', 'max:255'],
         ]);
 
         $this->kyc->upgradeToTier2(
@@ -32,7 +33,14 @@ class KycController extends Controller
             $request->ip(),
         );
 
-        return redirect()->route('profile')->with('success', 'Tier 2 verified — you can now open your personal ALATPay deposit account.');
+        $message = 'BVN verified — you can now fund your wallet and open your ALATPay deposit account.';
+
+        $returnTo = (string) ($validated['return_to'] ?? '');
+        if ($returnTo !== '' && str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')) {
+            return redirect($returnTo)->with('success', $message);
+        }
+
+        return redirect()->route('profile')->with('success', $message);
     }
 
     public function upgradeTier3(Request $request): RedirectResponse

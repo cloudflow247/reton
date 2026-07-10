@@ -22,7 +22,7 @@ export default function SetPin() {
       <PageHero
         icon={LockIcon}
         title={hasPin ? 'Change PIN' : 'Set up PIN'}
-        subtitle="4–6 digits. Required for every payment — separate from your password."
+        subtitle="4 digits. Required for every payment — separate from your password."
         tone="mint"
       />
 
@@ -35,10 +35,10 @@ export default function SetPin() {
                 type="password"
                 inputMode="numeric"
                 autoComplete="current-password"
-                maxLength={6}
+                maxLength={4}
                 placeholder="••••"
                 value={form.data.current_pin}
-                onChange={(e) => form.setData('current_pin', e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) => form.setData('current_pin', e.target.value.replace(/\D/g, '').slice(0, 4))}
                 error={form.errors.current_pin}
                 required
               />
@@ -50,10 +50,10 @@ export default function SetPin() {
             type="password"
             inputMode="numeric"
             autoComplete="new-password"
-            maxLength={6}
-            placeholder="4–6 digits"
+            maxLength={4}
+            placeholder="4 digits"
             value={form.data.pin}
-            onChange={(e) => form.setData('pin', e.target.value.replace(/\D/g, '').slice(0, 6))}
+            onChange={(e) => form.setData('pin', e.target.value.replace(/\D/g, '').slice(0, 4))}
             error={form.errors.pin}
             required
           />
@@ -63,10 +63,10 @@ export default function SetPin() {
             type="password"
             inputMode="numeric"
             autoComplete="new-password"
-            maxLength={6}
+            maxLength={4}
             placeholder="Re-enter PIN"
             value={form.data.pin_confirmation}
-            onChange={(e) => form.setData('pin_confirmation', e.target.value.replace(/\D/g, '').slice(0, 6))}
+            onChange={(e) => form.setData('pin_confirmation', e.target.value.replace(/\D/g, '').slice(0, 4))}
             error={form.errors.pin_confirmation}
             required
           />

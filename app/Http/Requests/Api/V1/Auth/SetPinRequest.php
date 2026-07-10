@@ -20,7 +20,7 @@ class SetPinRequest extends FormRequest
     {
         return [
             'current_pin' => ['nullable', 'string'],
-            'pin' => ['required', 'confirmed', 'digits_between:4,6'],
+            'pin' => ['required', 'confirmed', 'digits:4'],
         ];
     }
 }

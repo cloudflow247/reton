@@ -17,7 +17,7 @@ class ConfirmDigitalOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pin' => ['required', 'string', 'regex:/^\d{4,6}$/'],
+            'pin' => ['required', 'string', 'regex:/^\d{4}$/'],
         ];
     }
 }

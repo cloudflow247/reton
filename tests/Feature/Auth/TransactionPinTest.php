@@ -41,6 +41,11 @@ it('rejects a non-numeric or wrong-length pin', function () {
         'pin' => '12ab',
         'pin_confirmation' => '12ab',
     ])->assertStatus(422);
+
+    $this->actingAs($user)->postJson('/api/v1/auth/pin', [
+        'pin' => '123456',
+        'pin_confirmation' => '123456',
+    ])->assertStatus(422);
 });
 
 it('verifies a correct pin', function () {

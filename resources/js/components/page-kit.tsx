@@ -420,9 +420,9 @@ export function PinField({
         id={id}
         type="password"
         inputMode="numeric"
-        maxLength={6}
+        maxLength={4}
         value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 4))}
         placeholder="••••"
         autoComplete="off"
         className="field w-full px-4 py-3.5 text-center font-num text-lg tracking-[0.35em]"

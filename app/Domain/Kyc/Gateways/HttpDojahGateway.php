@@ -8,7 +8,9 @@ use App\Domain\Kyc\Contracts\KycVerificationGateway;
 use App\Domain\Kyc\Data\BvnIdentity;
 use App\Domain\Kyc\Data\NinIdentity;
 use App\Domain\Kyc\Exceptions\KycVerificationException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +26,12 @@ class HttpDojahGateway implements KycVerificationGateway
     {
         $bvn = (string) preg_replace('/\D/', '', $bvn);
 
-        $response = $this->client()->get('/api/v1/kyc/bvn/full', ['bvn' => $bvn]);
+        try {
+            $response = $this->client()->get('/api/v1/kyc/bvn/full', ['bvn' => $bvn]);
+        } catch (ConnectionException|RequestException $e) {
+            Log::warning('dojah.bvn.connection_failed', ['message' => $e->getMessage()]);
+            throw KycVerificationException::providerUnavailable();
+        }
 
         if ($response->status() === 404 || $response->json('error') !== null) {
             throw KycVerificationException::notFound('BVN');
@@ -55,7 +62,12 @@ class HttpDojahGateway implements KycVerificationGateway
     {
         $nin = (string) preg_replace('/\D/', '', $nin);
 
-        $response = $this->client()->get('/api/v1/kyc/nin', ['nin' => $nin]);
+        try {
+            $response = $this->client()->get('/api/v1/kyc/nin', ['nin' => $nin]);
+        } catch (ConnectionException|RequestException $e) {
+            Log::warning('dojah.nin.connection_failed', ['message' => $e->getMessage()]);
+            throw KycVerificationException::providerUnavailable();
+        }
 
         if ($response->status() === 404 || $response->json('error') !== null) {
             throw KycVerificationException::notFound('NIN');

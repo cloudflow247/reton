@@ -109,17 +109,17 @@ export default function Onboarding() {
             {step === 1 && (
               <motion.div key="pin" {...slide} transition={{ duration: 0.25 }}>
                 <h1 className="font-display text-2xl font-bold tracking-tight">Create your transaction PIN</h1>
-                <p className="mt-2 text-sm text-muted">4–6 digits. You'll enter this for sends, bills, and withdrawals.</p>
+                <p className="mt-2 text-sm text-muted">4 digits. You'll enter this for sends, bills, and withdrawals.</p>
                 <form onSubmit={submitPin} className="mt-6 space-y-4">
                   <Field
                     label="PIN"
                     type="password"
                     inputMode="numeric"
                     autoComplete="new-password"
-                    maxLength={6}
-                    placeholder="4–6 digits"
+                    maxLength={4}
+                    placeholder="4 digits"
                     value={pinForm.data.pin}
-                    onChange={(e) => pinForm.setData('pin', e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onChange={(e) => pinForm.setData('pin', e.target.value.replace(/\D/g, '').slice(0, 4))}
                     error={pinForm.errors.pin}
                     required
                   />
@@ -128,11 +128,11 @@ export default function Onboarding() {
                     type="password"
                     inputMode="numeric"
                     autoComplete="new-password"
-                    maxLength={6}
+                    maxLength={4}
                     placeholder="Repeat PIN"
                     value={pinForm.data.pin_confirmation}
                     onChange={(e) =>
-                      pinForm.setData('pin_confirmation', e.target.value.replace(/\D/g, '').slice(0, 6))
+                      pinForm.setData('pin_confirmation', e.target.value.replace(/\D/g, '').slice(0, 4))
                     }
                     error={pinForm.errors.pin_confirmation}
                     required

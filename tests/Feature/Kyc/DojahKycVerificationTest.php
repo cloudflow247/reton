@@ -65,6 +65,51 @@ it('completes tier 2 via web with consent', function () {
         ->assertSessionHas('success');
 });
 
+it('redirects back to add money after tier 2 when return_to is set', function () {
+    $user = kycUser();
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2', [
+        'bvn' => '22334455667',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHas('success');
+});
+
+it('allows tier 2 upgrade without a transaction pin for add money funding', function () {
+    $user = User::factory()->create([
+        'name' => 'Reton Test User',
+        'transaction_pin' => null,
+    ]);
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2', [
+        'bvn' => '22334455667',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHas('success');
+});
+
+it('returns validation errors instead of server errors when dojah is unavailable', function () {
+    config([
+        'services.dojah.driver' => 'http',
+        'services.dojah.app_id' => '',
+        'services.dojah.secret_key' => '',
+    ]);
+
+    $user = kycUser();
+
+    $this->actingAs($user)->from('/add-money')->post('/profile/kyc/tier-2', [
+        'bvn' => '22334455667',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHasErrors('bvn');
+});
+
 it('verifies nin via dojah fake before tier 3 upgrade', function () {
     $user = kycUser();
     app(KycService::class)->upgradeToTier2($user, '22334455667', '1990-05-15');

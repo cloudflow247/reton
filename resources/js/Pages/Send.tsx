@@ -354,7 +354,7 @@ function SendForm() {
               label="Transaction PIN"
               type="password"
               inputMode="numeric"
-              maxLength={6}
+              maxLength={4}
               placeholder="••••"
               autoComplete="off"
               error={fieldErrorMessage(errors.pin, serverErrors.pin)}

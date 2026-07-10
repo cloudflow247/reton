@@ -506,7 +506,7 @@ export default function Bills({ categories, bills }: Props) {
                   <input
                     type={showPin ? 'text' : 'password'}
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={4}
                     placeholder="••••"
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}

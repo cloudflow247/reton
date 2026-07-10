@@ -11,7 +11,7 @@ class KycVerificationException extends RuntimeException implements RenderableApi
 {
     public function __construct(
         string $message,
-        private readonly string $code = 'kyc_verification_failed',
+        private readonly string $apiErrorCode = 'kyc_verification_failed',
         private readonly int $status = 422,
     ) {
         parent::__construct($message);
@@ -34,6 +34,6 @@ class KycVerificationException extends RuntimeException implements RenderableApi
 
     public function apiCode(): string
     {
-        return $this->code;
+        return $this->apiErrorCode;
     }
 }

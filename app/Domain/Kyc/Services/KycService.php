@@ -87,7 +87,7 @@ class KycService
                 $identity = $this->verification->verifyBvn($bvn);
             } catch (KycVerificationException $e) {
                 $this->audit->record($user, 'bvn', $this->providerName(), 'failed', $e->getMessage(), $ipAddress);
-                throw $e;
+                throw ValidationException::withMessages(['bvn' => [$e->getMessage()]]);
             }
 
             if ($identity->dateOfBirth === null || ! $identity->dateOfBirth->isSameDay($dob)) {
@@ -152,7 +152,7 @@ class KycService
                 $identity = $this->verification->verifyNin($nin);
             } catch (KycVerificationException $e) {
                 $this->audit->record($user, 'nin', $this->providerName(), 'failed', $e->getMessage(), $ipAddress);
-                throw $e;
+                throw ValidationException::withMessages(['nin' => [$e->getMessage()]]);
             }
 
             if (! AccountNameMatcher::matches($identity->fullName(), $user->name)) {

@@ -46,7 +46,7 @@ class AdminAppSettingsController extends Controller
         $validated = $request->validate([
             'demo_enabled' => ['required', 'boolean'],
             'demo_password' => ['nullable', 'string', 'min:4', 'max:64'],
-            'demo_pin' => ['nullable', 'string', 'regex:/^\d{4,6}$/'],
+            'demo_pin' => ['nullable', 'string', 'digits:4'],
             'public_url' => ['nullable', 'url', 'max:255'],
             'admin_path' => ['required', 'string', 'max:48', new ValidAdminPath],
             'listing_path' => ['required', 'string', 'max:32', 'regex:/^\//'],
