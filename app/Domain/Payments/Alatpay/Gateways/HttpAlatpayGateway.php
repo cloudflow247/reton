@@ -191,32 +191,49 @@ class HttpAlatpayGateway implements AlatpayGateway
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
                 503,
-                'Could not reach ALATPay. Check your connection and try again.',
+                'Could not reach ALATPay. Check Base URL (https://apibox.alatpay.ng) and try again.',
             );
         }
+
+        $payload = $response->json();
 
         if (! $response->successful()) {
             Log::warning('ALATPay provisionStaticAccount failed', [
                 'status' => $response->status(),
-                'body' => $response->json() ?? $response->body(),
+                'base_url' => config('services.alatpay.base_url'),
+                'body' => $payload ?? $response->body(),
             ]);
 
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
                 $response->status(),
-                $this->extractErrorMessage($response->json()),
+                $this->extractErrorMessage($payload),
             );
         }
 
-        $data = (array) $response->json('data', $response->json());
+        $data = $this->unwrapPayload($payload);
+        $root = is_array($payload) ? $payload : [];
 
-        $staticWalletId = (string) ($data['id'] ?? '');
+        if ($this->looksLikeSoftFailure($root, $data)) {
+            throw AlatpayException::requestFailed(
+                'provisionStaticAccount',
+                400,
+                $this->extractErrorMessage($payload) ?? 'ALATPay rejected the BVN request.',
+            );
+        }
+
+        $staticWalletId = (string) ($data['id'] ?? $data['staticWalletId'] ?? '');
 
         if ($staticWalletId === '') {
+            Log::warning('ALATPay provisionStaticAccount missing wallet id', [
+                'base_url' => config('services.alatpay.base_url'),
+                'body' => $payload,
+            ]);
+
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
                 $response->status(),
-                'ALATPay returned an empty wallet id.',
+                $this->extractErrorMessage($payload) ?? 'ALATPay returned an empty wallet id. Confirm Business ID and Base URL (apibox.alatpay.ng).',
             );
         }
 
@@ -224,7 +241,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             ? (string) $data['otpTrackingID']
             : (isset($data['otpTrackingId']) ? (string) $data['otpTrackingId'] : null);
 
-        $message = (string) ($data['message'] ?? $response->json('message', ''));
+        $message = (string) ($data['message'] ?? $root['message'] ?? '');
 
         return new StaticAccountProvisionResponse(
             staticWalletId: $staticWalletId,
@@ -250,19 +267,26 @@ class HttpAlatpayGateway implements AlatpayGateway
             throw AlatpayException::requestFailed(
                 'verifyStaticAccount',
                 503,
-                'Could not reach ALATPay. Check your connection and try again.',
+                'Could not reach ALATPay. Check Base URL (https://apibox.alatpay.ng) and try again.',
             );
         }
 
+        $payload = $response->json();
+
         if (! $response->successful()) {
+            Log::warning('ALATPay verifyStaticAccount failed', [
+                'status' => $response->status(),
+                'body' => $payload ?? $response->body(),
+            ]);
+
             throw AlatpayException::requestFailed(
                 'verifyStaticAccount',
                 $response->status(),
-                $this->extractErrorMessage($response->json()),
+                $this->extractErrorMessage($payload),
             );
         }
 
-        $data = (array) $response->json('data', $response->json());
+        $data = $this->unwrapPayload($payload);
 
         $accountNumber = (string) ($data['accountNumber'] ?? '');
 
@@ -270,7 +294,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             throw AlatpayException::requestFailed(
                 'verifyStaticAccount',
                 $response->status(),
-                'ALATPay did not return an account number.',
+                $this->extractErrorMessage($payload) ?? 'ALATPay did not return an account number.',
             );
         }
 
@@ -308,12 +332,72 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     private function client(): PendingRequest
     {
-        return Http::baseUrl((string) config('services.alatpay.base_url'))
+        return Http::baseUrl($this->resolvedBaseUrl())
             ->timeout((int) config('services.alatpay.timeout', 12))
             ->connectTimeout(4)
             ->withHeaders(['Ocp-Apim-Subscription-Key' => (string) config('services.alatpay.api_key')])
             ->acceptJson()
             ->asJson();
+    }
+
+    /**
+     * Official ALATPay host is apibox. Older Reton defaults used api.alatpay.ng, which breaks static wallet.
+     *
+     * @see https://docs.alatpay.ng/get-started
+     */
+    private function resolvedBaseUrl(): string
+    {
+        $base = rtrim((string) config('services.alatpay.base_url'), '/');
+
+        if ($base === 'https://api.alatpay.ng' || $base === 'http://api.alatpay.ng') {
+            Log::warning('ALATPay base_url remapped from api.alatpay.ng to apibox.alatpay.ng');
+
+            return 'https://apibox.alatpay.ng';
+        }
+
+        return $base !== '' ? $base : 'https://apibox.alatpay.ng';
+    }
+
+    /**
+     * Official docs return a flat object; some environments nest under `data`.
+     * When `data` is null/empty, fall back to the root payload.
+     *
+     * @return array<string, mixed>
+     */
+    private function unwrapPayload(mixed $payload): array
+    {
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        $nested = $payload['data'] ?? null;
+
+        if (is_array($nested) && $nested !== []) {
+            return $nested;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $root
+     * @param  array<string, mixed>  $data
+     */
+    private function looksLikeSoftFailure(array $root, array $data): bool
+    {
+        foreach ([$root, $data] as $bag) {
+            if (array_key_exists('status', $bag) && $bag['status'] === false) {
+                return true;
+            }
+            if (array_key_exists('succeeded', $bag) && $bag['succeeded'] === false) {
+                return true;
+            }
+            if (isset($bag['statusCode']) && (int) $bag['statusCode'] >= 400) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function assertConfigured(string $operation): void
@@ -333,7 +417,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             return null;
         }
 
-        foreach (['message', 'error', 'title', 'detail'] as $key) {
+        foreach (['message', 'error', 'title', 'detail', 'otpResponseMessage'] as $key) {
             if (isset($payload[$key]) && is_string($payload[$key]) && trim($payload[$key]) !== '') {
                 return trim($payload[$key]);
             }

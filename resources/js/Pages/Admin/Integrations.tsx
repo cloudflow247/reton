@@ -144,6 +144,11 @@ function IntegrationForm({
         label="Base URL"
         value={String(form.data.base_url ?? '')}
         onChange={(e) => form.setData('base_url', e.target.value)}
+        hint={
+          group === 'alatpay'
+            ? 'Official host: https://apibox.alatpay.ng — do not use api.alatpay.ng'
+            : undefined
+        }
       />
 
       {group === 'alatpay' && (
@@ -191,6 +196,7 @@ function IntegrationForm({
           <p className="rounded-xl border border-mint/20 bg-mint/[0.04] px-4 py-3 text-xs leading-relaxed text-muted">
             <span className="font-semibold text-text">BVN verification</span> for wallet funding uses ALATPay Static
             Wallet OTP (same credentials). Users receive an SMS code linked to their BVN before they can add money.
+            Driver must be Live HTTP, with API key, Business ID, and Base URL set to apibox.
           </p>
         </>
       )}
