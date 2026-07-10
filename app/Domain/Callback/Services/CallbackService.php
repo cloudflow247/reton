@@ -38,6 +38,7 @@ class CallbackService
         private readonly TransferService $transfers,
         private readonly CallbackDecisionEngine $engine,
         private readonly DigitalMarketplaceService $marketplace,
+        private readonly ProtectionFairnessService $fairness,
     ) {}
 
     public function initiate(Transfer $transfer, User $sender, string $reason): Callback
@@ -52,17 +53,28 @@ class CallbackService
             throw CallbackAlreadyOpenException::forTransfer((string) $transfer->id);
         }
 
-        return DB::transaction(function () use ($transfer, $sender, $reason): Callback {
+        $this->fairness->assertCanInitiate($transfer, $sender, $reason);
+        $snapshot = $this->fairness->initiationSnapshot($transfer, $sender, $reason);
+        $responseHours = $snapshot->responseHours
+            ?? (int) config('reton.callback.response_hours', 24);
+
+        return DB::transaction(function () use ($transfer, $sender, $reason, $snapshot, $responseHours): Callback {
             $callback = Callback::create([
                 'reference' => 'CBK-'.Str::upper((string) Str::ulid()),
                 'transfer_id' => $transfer->id,
                 'initiated_by' => $sender->getKey(),
                 'status' => CallbackStatus::Pending,
                 'reason' => $reason,
-                'responds_by' => now()->addHours((int) config('reton.callback.response_hours', 24)),
+                'responds_by' => now()->addHours($responseHours),
+                'metadata' => [
+                    'fairness' => $snapshot->toArray(),
+                ],
             ]);
 
-            $this->log($callback, $sender, CallbackAction::Initiated, $reason);
+            $this->log($callback, $sender, CallbackAction::Initiated, $reason, [
+                'category' => $snapshot->category,
+                'fairness' => $snapshot->toArray(),
+            ]);
 
             TrustProtectionBroadcaster::callbackChanged($callback, 'callback.initiated');
 
@@ -108,6 +120,12 @@ class CallbackService
     public function addEvidence(Callback $callback, User $actor, string $note, array $metadata = []): CallbackEvent
     {
         $this->assertOpen($callback);
+
+        $score = $this->fairness->evidenceScore($note, $metadata);
+        $metadata = array_merge($metadata, [
+            'evidence_score' => $score,
+            'quality' => $score >= 70 ? 'strong' : ($score >= 40 ? 'fair' : 'weak'),
+        ]);
 
         return $this->log($callback, $actor, CallbackAction::EvidenceAdded, $note, $metadata);
     }

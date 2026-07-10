@@ -384,6 +384,15 @@ function CheckoutPendingPanel({ deposit, onDismiss }: { deposit: Deposit; onDism
 }
 
 function SuccessPanel({ deposit, onDismiss }: { deposit: Deposit; onDismiss: () => void }) {
+  const bank = deposit.bank_transfer
+  const description =
+    deposit.description ??
+    (bank?.narration
+      ? `Bank transfer — ${bank.narration}`
+      : bank?.payer_name
+        ? `Bank transfer from ${bank.payer_name}`
+        : null)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -402,9 +411,32 @@ function SuccessPanel({ deposit, onDismiss }: { deposit: Deposit; onDismiss: () 
             <p className="mt-1 text-sm text-muted">{ngn(deposit.amount)} has been added to your wallet.</p>
           </div>
         </div>
+
+        {(description || bank || deposit.provider_reference) && (
+          <div className="space-y-2 rounded-2xl border border-line bg-surface-2/40 px-4 py-3 text-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Transfer receipt</p>
+            {description && <p className="font-medium text-text">{description}</p>}
+            {bank?.payer_name && (
+              <p className="text-xs text-muted">
+                From <span className="text-text">{bank.payer_name}</span>
+                {bank.bank_name ? ` · ${bank.bank_name}` : ''}
+              </p>
+            )}
+            {(deposit.provider_reference || bank?.provider_reference) && (
+              <p className="font-mono text-[11px] text-muted">
+                Provider ref {deposit.provider_reference ?? bank?.provider_reference}
+              </p>
+            )}
+            <p className="font-mono text-[11px] text-muted">Reton ref {deposit.reference}</p>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2">
           <Link href="/dashboard" className="btn bg-mint px-5 py-2.5 text-sm text-white hover:bg-mint-strong">
             Go to dashboard
+          </Link>
+          <Link href="/activity" className="btn border border-line bg-surface px-4 py-2.5 text-sm hover:border-mint/30">
+            View activity
           </Link>
           <Button variant="ghost" className="px-4 py-2" onClick={onDismiss}>
             Add more money

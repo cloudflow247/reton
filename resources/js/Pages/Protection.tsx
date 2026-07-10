@@ -16,7 +16,7 @@ import {
   protectionActionSchema,
   type ProtectionActionValues,
 } from '@/lib/schemas/protection'
-import type { Callback, DigitalOrder, ProtectionEvent, Recovery, Transfer } from '@/lib/types'
+import type { Callback, CallbackFairness, DigitalOrder, ProtectionEvent, Recovery, Transfer } from '@/lib/types'
 import type { PageProps } from '@/types'
 
 type ActionDef = {
@@ -349,6 +349,7 @@ export default function Protection() {
                       meta={`${c.reason ?? 'No reason given'}${c.responds_by && c.status === 'pending' ? ` · respond by ${shortDate(c.responds_by)}` : ''}`}
                       badge={<StatusPill status={c.status} />}
                     />
+                    {c.fairness && <FairnessStrip fairness={c.fairness} />}
                     {canAnswer && (
                       <CaseActions>
                         <Button
@@ -612,6 +613,33 @@ function ActionDialog({ action, onClose }: { action: ActionDef; onClose: () => v
         </Button>
       </form>
     </Modal>
+  )
+}
+
+function FairnessStrip({ fairness }: { fairness: CallbackFairness }) {
+  const category = (fairness.category ?? 'other').replace(/_/g, ' ')
+  const reasons = Array.isArray(fairness.reasons) ? fairness.reasons : []
+
+  return (
+    <div className="mt-3 w-full rounded-2xl border border-mint/20 bg-mint/[0.04] px-3.5 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-mint">Fair usage</p>
+        <Pill tone="mint">{category}</Pill>
+        <span className="text-[11px] text-muted">
+          Sender {fairness.sender_score} · Receiver {fairness.receiver_score}
+        </span>
+      </div>
+      {reasons[0] && <p className="mt-1.5 text-xs leading-relaxed text-muted">{reasons[0]}</p>}
+      {reasons.length > 1 && (
+        <ul className="mt-1 space-y-0.5">
+          {reasons.slice(1, 3).map((reason) => (
+            <li key={reason} className="text-[11px] text-muted">
+              · {reason}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

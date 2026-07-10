@@ -133,6 +133,18 @@ return [
 
         // Protected wallet-to-wallet transfers: sender debited immediately, receiver
         // credited as pending (held_balance) until release or refund.
+        'fairness' => [
+            'hold_hours_min' => (int) env('RETON_CALLBACK_HOLD_HOURS_MIN', 24),
+            'hold_hours_max' => (int) env('RETON_CALLBACK_HOLD_HOURS_MAX', 120),
+            'response_hours_min' => (int) env('RETON_CALLBACK_RESPONSE_HOURS_MIN', 12),
+            'response_hours_max' => (int) env('RETON_CALLBACK_RESPONSE_HOURS_MAX', 48),
+            'large_amount_minor' => (int) env('RETON_CALLBACK_FAIRNESS_LARGE_AMOUNT', 500_000),
+            'max_open_callbacks' => (int) env('RETON_CALLBACK_MAX_OPEN', 3),
+            'max_callbacks_per_week' => (int) env('RETON_CALLBACK_MAX_PER_WEEK', 5),
+            'max_protected_conversion' => (float) env('RETON_CALLBACK_MAX_CONVERSION', 0.7),
+            'min_sender_score' => (int) env('RETON_CALLBACK_MIN_SENDER_SCORE', 25),
+            'min_reason_length' => (int) env('RETON_CALLBACK_MIN_REASON_LENGTH', 8),
+        ],
     ],
 
     /*

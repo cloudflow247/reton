@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Transfers\Services;
 
+use App\Domain\Callback\Services\ProtectionFairnessService;
 use App\Domain\Ledger\Data\PostingDraft;
 use App\Domain\Ledger\Enums\TransactionType;
 use App\Domain\Ledger\Models\Transaction;
@@ -33,6 +34,7 @@ class TransferService
     public function __construct(
         private readonly LedgerService $ledger,
         private readonly WalletService $wallets,
+        private readonly ProtectionFairnessService $fairness,
     ) {}
 
     /**
@@ -118,12 +120,17 @@ class TransferService
                 completed: false,
             );
 
+            $receiver = User::find($to->owner_id);
+            $holdHours = $receiver instanceof User
+                ? $this->fairness->holdHoursFor($sender, $receiver, $amount)
+                : (int) config('reton.callback.hold_hours', 72);
+
             Hold::create([
                 'transfer_id' => $transfer->id,
                 'amount' => $amount->amount,
                 'currency' => $amount->currency,
                 'status' => HoldStatus::Active,
-                'expires_at' => now()->addHours((int) config('reton.callback.hold_hours', 72)),
+                'expires_at' => now()->addHours($holdHours),
             ]);
 
             return $transfer->load('hold');

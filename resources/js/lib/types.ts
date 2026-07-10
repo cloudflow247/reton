@@ -187,6 +187,17 @@ export type ProtectionEvent = {
   created_at: string
 }
 
+export type CallbackFairness = {
+  sender_score: number
+  receiver_score: number
+  category: string
+  evidence_score: number | null
+  resolution: string
+  reasons: string[]
+  hold_hours?: number | null
+  response_hours?: number | null
+}
+
 export type Callback = {
   id: string
   reference: string
@@ -196,6 +207,7 @@ export type Callback = {
   resolution: string | null
   responds_by: string | null
   created_at: string
+  fairness?: CallbackFairness | null
   events?: ProtectionEvent[]
 }
 
@@ -217,6 +229,7 @@ export type Recovery = {
 export type Deposit = {
   id: string
   reference: string
+  provider_reference?: string | null
   status: string
   amount: number
   currency: string
@@ -227,6 +240,16 @@ export type Deposit = {
     account_name: string
   } | null
   payment_link_url?: string | null
+  description?: string | null
+  bank_transfer?: {
+    narration?: string | null
+    payer_name?: string | null
+    bank_name?: string | null
+    channel?: string | null
+    provider_reference?: string | null
+    provider_paid_at?: string | null
+  } | null
+  paid_at?: string | null
 }
 
 export type BillCategory = 'airtime' | 'data' | 'electricity' | 'cable_tv' | 'betting' | 'rrr'

@@ -81,7 +81,7 @@ class WalletService
      *
      * @param  array<string, mixed>  $metadata
      */
-    public function fund(Wallet $wallet, Money $amount, ?string $idempotencyKey = null, array $metadata = []): Transaction
+    public function fund(Wallet $wallet, Money $amount, ?string $idempotencyKey = null, array $metadata = [], ?string $description = null): Transaction
     {
         $this->assertCurrency($wallet, $amount);
 
@@ -89,7 +89,7 @@ class WalletService
 
         return $this->ledger->post(
             PostingDraft::for(TransactionType::WalletFunding)
-                ->describedAs('Wallet funding')
+                ->describedAs($description ?: 'Wallet funding')
                 ->idempotentBy($idempotencyKey)
                 ->withMetadata($metadata + ['wallet_id' => $wallet->getKey()])
                 ->debit($cash, $amount)

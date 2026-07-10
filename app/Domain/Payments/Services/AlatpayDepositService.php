@@ -150,7 +150,7 @@ class AlatpayDepositService
             return false;
         }
 
-        $this->creditDeposit($deposit);
+        $this->creditDeposit($deposit, $remote);
 
         return true;
     }
@@ -185,7 +185,16 @@ class AlatpayDepositService
             return;
         }
 
-        $this->creditDeposit($deposit);
+        $remote = null;
+        if (filled($deposit->provider_reference)) {
+            try {
+                $remote = $this->gateway->fetchTransaction((string) $deposit->provider_reference);
+            } catch (\Throwable) {
+                $remote = null;
+            }
+        }
+
+        $this->creditDeposit($deposit, $remote, $data);
         $event->update(['status' => 'processed', 'processed_at' => now()]);
     }
 
@@ -218,22 +227,42 @@ class AlatpayDepositService
             ->first();
     }
 
-    private function creditDeposit(Deposit $deposit): void
+    /**
+     * @param  array<string, mixed>  $webhookData
+     */
+    private function creditDeposit(Deposit $deposit, ?\App\Domain\Payments\Alatpay\Data\RemoteTransaction $remote = null, array $webhookData = []): void
     {
-        DB::transaction(function () use ($deposit): void {
+        DB::transaction(function () use ($deposit, $remote, $webhookData): void {
             $wallet = Wallet::findOrFail($deposit->wallet_id);
+
+            $bankMeta = $remote?->receiptMetadata() ?? array_filter([
+                'narration' => is_string($webhookData['narration'] ?? null) ? $webhookData['narration'] : null,
+                'payer_name' => is_string($webhookData['customerName'] ?? $webhookData['payerName'] ?? null)
+                    ? ($webhookData['customerName'] ?? $webhookData['payerName'])
+                    : null,
+                'bank_name' => is_string($webhookData['bankName'] ?? null) ? $webhookData['bankName'] : null,
+                'provider_reference' => $deposit->provider_reference,
+            ], static fn (mixed $v): bool => $v !== null && $v !== '');
+
+            $description = $remote?->fundingDescription()
+                ?? (isset($bankMeta['narration']) ? 'Bank transfer — '.$bankMeta['narration'] : 'Wallet funding via bank transfer');
 
             $transaction = $this->wallets->fund(
                 $wallet,
                 Money::of($deposit->amount, $deposit->currency),
-                $deposit->reference, // ledger idempotency key
-                ['deposit_id' => $deposit->id, 'provider' => self::PROVIDER],
+                $deposit->reference,
+                ['deposit_id' => $deposit->id, 'provider' => self::PROVIDER, 'bank_transfer' => $bankMeta],
+                $description,
             );
 
             $deposit->update([
                 'status' => DepositStatus::Completed,
                 'transaction_id' => $transaction->id,
                 'paid_at' => now(),
+                'metadata' => array_merge((array) ($deposit->metadata ?? []), [
+                    'bank_transfer' => $bankMeta,
+                    'ledger_description' => $description,
+                ]),
             ]);
         });
     }

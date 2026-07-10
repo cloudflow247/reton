@@ -67,14 +67,14 @@ it('cannot initiate a callback on a normal transfer', function () {
 
     $normal = app(TransferService::class)->sendNormal($sender, $from->refresh(), $to, Money::of(100_00, 'NGN'));
 
-    callbacks()->initiate($normal, $sender, 'oops');
+    callbacks()->initiate($normal, $sender, 'Accidental unprotected send');
 })->throws(CannotInitiateCallbackException::class);
 
 it('cannot open a second callback while one is already open', function () {
     [$sender, , $transfer] = heldProtectedTransfer();
 
-    callbacks()->initiate($transfer, $sender, 'first');
-    callbacks()->initiate($transfer->fresh(), $sender, 'second');
+    callbacks()->initiate($transfer, $sender, 'First callback on this transfer');
+    callbacks()->initiate($transfer->fresh(), $sender, 'Second callback should fail');
 })->throws(CallbackAlreadyOpenException::class);
 
 it('refunds the sender when the receiver accepts', function () {
@@ -91,7 +91,7 @@ it('refunds the sender when the receiver accepts', function () {
 it('escalates the callback when the receiver rejects', function () {
     [$sender, $receiver, $transfer] = heldProtectedTransfer();
 
-    $callback = callbacks()->initiate($transfer, $sender, 'dispute');
+    $callback = callbacks()->initiate($transfer, $sender, 'Payment dispute please review');
     $rejected = callbacks()->reject($callback, $receiver, 'I delivered the goods');
 
     expect($rejected->status)->toBe(CallbackStatus::Escalated)
@@ -103,7 +103,7 @@ it('lets an admin resolve an escalated callback by releasing to the receiver', f
     [$sender, $receiver, $transfer] = heldProtectedTransfer(400_00);
     $admin = User::factory()->create();
 
-    $callback = callbacks()->initiate($transfer, $sender, 'dispute');
+    $callback = callbacks()->initiate($transfer, $sender, 'Payment dispute please review');
     callbacks()->reject($callback->fresh(), $receiver, 'delivered');
     $resolved = callbacks()->resolve($callback->fresh(), CallbackResolution::Release, $admin);
 
@@ -116,7 +116,7 @@ it('lets an admin resolve an escalated callback by refunding the sender', functi
     [$sender, $receiver, $transfer] = heldProtectedTransfer(400_00);
     $admin = User::factory()->create();
 
-    $callback = callbacks()->initiate($transfer, $sender, 'dispute');
+    $callback = callbacks()->initiate($transfer, $sender, 'Payment dispute please review');
     callbacks()->reject($callback->fresh(), $receiver, 'delivered');
     $resolved = callbacks()->resolve($callback->fresh(), CallbackResolution::Refund, $admin);
 
@@ -126,7 +126,7 @@ it('lets an admin resolve an escalated callback by refunding the sender', functi
 
 it('records evidence on the callback timeline', function () {
     [$sender, $receiver, $transfer] = heldProtectedTransfer();
-    $callback = callbacks()->initiate($transfer, $sender, 'dispute');
+    $callback = callbacks()->initiate($transfer, $sender, 'Payment dispute please review');
 
     callbacks()->addEvidence($callback, $receiver, 'Tracking shows delivered', ['url' => 'https://x/y']);
 
@@ -148,7 +148,7 @@ it('auto-resolves an unanswered callback on expiry (refund by default)', functio
 
 it('cannot accept a callback that is already resolved', function () {
     [$sender, $receiver, $transfer] = heldProtectedTransfer();
-    $callback = callbacks()->initiate($transfer, $sender, 'dispute');
+    $callback = callbacks()->initiate($transfer, $sender, 'Payment dispute please review');
     callbacks()->accept($callback, $receiver);
 
     callbacks()->accept($callback->fresh(), $receiver);

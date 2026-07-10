@@ -44,7 +44,7 @@ it('rejects callback initiation with the wrong pin', function () {
     [$sender, , $transfer] = protectedScenario();
 
     $this->actingAs($sender)->postJson("/api/v1/transfers/{$transfer->id}/callbacks", [
-        'reason' => 'dispute',
+        'reason' => 'Payment dispute please review',
         'pin' => '0000',
     ])->assertStatus(422)->assertJsonPath('code', 'invalid_pin');
 });
@@ -53,7 +53,7 @@ it('forbids a non-sender from initiating a callback', function () {
     [, $receiver, $transfer] = protectedScenario();
 
     $this->actingAs($receiver)->postJson("/api/v1/transfers/{$transfer->id}/callbacks", [
-        'reason' => 'dispute',
+        'reason' => 'Payment dispute please review',
         'pin' => '5678',
     ])->assertStatus(403);
 });
@@ -62,7 +62,7 @@ it('lets the receiver accept a callback, refunding the sender', function () {
     [$sender, $receiver, $transfer] = protectedScenario(400_00);
 
     $callbackId = $this->actingAs($sender)->postJson("/api/v1/transfers/{$transfer->id}/callbacks", [
-        'reason' => 'dispute',
+        'reason' => 'Payment dispute please review',
         'pin' => '1234',
     ])->json('data.id');
 
@@ -77,7 +77,7 @@ it('lets the receiver reject a callback, escalating it', function () {
     [$sender, $receiver, $transfer] = protectedScenario();
 
     $callbackId = $this->actingAs($sender)->postJson("/api/v1/transfers/{$transfer->id}/callbacks", [
-        'reason' => 'dispute',
+        'reason' => 'Payment dispute please review',
         'pin' => '1234',
     ])->json('data.id');
 
@@ -90,7 +90,7 @@ it('forbids the sender from responding to their own callback', function () {
     [$sender, , $transfer] = protectedScenario();
 
     $callbackId = $this->actingAs($sender)->postJson("/api/v1/transfers/{$transfer->id}/callbacks", [
-        'reason' => 'dispute',
+        'reason' => 'Payment dispute please review',
         'pin' => '1234',
     ])->json('data.id');
 
@@ -103,7 +103,7 @@ it('lets either party add evidence and view the timeline', function () {
     [$sender, $receiver, $transfer] = protectedScenario();
 
     $callbackId = $this->actingAs($sender)->postJson("/api/v1/transfers/{$transfer->id}/callbacks", [
-        'reason' => 'dispute',
+        'reason' => 'Payment dispute please review',
         'pin' => '1234',
     ])->json('data.id');
 
@@ -122,7 +122,7 @@ it('lists the callbacks a user is party to', function () {
     [$sender, $receiver, $transfer] = protectedScenario();
 
     $this->actingAs($sender)->postJson("/api/v1/transfers/{$transfer->id}/callbacks", [
-        'reason' => 'dispute',
+        'reason' => 'Payment dispute please review',
         'pin' => '1234',
     ])->assertCreated();
 

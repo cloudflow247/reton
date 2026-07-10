@@ -18,6 +18,10 @@ class CallbackResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $fairness = is_array($this->metadata['fairness'] ?? null)
+            ? $this->metadata['fairness']
+            : null;
+
         return [
             'id' => $this->id,
             'reference' => $this->reference,
@@ -28,6 +32,7 @@ class CallbackResource extends JsonResource
             'responds_by' => $this->responds_by,
             'resolved_at' => $this->resolved_at,
             'created_at' => $this->created_at,
+            'fairness' => $fairness,
             'events' => CallbackEventResource::collection($this->whenLoaded('events')),
         ];
     }

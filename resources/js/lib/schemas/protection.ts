@@ -10,7 +10,7 @@ export function protectionActionSchema(options: { needReason: boolean; needPin: 
           .regex(/^\d+$/, 'PIN must be numbers only')
       : z.string().optional(),
     reason: options.needReason
-      ? z.string().min(3, 'Please add a short note').max(500)
+      ? z.string().min(8, 'Please explain in a bit more detail').max(500)
       : z.string().optional(),
   })
 }

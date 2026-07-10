@@ -93,19 +93,26 @@ class FakeAlatpayGateway implements AlatpayGateway
             status: $record['status'],
             amount: $record['amount'],
             currency: $record['currency'],
+            narration: $record['narration'] ?? 'NIP/Transfer from GTBank',
+            payerName: $record['payer_name'] ?? 'Ada Lovelace',
+            bankName: $record['bank_name'] ?? 'Guaranty Trust Bank',
+            channel: $record['channel'] ?? 'bank_transfer',
+            paidAt: $record['paid_at'] ?? now()->toIso8601String(),
         );
     }
 
     /**
      * Test/dev helper: simulate AlatPay confirming a payment.
+     *
+     * @param  array<string, mixed>  $extra
      */
-    public function markPaid(string $providerReference, int $amount, string $currency = 'NGN'): void
+    public function markPaid(string $providerReference, int $amount, string $currency = 'NGN', array $extra = []): void
     {
-        $this->transactions[$providerReference] = [
+        $this->transactions[$providerReference] = array_merge([
             'currency' => $currency,
             'amount' => $amount,
             'status' => 'completed',
-        ];
+        ], $extra);
     }
 
     public function supportsOutboundTransfers(): bool

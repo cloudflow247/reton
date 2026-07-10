@@ -422,17 +422,38 @@ class StaticAccountService
                 ],
             ]);
 
+            $description = filled($txn->narration)
+                ? 'Bank transfer — '.$txn->narration
+                : 'Wallet funding via dedicated account';
+
             $transaction = $this->wallets->fund(
                 $wallet,
                 $amount,
-                $txn->transactionId, // ledger idempotency key
-                ['deposit_id' => $deposit->id, 'provider' => self::STATIC_PROVIDER],
+                $txn->transactionId,
+                [
+                    'deposit_id' => $deposit->id,
+                    'provider' => self::STATIC_PROVIDER,
+                    'bank_transfer' => [
+                        'narration' => $txn->narration,
+                        'provider_reference' => $txn->transactionId,
+                        'channel' => 'static_account',
+                    ],
+                ],
+                $description,
             );
 
             $deposit->update([
                 'status' => DepositStatus::Completed,
                 'transaction_id' => $transaction->id,
                 'paid_at' => now(),
+                'metadata' => array_merge((array) ($deposit->metadata ?? []), [
+                    'ledger_description' => $description,
+                    'bank_transfer' => [
+                        'narration' => $txn->narration,
+                        'provider_reference' => $txn->transactionId,
+                        'channel' => 'static_account',
+                    ],
+                ]),
             ]);
         });
     }

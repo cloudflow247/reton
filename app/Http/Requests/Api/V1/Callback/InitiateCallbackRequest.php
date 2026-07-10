@@ -19,7 +19,7 @@ class InitiateCallbackRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => ['required', 'string', 'max:280'],
+            'reason' => ['required', 'string', 'min:8', 'max:280'],
             'pin' => ['required', 'string'],
         ];
     }

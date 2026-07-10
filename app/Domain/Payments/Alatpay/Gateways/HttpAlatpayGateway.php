@@ -124,10 +124,15 @@ class HttpAlatpayGateway implements AlatpayGateway
         $data = (array) $response->json('data', []);
 
         return new RemoteTransaction(
-            providerReference: $providerReference,
+            providerReference: (string) ($data['transactionId'] ?? $data['reference'] ?? $providerReference),
             status: $this->normaliseStatus((string) ($data['status'] ?? 'pending')),
-            amount: (int) ($data['amount'] ?? 0),
+            amount: $this->amountMinorFromPayload($data),
             currency: (string) ($data['currency'] ?? 'NGN'),
+            narration: $this->stringOrNull($data['narration'] ?? $data['Narration'] ?? $data['paymentDescription'] ?? null),
+            payerName: $this->stringOrNull($data['customerName'] ?? $data['senderName'] ?? $data['payerName'] ?? $data['accountName'] ?? null),
+            bankName: $this->stringOrNull($data['bankName'] ?? $data['sourceBank'] ?? $data['BankName'] ?? null),
+            channel: $this->stringOrNull($data['channel'] ?? $data['paymentChannel'] ?? 'bank_transfer'),
+            paidAt: $this->stringOrNull($data['transactionDate'] ?? $data['paidAt'] ?? $data['settlementDate'] ?? null),
         );
     }
 
@@ -1075,5 +1080,36 @@ class HttpAlatpayGateway implements AlatpayGateway
             'failed', 'failure', 'declined' => 'failed',
             default => 'pending',
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function amountMinorFromPayload(array $data): int
+    {
+        $raw = $data['amount'] ?? $data['Amount'] ?? 0;
+
+        if (is_int($raw)) {
+            // Values under 1000 with a decimal sibling are rare; treat ints as minor units
+            // when they match our deposit convention (Fake + existing reconcile).
+            return $raw;
+        }
+
+        if (is_float($raw) || (is_string($raw) && str_contains($raw, '.'))) {
+            return (int) round(((float) $raw) * 100);
+        }
+
+        return (int) $raw;
+    }
+
+    private function stringOrNull(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed !== '' ? $trimmed : null;
     }
 }

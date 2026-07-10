@@ -6,27 +6,21 @@ namespace App\Domain\Callback\Services;
 
 use App\Domain\Callback\Enums\CallbackResolution;
 use App\Domain\Callback\Models\Callback;
-use App\Domain\Fraud\Contracts\FraudScorer;
-use App\Domain\Fraud\Data\FraudContext;
-use App\Domain\Fraud\Enums\FraudRiskLevel;
 use App\Domain\Marketplace\Models\DigitalOrder;
 use App\Domain\Marketplace\Services\DigitalEscrowJudgementService;
-use App\Domain\Transfers\Models\Transfer;
-use App\Models\User;
-use App\Support\Money\Money;
 
 /**
  * Decides the outcome of a callback for the cases that resolve automatically
  * (without an explicit admin decision).
  *
- * The fraud scorer feeds the decision: an unanswered callback is never released
- * to a high-risk receiver, regardless of the configured default.
+ * Marketplace digital orders use escrow judgement. P2P protected transfers use
+ * {@see ProtectionFairnessService} so both sender and receiver are scored.
  */
 class CallbackDecisionEngine
 {
     public function __construct(
-        private readonly FraudScorer $fraud,
         private readonly DigitalEscrowJudgementService $digitalEscrow,
+        private readonly ProtectionFairnessService $fairness,
     ) {}
 
     /**
@@ -40,40 +34,15 @@ class CallbackDecisionEngine
             return $this->digitalEscrow->resolveOnCallbackExpiry($callback, $order);
         }
 
-        if ($this->receiverIsHighRisk($callback->transfer)) {
-            return CallbackResolution::Refund;
-        }
+        $assessment = $this->fairness->assessExpiry($callback);
 
-        return $this->configuredDefault();
-    }
+        $callback->update([
+            'metadata' => array_merge((array) ($callback->metadata ?? []), [
+                'fairness' => $assessment->toArray(),
+                'fairness_decided_at' => now()->toIso8601String(),
+            ]),
+        ]);
 
-    private function configuredDefault(): CallbackResolution
-    {
-        return (string) config('reton.callback.unanswered_resolution', 'refund') === 'release'
-            ? CallbackResolution::Release
-            : CallbackResolution::Refund;
-    }
-
-    private function receiverIsHighRisk(?Transfer $transfer): bool
-    {
-        if ($transfer === null) {
-            return false;
-        }
-
-        $wallet = $transfer->receiverWallet;
-        $owner = $wallet !== null ? User::find($wallet->owner_id) : null;
-
-        if ($wallet === null || ! $owner instanceof User) {
-            return false;
-        }
-
-        $assessment = $this->fraud->score(new FraudContext(
-            user: $owner,
-            wallet: $wallet,
-            amount: Money::of($transfer->amount, $transfer->currency),
-            action: 'callback_expiry',
-        ));
-
-        return $assessment->level === FraudRiskLevel::High;
+        return $assessment->resolution;
     }
 }
