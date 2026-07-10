@@ -3,11 +3,10 @@ import { CheckIcon, CopyIcon, EyeIcon, EyeOffIcon } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ngn } from '@/lib/format'
-import type { StaticAccount, Wallet } from '@/lib/types'
+import type { Wallet } from '@/lib/types'
 
 type BalanceHeroCardProps = {
   wallet: Wallet | undefined
-  depositAccount?: Pick<StaticAccount, 'account_number' | 'bank_name'> | null
   availableBalance: number
   animatedAvailable: number
   totalBalance: number
@@ -20,7 +19,6 @@ type BalanceHeroCardProps = {
 
 export function BalanceHeroCard({
   wallet,
-  depositAccount,
   availableBalance,
   animatedAvailable,
   totalBalance,
@@ -31,11 +29,7 @@ export function BalanceHeroCard({
   onCopyAccount,
 }: BalanceHeroCardProps) {
   const hasPending = pendingBalance > 0
-  const bankAccount = depositAccount?.account_number ?? null
-  const bankLabel = depositAccount?.bank_name?.trim() || 'Wema Bank'
-  // Prefer the ALATPay VA for bank deposits — wallet.account_number is Reton-only.
-  const displayAccount = bankAccount ?? wallet?.account_number ?? null
-  const accountKind = bankAccount ? 'Bank deposit' : 'RETON ID'
+  const retonId = wallet?.account_number ?? null
 
   return (
     <motion.div
@@ -53,9 +47,7 @@ export function BalanceHeroCard({
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60 sm:text-[11px]">
             Available to spend
           </p>
-          <p className="mt-0.5 text-xs text-white/50">
-            {bankAccount ? `Settled balance · ${bankLabel}` : 'Settled balance · Reton wallet'}
-          </p>
+          <p className="mt-0.5 text-xs text-white/50">Settled balance · Reton wallet</p>
         </div>
         <Button
           type="button"
@@ -91,14 +83,14 @@ export function BalanceHeroCard({
         </div>
       )}
 
-      {displayAccount && (
+      {retonId && (
         <button
           type="button"
           onClick={onCopyAccount}
           className="relative mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-2 text-xs backdrop-blur transition hover:bg-white/20"
         >
-          <span className="shrink-0 text-white/55">{accountKind}</span>
-          <span className="font-num tracking-wider">{displayAccount}</span>
+          <span className="shrink-0 text-white/55">RETON ID</span>
+          <span className="font-num tracking-wider">{retonId}</span>
           {copied ? <CheckIcon size={14} className="text-emerald-200" /> : <CopyIcon size={14} />}
         </button>
       )}

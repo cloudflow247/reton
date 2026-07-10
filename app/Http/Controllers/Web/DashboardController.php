@@ -7,13 +7,10 @@ namespace App\Http\Controllers\Web;
 use App\Domain\Dashboard\Services\DashboardSummaryService;
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Ledger\Models\LedgerEntry;
-use App\Domain\Payments\Enums\StaticAccountStatus;
-use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Payments\Services\StaticAccountService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\StatementEntryResource;
-use App\Http\Resources\Api\V1\StaticAccountResource;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -46,15 +43,6 @@ class DashboardController extends Controller
 
         $wallet = $user->wallets()->first();
 
-        $staticAccount = $wallet
-            ? StaticAccount::query()
-                ->where('wallet_id', $wallet->getKey())
-                ->where('status', StaticAccountStatus::Active)
-                ->whereNotNull('account_number')
-                ->latest()
-                ->first()
-            : null;
-
         if ($credited > 0) {
             $request->session()->flash(
                 'success',
@@ -67,9 +55,6 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'summary' => $this->summary->forUser($user)->toArray(),
             'kycTier' => $this->kyc->forUser($user)->tier->value,
-            'staticAccount' => $staticAccount
-                ? (new StaticAccountResource($staticAccount))->resolve()
-                : null,
             'activity' => $wallet instanceof Wallet
                 ? StatementEntryResource::collection($this->recentEntries($wallet))->resolve()
                 : [],

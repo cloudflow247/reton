@@ -109,7 +109,8 @@ it('shows the credited balance on the dashboard after polling', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('auth.wallets.0.balance', 15000)
-            ->where('staticAccount.account_number', $account->account_number)
+            ->where('auth.wallets.0.account_number', $wallet->fresh()->account_number)
+            ->missing('staticAccount')
             ->where('flash.success', 'Deposit received — your balance is updated.'));
 
     expect($wallet->fresh()->balance)->toBe(15000);
