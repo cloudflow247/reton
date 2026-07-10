@@ -153,7 +153,7 @@ export function Field({
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">{label}</span>
-      <input className={`field w-full px-4 py-3 text-sm ${error ? '!border-danger' : ''}`} {...props} />
+      <input className={`field w-full min-w-0 px-4 py-3 text-sm ${error ? '!border-danger' : ''}`} {...props} />
       {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
       {error && <span className="mt-1 block text-sm text-danger">{error}</span>}
     </label>

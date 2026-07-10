@@ -56,7 +56,7 @@ class PlatformSettingsService
             'business_id' => '',
             'business_bvn' => '',
             'webhook_secret' => '',
-            'timeout' => 15,
+            'timeout' => 12,
         ],
         'interswitch' => [
             'driver' => 'fake',

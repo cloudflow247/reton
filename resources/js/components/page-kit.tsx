@@ -5,15 +5,15 @@ import { CheckIcon, WalletIcon } from './icons'
 import { Button } from './ui'
 import { ngn } from '@/lib/format'
 
-export const PAGE_SPRING = { type: 'spring', stiffness: 380, damping: 32 } as const
+export const PAGE_SPRING = { type: 'spring', stiffness: 520, damping: 38 } as const
 
 export const pageList = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.05, delayChildren: 0.02 } },
+  show: { transition: { staggerChildren: 0.03, delayChildren: 0 } },
 }
 
 export const pageItem = {
-  hidden: { y: 10 },
+  hidden: { y: 6 },
   show: { y: 0, transition: PAGE_SPRING },
 }
 
@@ -120,12 +120,12 @@ export function PageHero({
       className={`panel relative overflow-hidden bg-gradient-to-br ${t.gradient} p-5`}
     >
       <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-mint/8 blur-2xl" />
-      <div className="relative flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
+      <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
           <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${t.iconBg}`}>
             <Icon size={22} />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
             <p className="mt-1 text-sm leading-relaxed text-muted">{subtitle}</p>
           </div>

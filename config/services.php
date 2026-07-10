@@ -43,7 +43,7 @@ return [
         'business_id' => env('ALATPAY_BUSINESS_ID'),
         'business_bvn' => env('ALATPAY_BUSINESS_BVN'),
         'webhook_secret' => env('ALATPAY_WEBHOOK_SECRET', ''),
-        'timeout' => (int) env('ALATPAY_TIMEOUT', 15),
+        'timeout' => (int) env('ALATPAY_TIMEOUT', 12),
     ],
 
     'remita' => [

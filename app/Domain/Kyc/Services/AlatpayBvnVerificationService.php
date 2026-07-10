@@ -90,7 +90,7 @@ class AlatpayBvnVerificationService
         } catch (AlatpayException $e) {
             $this->audit->record($user, 'bvn', $this->providerName(), 'failed', $e->getMessage(), $ipAddress);
             throw ValidationException::withMessages([
-                'bvn' => ['We could not verify that BVN with ALATPay. Check the number and try again.'],
+                'bvn' => [$e->userFacingMessage('We could not verify that BVN with ALATPay. Check the number and try again.')],
             ]);
         }
 
@@ -114,6 +114,10 @@ class AlatpayBvnVerificationService
         ], self::TTL_SECONDS);
 
         $this->audit->record($user, 'bvn', $this->providerName(), 'otp_sent', null, $ipAddress);
+
+        if ($this->providerName() === 'alatpay_fake') {
+            return 'Demo mode: enter verification code 123456 below (no SMS when ALATPay driver is fake).';
+        }
 
         return 'We sent a verification code to the phone linked to your BVN. Enter it below to unlock funding.';
     }
@@ -141,9 +145,11 @@ class AlatpayBvnVerificationService
                 otp: $otp,
                 trackingId: (string) $pending['tracking_id'],
             ));
-        } catch (AlatpayException) {
+        } catch (AlatpayException $e) {
             $this->audit->record($user, 'bvn', $this->providerName(), 'failed', 'invalid_otp', $ipAddress);
-            throw ValidationException::withMessages(['otp' => ['Invalid or expired code. Check the OTP from ALATPay and try again.']]);
+            throw ValidationException::withMessages([
+                'otp' => [$e->userFacingMessage('Invalid or expired code. Check the OTP from ALATPay and try again.')],
+            ]);
         }
 
         $bvn = decrypt((string) $pending['bvn']);

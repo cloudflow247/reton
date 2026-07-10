@@ -177,6 +177,8 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
     {
+        $this->assertConfigured('provisionStaticAccount');
+
         try {
             $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount', [
                 'businessId' => config('services.alatpay.business_id'),
@@ -185,11 +187,19 @@ class HttpAlatpayGateway implements AlatpayGateway
                 'email' => $request->email,
             ]);
         } catch (ConnectionException|RequestException $e) {
-            throw AlatpayException::requestFailed('provisionStaticAccount', 503);
+            throw AlatpayException::requestFailed(
+                'provisionStaticAccount',
+                503,
+                'Could not reach ALATPay. Check your connection and try again.',
+            );
         }
 
         if (! $response->successful()) {
-            throw AlatpayException::requestFailed('provisionStaticAccount', $response->status());
+            throw AlatpayException::requestFailed(
+                'provisionStaticAccount',
+                $response->status(),
+                $this->extractErrorMessage($response->json()),
+            );
         }
 
         $data = (array) $response->json('data', $response->json());
@@ -197,7 +207,11 @@ class HttpAlatpayGateway implements AlatpayGateway
         $staticWalletId = (string) ($data['id'] ?? '');
 
         if ($staticWalletId === '') {
-            throw AlatpayException::requestFailed('provisionStaticAccount', $response->status());
+            throw AlatpayException::requestFailed(
+                'provisionStaticAccount',
+                $response->status(),
+                'ALATPay returned an empty wallet id.',
+            );
         }
 
         $otpTrackingId = isset($data['otpTrackingID'])
@@ -217,15 +231,29 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
     {
-        $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount/validateAndCreate', [
-            'staticWalletId' => $request->staticWalletId,
-            'businessId' => config('services.alatpay.business_id'),
-            'otp' => $request->otp,
-            'trackingId' => $request->trackingId,
-        ]);
+        $this->assertConfigured('verifyStaticAccount');
+
+        try {
+            $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount/validateAndCreate', [
+                'staticWalletId' => $request->staticWalletId,
+                'businessId' => config('services.alatpay.business_id'),
+                'otp' => $request->otp,
+                'trackingId' => $request->trackingId,
+            ]);
+        } catch (ConnectionException|RequestException $e) {
+            throw AlatpayException::requestFailed(
+                'verifyStaticAccount',
+                503,
+                'Could not reach ALATPay. Check your connection and try again.',
+            );
+        }
 
         if (! $response->successful()) {
-            throw AlatpayException::requestFailed('verifyStaticAccount', $response->status());
+            throw AlatpayException::requestFailed(
+                'verifyStaticAccount',
+                $response->status(),
+                $this->extractErrorMessage($response->json()),
+            );
         }
 
         $data = (array) $response->json('data', $response->json());
@@ -233,7 +261,11 @@ class HttpAlatpayGateway implements AlatpayGateway
         $accountNumber = (string) ($data['accountNumber'] ?? '');
 
         if ($accountNumber === '') {
-            throw AlatpayException::requestFailed('verifyStaticAccount', $response->status());
+            throw AlatpayException::requestFailed(
+                'verifyStaticAccount',
+                $response->status(),
+                'ALATPay did not return an account number.',
+            );
         }
 
         return new StaticAccountResponse(
@@ -271,17 +303,65 @@ class HttpAlatpayGateway implements AlatpayGateway
     private function client(): PendingRequest
     {
         return Http::baseUrl((string) config('services.alatpay.base_url'))
-            ->timeout((int) config('services.alatpay.timeout', 15))
+            ->timeout((int) config('services.alatpay.timeout', 12))
+            ->connectTimeout(4)
             ->withHeaders(['Ocp-Apim-Subscription-Key' => (string) config('services.alatpay.api_key')])
             ->acceptJson()
             ->asJson();
     }
 
+    private function assertConfigured(string $operation): void
+    {
+        if (blank(config('services.alatpay.api_key')) || blank(config('services.alatpay.business_id'))) {
+            throw AlatpayException::requestFailed(
+                $operation,
+                503,
+                'ALATPay API key or Business ID is missing. Add them in Admin → Integrations.',
+            );
+        }
+    }
+
+    private function extractErrorMessage(mixed $payload): ?string
+    {
+        if (! is_array($payload)) {
+            return null;
+        }
+
+        foreach (['message', 'error', 'title', 'detail'] as $key) {
+            if (isset($payload[$key]) && is_string($payload[$key]) && trim($payload[$key]) !== '') {
+                return trim($payload[$key]);
+            }
+        }
+
+        $data = $payload['data'] ?? null;
+        if (is_array($data)) {
+            foreach (['message', 'error', 'title'] as $key) {
+                if (isset($data[$key]) && is_string($data[$key]) && trim($data[$key]) !== '') {
+                    return trim($data[$key]);
+                }
+            }
+        }
+
+        $errors = $payload['errors'] ?? null;
+        if (is_array($errors)) {
+            foreach ($errors as $error) {
+                if (is_string($error) && trim($error) !== '') {
+                    return trim($error);
+                }
+                if (is_array($error) && isset($error[0]) && is_string($error[0])) {
+                    return trim($error[0]);
+                }
+            }
+        }
+
+        return null;
+    }
+
     private function normaliseStatus(string $status): string
     {
         return match (strtolower($status)) {
-            'completed', 'successful', 'success' => 'completed',
-            'failed', 'declined' => 'failed',
+            'success', 'successful', 'completed', 'paid' => 'completed',
+            'failed', 'failure', 'declined' => 'failed',
             default => 'pending',
         };
     }

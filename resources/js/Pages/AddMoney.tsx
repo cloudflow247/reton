@@ -22,6 +22,7 @@ type AddMoneyProps = PageProps<{
   bvnPendingOtp?: boolean
   bvnOtpHint?: string | null
   bvnProvider?: string
+  bvnDemoMode?: boolean
 }>
 
 const methods: {
@@ -63,7 +64,7 @@ const methodLabel: Record<DepositMethod, string> = {
 }
 
 export default function AddMoney() {
-  const { auth, flash, pendingDeposit, openDeposits, kyc, staticAccount, bvnPendingOtp, bvnOtpHint, bvnProvider } =
+  const { auth, flash, pendingDeposit, openDeposits, kyc, staticAccount, bvnPendingOtp, bvnOtpHint, bvnProvider, bvnDemoMode } =
     usePage<AddMoneyProps>().props
   const wallet = auth.wallets[0]
 
@@ -140,13 +141,14 @@ export default function AddMoney() {
           tone="mint"
         />
 
-        <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />
+        {kyc.bvn_verified && <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />}
 
         {!kyc.bvn_verified ? (
           <BvnVerificationGate
             pendingOtp={bvnPendingOtp}
             otpHint={bvnOtpHint}
             provider={bvnProvider}
+            demoMode={bvnDemoMode}
           />
         ) : (
           <>
@@ -296,12 +298,12 @@ function BankTransferPanel({ deposit, onDismiss }: { deposit: Deposit; onDismiss
       <Head title="Add money" />
 
       <div className="brand-card sheen relative overflow-hidden p-6 text-white shield-glow">
-        <div className="relative flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
+        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15">
               <BankIcon size={22} />
             </span>
-            <div>
+            <div className="min-w-0">
               <h2 className="font-display text-lg font-bold">Transfer to fund</h2>
               <p className="text-sm text-white/75">{ngn(deposit.amount)} · any Nigerian bank</p>
             </div>

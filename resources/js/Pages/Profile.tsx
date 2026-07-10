@@ -1,6 +1,7 @@
 import type { FormEvent, ReactNode } from 'react'
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import { AppShell } from '@/components/AppShell'
+import { BvnVerificationGate } from '@/components/BvnVerificationGate'
 import { FormPanel, Page, PageHero, SectionLabel } from '@/components/page-kit'
 import { Button, Pill } from '@/components/ui'
 import {
@@ -19,21 +20,19 @@ import type { KycProfile, PageProps } from '@/types'
 
 type ProfileProps = PageProps<{
   kyc: KycProfile
+  bvnPendingOtp?: boolean
+  bvnOtpHint?: string | null
+  bvnProvider?: string
+  bvnDemoMode?: boolean
 }>
 
 export default function Profile() {
-  const { auth, flash, kyc } = usePage<ProfileProps>().props
+  const { auth, flash, kyc, bvnPendingOtp, bvnOtpHint, bvnProvider, bvnDemoMode } = usePage<ProfileProps>().props
   const user = auth.user
   const wallet = auth.wallets[0]
   const initial = user?.name?.trim().charAt(0).toUpperCase() || '?'
 
-  const tier2 = useForm({ bvn: '', date_of_birth: '', identity_consent: false })
   const tier3 = useForm({ nin: '', address_line1: '', city: '', state: '', identity_consent: false })
-
-  function submitTier2(e: FormEvent) {
-    e.preventDefault()
-    tier2.post('/profile/kyc/tier-2', { preserveScroll: true })
-  }
 
   function submitTier3(e: FormEvent) {
     e.preventDefault()
@@ -144,44 +143,16 @@ export default function Profile() {
             </p>
           )}
 
-          {kyc.tier === 1 && (
-            <form onSubmit={submitTier2} className="space-y-3 border-t border-line pt-4">
-              <p className="text-sm font-semibold text-text">Upgrade to Tier 2 — BVN</p>
-              <p className="text-xs text-muted">
-                Required for a personal ALATPay static account. BVN is encrypted and only sent to ALATPay for
-                provisioning.
-              </p>
-              <input
-                className="field w-full px-3 py-2.5 text-sm"
-                placeholder="11-digit BVN"
-                inputMode="numeric"
-                maxLength={11}
-                value={tier2.data.bvn}
-                onChange={(e) => tier2.setData('bvn', e.target.value.replace(/\D/g, '').slice(0, 11))}
+          {(kyc.tier === 1 || bvnPendingOtp) && (
+            <div className="border-t border-line pt-4">
+              <BvnVerificationGate
+                returnTo="/profile"
+                pendingOtp={bvnPendingOtp}
+                otpHint={bvnOtpHint}
+                provider={bvnProvider}
+                demoMode={bvnDemoMode}
               />
-              {tier2.errors.bvn && <p className="text-xs text-danger">{tier2.errors.bvn}</p>}
-              <input
-                type="date"
-                className="field w-full px-3 py-2.5 text-sm"
-                value={tier2.data.date_of_birth}
-                onChange={(e) => tier2.setData('date_of_birth', e.target.value)}
-              />
-              {tier2.errors.date_of_birth && <p className="text-xs text-danger">{tier2.errors.date_of_birth}</p>}
-              <label className="flex items-start gap-2 text-xs leading-relaxed text-muted">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 rounded border-line"
-                  checked={tier2.data.identity_consent}
-                  onChange={(e) => tier2.setData('identity_consent', e.target.checked)}
-                />
-                I consent to Reton verifying my BVN with ALATPay under NDPR. ALATPay will send an OTP to the phone
-                linked to my BVN. My number is encrypted and never stored in plain text.
-              </label>
-              {tier2.errors.identity_consent && <p className="text-xs text-danger">{tier2.errors.identity_consent}</p>}
-              <Button type="submit" loading={tier2.processing} className="w-full">
-                Verify BVN
-              </Button>
-            </form>
+            </div>
           )}
 
           {kyc.tier === 2 && (

@@ -24,6 +24,10 @@ class ProfileController extends Controller
 
         return Inertia::render('Profile', [
             'kyc' => (new KycResource($profile))->resolve(),
+            'bvnPendingOtp' => $this->kyc->hasPendingAlatpayBvn($user),
+            'bvnOtpHint' => $this->kyc->pendingAlatpayBvnHint($user),
+            'bvnProvider' => $this->kyc->bvnProvider(),
+            'bvnDemoMode' => $this->kyc->bvnDemoMode(),
         ]);
     }
 }

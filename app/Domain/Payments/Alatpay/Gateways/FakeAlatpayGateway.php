@@ -18,13 +18,19 @@ use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
+use Illuminate\Support\Facades\Cache;
 
 /**
- * An in-memory AlatPay gateway for local development and tests. Deterministic;
- * never touches the network.
+ * AlatPay gateway for local development and tests. Deterministic; never touches
+ * the network. Static-wallet OTP state is cache-backed so browser round-trips
+ * (new container per request) can still confirm with demo OTP 123456.
  */
 class FakeAlatpayGateway implements AlatpayGateway
 {
+    private const STATIC_WALLETS_CACHE_KEY = 'fake_alatpay:static_wallets';
+
+    private const STATIC_WALLETS_TTL_SECONDS = 7200;
+
     /** @var array<string, array{currency: string, amount: int, status: string}> */
     private array $transactions = [];
 
@@ -152,32 +158,40 @@ class FakeAlatpayGateway implements AlatpayGateway
         $accountNumber = '04'.substr(preg_replace('/\D/', '', $request->reference).'00000000', 0, 8);
 
         if ($this->provisionImmediate) {
-            $this->staticWallets[$staticWalletId] = ['accountNumber' => $accountNumber, 'otpTrackingId' => null];
+            $this->rememberStaticWallet($staticWalletId, [
+                'accountNumber' => $accountNumber,
+                'otpTrackingId' => null,
+            ]);
 
             return new StaticAccountProvisionResponse($staticWalletId, null, $accountNumber, 'RETON STATIC');
         }
 
-        $this->staticWallets[$staticWalletId] = ['accountNumber' => $accountNumber, 'otpTrackingId' => 'OTP-'.$request->reference];
+        $this->rememberStaticWallet($staticWalletId, [
+            'accountNumber' => $accountNumber,
+            'otpTrackingId' => 'OTP-'.$request->reference,
+        ]);
 
         return new StaticAccountProvisionResponse(
             $staticWalletId,
             'OTP-'.$request->reference,
             null,
             null,
-            'An OTP has been sent to the phone linked to your BVN. Demo code: 123456',
+            'Demo mode: use verification code 123456 (no SMS is sent when ALATPay driver is fake).',
         );
     }
 
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
     {
         if ($request->otp !== '123456') {
-            throw AlatpayException::requestFailed('verifyStaticAccount', 400);
+            throw AlatpayException::requestFailed('verifyStaticAccount', 400, 'Invalid OTP.');
         }
 
-        $wallet = $this->staticWallets[$request->staticWalletId] ?? null;
+        $wallet = $this->staticWallets[$request->staticWalletId]
+            ?? $this->cachedStaticWallets()[$request->staticWalletId]
+            ?? null;
 
         if ($wallet === null || $wallet['accountNumber'] === null) {
-            throw AlatpayException::requestFailed('verifyStaticAccount', 404);
+            throw AlatpayException::requestFailed('verifyStaticAccount', 404, 'Static wallet not found.');
         }
 
         return new StaticAccountResponse(
@@ -185,6 +199,28 @@ class FakeAlatpayGateway implements AlatpayGateway
             accountNumber: $wallet['accountNumber'],
             accountName: 'RETON STATIC',
         );
+    }
+
+    /**
+     * @param  array{accountNumber: ?string, otpTrackingId: ?string}  $wallet
+     */
+    private function rememberStaticWallet(string $staticWalletId, array $wallet): void
+    {
+        $this->staticWallets[$staticWalletId] = $wallet;
+
+        $cached = $this->cachedStaticWallets();
+        $cached[$staticWalletId] = $wallet;
+        Cache::put(self::STATIC_WALLETS_CACHE_KEY, $cached, self::STATIC_WALLETS_TTL_SECONDS);
+    }
+
+    /**
+     * @return array<string, array{accountNumber: ?string, otpTrackingId: ?string}>
+     */
+    private function cachedStaticWallets(): array
+    {
+        $cached = Cache::get(self::STATIC_WALLETS_CACHE_KEY, []);
+
+        return is_array($cached) ? $cached : [];
     }
 
     /**

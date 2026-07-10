@@ -89,6 +89,49 @@ it('allows alatpay bvn verification without a transaction pin', function () {
     expect(app(KycService::class)->forUser($user->fresh())->tier->value)->toBe(2);
 });
 
+it('confirms alatpay otp after a fresh gateway instance (cache-backed fake)', function () {
+    $user = alatpayKycUser();
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2', [
+        'bvn' => '22334455667',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money');
+
+    // Simulate a new HTTP request: forget the singleton and rebind a clean fake.
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway::class);
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2/confirm', [
+        'otp' => '123456',
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHas('success');
+
+    expect(app(KycService::class)->forUser($user->fresh())->tier->value)->toBe(2);
+});
+
+it('exposes pending otp props on profile for the verification gate', function () {
+    $user = alatpayKycUser();
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2', [
+        'bvn' => '22334455667',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/profile',
+    ])->assertRedirect('/profile');
+
+    $this->actingAs($user)->get('/profile')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Profile')
+            ->where('bvnPendingOtp', true)
+            ->where('bvnProvider', 'alatpay')
+            ->where('bvnDemoMode', true)
+        );
+});
+
 it('returns validation errors when alatpay credentials are missing', function () {
     config([
         'services.alatpay.driver' => 'http',

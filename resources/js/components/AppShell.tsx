@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [moreOpen])
 
   return (
-    <div className="mx-auto flex min-h-full max-w-6xl flex-col px-4 pb-28 sm:px-6 sm:pb-10">
+    <div className="mx-auto flex min-h-full max-w-6xl flex-col px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10">
       <header className="dock sticky top-3 z-30 mt-3 flex items-center gap-3 rounded-2xl px-3 py-2.5 sm:gap-4 sm:px-4">
         <Link href="/dashboard" className="relative z-20 shrink-0 transition-opacity hover:opacity-90">
           <Wordmark />
@@ -209,15 +209,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="flex-1 pt-4 sm:pt-5">
         <motion.div
           key={pathname}
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
         >
           {children}
         </motion.div>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-4 z-30 px-5 sm:hidden" aria-label="Main">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 sm:hidden"
+        aria-label="Main"
+      >
         <div className="dock relative mx-auto flex max-w-sm items-center justify-between rounded-[22px] px-2 py-2">
           {dockLeft.map((n) => (
             <DockItem key={n.to} {...n} on={active(n.to, n.end)} />

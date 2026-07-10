@@ -69,6 +69,7 @@ class AddMoneyController extends Controller
             'bvnPendingOtp' => $this->kyc->hasPendingAlatpayBvn($user),
             'bvnOtpHint' => $this->kyc->pendingAlatpayBvnHint($user),
             'bvnProvider' => $this->kyc->bvnProvider(),
+            'bvnDemoMode' => $this->kyc->bvnDemoMode(),
         ]);
     }
 

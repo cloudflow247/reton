@@ -86,6 +86,12 @@ class KycService
         return (string) config('services.kyc.bvn_provider', 'alatpay');
     }
 
+    public function bvnDemoMode(): bool
+    {
+        return $this->bvnProvider() === 'alatpay'
+            && (string) config('services.alatpay.driver', 'http') === 'fake';
+    }
+
     private function upgradeToTier2ViaDojah(User $user, string $bvn, string $dateOfBirth, ?string $ipAddress = null): UserKyc
     {
         $bvn = (string) preg_replace('/\D/', '', $bvn);
