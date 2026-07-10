@@ -60,6 +60,22 @@ it('redirects administrators to the admin panel after login', function () {
     $this->assertAuthenticatedAs($admin);
 });
 
+it('creates an admin user whose password works for web login', function () {
+    $this->artisan('reton:admin', [
+        'email' => 'ops@retonpay.com',
+        '--create' => true,
+        '--name' => 'Ops Admin',
+        '--password' => 'AdminPass123!',
+    ])->assertSuccessful();
+
+    $this->post('/login', [
+        'email' => 'ops@retonpay.com',
+        'password' => 'AdminPass123!',
+    ])->assertRedirect('/admin');
+
+    $this->assertAuthenticated();
+});
+
 it('forbids non-admins from the admin panel', function () {
     $user = User::factory()->create(['is_admin' => false]);
 

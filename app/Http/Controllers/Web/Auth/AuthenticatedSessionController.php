@@ -31,6 +31,7 @@ class AuthenticatedSessionController extends Controller
 
         return Inertia::render('Auth/Login', [
             'redirect' => $request->string('redirect')->toString() ?: null,
+            'email' => $request->old('email'),
         ]);
     }
 

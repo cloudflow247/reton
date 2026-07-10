@@ -9,9 +9,9 @@ export function AuthAlert({
   message?: string
 }) {
   const styles = {
-    error: 'border-red-200/80 bg-red-50 text-red-800 dark:border-red-900/40 dark:bg-red-950/35 dark:text-red-300',
-    success: 'border-mint/30 bg-mint/[0.07] text-mint-strong',
-    info: 'border-line bg-surface-2 text-muted',
+    error: 'auth-alert auth-alert-error',
+    success: 'auth-alert auth-alert-success',
+    info: 'auth-alert auth-alert-info',
   }[tone]
 
   const Icon = tone === 'success' ? CheckIcon : ShieldIcon
@@ -26,8 +26,8 @@ export function AuthAlert({
           exit={{ opacity: 0, y: -6, height: 0 }}
           className={`mb-4 flex items-start gap-2.5 overflow-hidden rounded-xl border px-4 py-3 text-sm ${styles}`}
         >
-          <Icon size={16} className="mt-0.5 shrink-0 opacity-80" />
-          <span className="leading-relaxed">{message}</span>
+          <Icon size={16} className="mt-0.5 shrink-0 opacity-90" />
+          <span className="leading-relaxed font-medium">{message}</span>
         </motion.div>
       )}
     </AnimatePresence>

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Head, Link, router, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, type FieldErrors } from 'react-hook-form'
 import { AuthAlert } from '@/components/AuthAlert'
 import { AuthLayout } from '@/components/AuthLayout'
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui'
 import { ArrowRightIcon, SparkleIcon } from '@/components/icons'
 import { deviceHeaders } from '@/lib/device'
 import { loginSchema, type LoginFormValues } from '@/lib/schemas/auth'
-import type { SharedProps } from '@/types'
+import type { PageProps } from '@/types'
 import { cn } from '@/lib/utils'
 
 const slide = {
@@ -32,9 +32,16 @@ function syncLoginEmail(form: HTMLFormElement, setValue: (v: string) => void) {
   }
 }
 
+type LoginPageProps = PageProps<{
+  redirect?: string | null
+  email?: string | null
+  errors?: Record<string, string>
+}>
+
 export default function Login() {
-  const { demo } = usePage<SharedProps>().props
+  const { demo, email: prefilledEmail, errors: inertiaErrors } = usePage<LoginPageProps>().props
   const [step, setStep] = useState(0)
+  const [confirmedEmail, setConfirmedEmail] = useState(prefilledEmail ?? '')
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({})
   const [processing, setProcessing] = useState(false)
 
@@ -50,14 +57,32 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: prefilledEmail ?? '', password: '' },
     mode: 'onBlur',
     shouldUnregister: false,
   })
 
   useServerErrors(serverErrors, setError)
 
-  const email = watch('email')
+  const email = watch('email') || confirmedEmail
+
+  useEffect(() => {
+    const errs = inertiaErrors ?? {}
+    if (Object.keys(errs).length === 0) {
+      return
+    }
+
+    setServerErrors(errs as Record<string, string>)
+
+    if (prefilledEmail) {
+      setValue('email', prefilledEmail)
+      setConfirmedEmail(prefilledEmail)
+    }
+
+    if (errs.password) {
+      setStep(1)
+    }
+  }, [inertiaErrors, prefilledEmail, setValue])
 
   const postLogin = (values: LoginFormValues) => {
     const form = document.getElementById('login-form')
@@ -65,8 +90,17 @@ export default function Login() {
       syncLoginEmail(form, (v) => setValue('email', v, { shouldDirty: true }))
     }
 
+    const resolvedEmail = (values.email || confirmedEmail || getValues('email')).trim()
+
+    if (! resolvedEmail) {
+      setStep(0)
+      setError('email', { type: 'manual', message: 'Enter your email to continue.' })
+
+      return
+    }
+
     const payload = {
-      email: values.email || email || getValues('email'),
+      email: resolvedEmail,
       password: values.password,
     }
 
@@ -75,7 +109,12 @@ export default function Login() {
     router.post('/login', payload, {
       headers: deviceHeaders(),
       preserveScroll: true,
-      onError: (errs) => setServerErrors(errs as Record<string, string>),
+      onError: (errs) => {
+        setServerErrors(errs as Record<string, string>)
+        setStep(1)
+        setConfirmedEmail(resolvedEmail)
+        setValue('email', resolvedEmail, { shouldDirty: true })
+      },
       onFinish: () => {
         setProcessing(false)
         resetField('password')
@@ -84,11 +123,15 @@ export default function Login() {
   }
 
   const onInvalid = (formErrors: FieldErrors<LoginFormValues>) => {
-    if (formErrors.email && step === 1) setStep(0)
+    if (formErrors.email && step === 1) {
+      setStep(0)
+    }
   }
 
   const signInAs = (demoEmail: string) => {
     if (!demo) return
+    setValue('email', demoEmail)
+    setConfirmedEmail(demoEmail)
     postLogin({ email: demoEmail, password: demo.password })
   }
 
@@ -98,21 +141,27 @@ export default function Login() {
       syncLoginEmail(form, (v) => setValue('email', v, { shouldDirty: true }))
     }
     const ok = await trigger('email')
-    if (ok) setStep(1)
+    if (ok) {
+      const nextEmail = getValues('email').trim()
+      setConfirmedEmail(nextEmail)
+      setStep(1)
+    }
   }
 
   const titles = ['Welcome back', 'Enter your password']
   const subs = ['Sign in to your Reton wallet.', `Signing in as ${email || 'you'}.`]
-  const authError =
-    firstError(serverErrors.password) ??
-    firstError(serverErrors.email) ??
-    (step === 1 ? errors.email?.message : undefined)
+
+  const passwordError = step === 1 ? fieldErrorMessage(errors.password, serverErrors.password) : undefined
+  const bannerError =
+    step === 0
+      ? (firstError(serverErrors.email) ?? errors.email?.message)
+      : undefined
 
   return (
     <AuthLayout title={titles[step]} sub={subs[step]} step={step} totalSteps={2}>
       <Head title="Sign in" />
 
-      <AuthAlert message={authError} />
+      <AuthAlert message={bannerError} />
 
       {demo && step === 0 && (
         <motion.div
@@ -186,7 +235,7 @@ export default function Login() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   autoFocus={step === 1}
-                  error={fieldErrorMessage(errors.password, serverErrors.password)}
+                  error={passwordError}
                   {...register('password')}
                 />
                 <div className="flex justify-end">

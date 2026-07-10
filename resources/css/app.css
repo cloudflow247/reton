@@ -322,6 +322,29 @@ textarea:focus-visible,
   -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
+.auth-alert {
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.auth-alert-error {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  color: var(--color-danger);
+}
+
+.auth-alert-success {
+  border: 1px solid color-mix(in srgb, var(--color-mint) 35%, transparent);
+  background: color-mix(in srgb, var(--color-mint) 8%, var(--color-surface));
+  color: var(--color-mint-strong);
+}
+
+.auth-alert-info {
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
 .field.field-valid {
   border-color: rgba(11, 122, 87, 0.45);
   box-shadow: 0 0 0 3px rgba(11, 122, 87, 0.08);

@@ -107,6 +107,21 @@ it('logs in with valid credentials', function () {
     $this->assertAuthenticatedAs($user);
 });
 
+it('logs in with case-insensitive email on the paginated login flow', function () {
+    $user = User::factory()->create([
+        'email' => 'admin@retonpay.com',
+        'password' => 'password',
+        'is_admin' => true,
+    ]);
+
+    $this->post('/login', [
+        'email' => 'Admin@RetonPay.com',
+        'password' => 'password',
+    ])->assertRedirect('/admin');
+
+    $this->assertAuthenticatedAs($user);
+});
+
 it('rejects a login with the wrong password', function () {
     $user = User::factory()->create(['password' => Hash::make('password')]);
 

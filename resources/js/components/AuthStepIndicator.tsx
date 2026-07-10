@@ -3,11 +3,14 @@ import { motion } from 'framer-motion'
 const labels = ['Account', 'Contact', 'Security', 'Verify', 'Reset']
 
 export function AuthStepIndicator({ step, total }: { step: number; total: number }) {
+  const progressPct =
+    total <= 1 ? 100 : Math.min(99, Math.round(((step + 0.5) / total) * 100))
+
   return (
     <div aria-label={`Step ${step + 1} of ${total}`}>
       <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted">
         <span>Step {step + 1} of {total}</span>
-        <span className="text-mint">{Math.round(((step + 1) / total) * 100)}%</span>
+        <span className="text-mint">{progressPct}%</span>
       </div>
       <div className="flex items-center gap-2">
         {Array.from({ length: total }, (_, i) => (

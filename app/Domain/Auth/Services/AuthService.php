@@ -46,9 +46,10 @@ class AuthService
 
     public function login(string $email, string $password, ?DeviceContext $device = null): User
     {
-        $user = User::where('email', $email)->first();
+        $email = strtolower(trim($email));
+        $user = User::query()->whereRaw('lower(email) = ?', [$email])->first();
 
-        if ($user === null || ! Hash::check($password, $user->password)) {
+        if ($user === null || ! Hash::check($password, (string) $user->password)) {
             throw InvalidCredentialsException::make();
         }
 

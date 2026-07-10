@@ -7,7 +7,6 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Support\Admin\AdminPath;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class PromoteAdminCommand extends Command
@@ -23,8 +22,8 @@ class PromoteAdminCommand extends Command
 
     public function handle(): int
     {
-        $email = (string) $this->argument('email');
-        $user = User::query()->where('email', $email)->first();
+        $email = strtolower(trim((string) $this->argument('email')));
+        $user = User::query()->whereRaw('lower(email) = ?', [$email])->first();
 
         if ($user === null && $this->option('create')) {
             $password = (string) ($this->option('password') ?: Str::password(24));
@@ -32,15 +31,22 @@ class PromoteAdminCommand extends Command
 
             $user = User::query()->create([
                 'name' => $name,
-                'email' => $email,
-                'password' => Hash::make($password),
-                'email_verified_at' => now(),
+                'email' => strtolower(trim($email)),
+                'password' => $password,
             ]);
+
+            $user->forceFill([
+                'email_verified_at' => now(),
+                'is_admin' => true,
+            ])->save();
 
             $this->info("Created user {$email}.");
             $this->line('Temporary password: '.$password);
             $this->newLine();
             $this->warn('Save this password now — it will not be shown again.');
+            $this->line('Open '.AdminPath::url().' after signing in to configure ALATPay and other integrations.');
+
+            return self::SUCCESS;
         }
 
         if ($user === null) {
