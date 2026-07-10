@@ -7,8 +7,14 @@ export function useAdminBase(): string {
   return adminPath ?? '/admin'
 }
 
-export function adminUrl(path = ''): string {
-  const base = useAdminBase()
+/** Build an admin URL from a known base path (safe inside event handlers). */
+export function buildAdminUrl(base: string, path = ''): string {
   if (!path) return base
   return `${base}/${path.replace(/^\//, '')}`
+}
+
+/** @deprecated Prefer `useAdminBase()` + `buildAdminUrl()` — only call during render. */
+export function adminUrl(path = ''): string {
+  const base = useAdminBase()
+  return buildAdminUrl(base, path)
 }

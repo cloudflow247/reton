@@ -54,6 +54,12 @@ class AuthService
             throw InvalidCredentialsException::make();
         }
 
+        if ($user->trashed()) {
+            throw ValidationException::withMessages([
+                'email' => ['This account has been removed. Contact support if you believe this is a mistake.'],
+            ]);
+        }
+
         if (! $user->isActive()) {
             throw ValidationException::withMessages([
                 'email' => ['This account has been suspended. Contact support for help.'],

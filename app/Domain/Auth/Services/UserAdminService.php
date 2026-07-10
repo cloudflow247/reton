@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace App\Domain\Auth\Services;
 
+use App\Domain\Callback\Models\Callback;
+use App\Domain\Marketplace\Models\DigitalOrder;
+use App\Domain\Recovery\Models\Recovery;
 use App\Domain\Settings\Services\PlatformSettingsService;
+use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class UserAdminService
@@ -123,16 +130,129 @@ class UserAdminService
             $this->assertNotLastAdmin($target);
         }
 
-        DB::transaction(function () use ($admin, $target, $ip): void {
-            $email = $target->email;
+        $this->assertSafeToRemove($target);
 
-            $target->delete();
+        try {
+            DB::transaction(function () use ($admin, $target, $ip): void {
+                $originalEmail = $target->email;
 
-            $this->settings->audit($admin, 'user.deleted', 'users', [
-                'target_id' => $target->getKey(),
-                'email' => $email,
-            ], $ip);
-        });
+                $this->revokeAccess($target);
+
+                $target->forceFill([
+                    'name' => 'Removed user',
+                    'email' => $this->anonymizedEmail($target),
+                    'phone' => null,
+                    'status' => 'frozen',
+                    'password' => Hash::make(Str::random(64)),
+                    'transaction_pin' => null,
+                    'remember_token' => null,
+                    'pin_attempts' => 0,
+                    'pin_locked_until' => null,
+                ])->save();
+
+                $target->delete();
+
+                $this->settings->audit($admin, 'user.deleted', 'users', [
+                    'target_id' => $target->getKey(),
+                    'email' => $originalEmail,
+                    'mode' => 'soft_delete',
+                ], $ip);
+            });
+        } catch (QueryException $exception) {
+            report($exception);
+
+            throw ValidationException::withMessages([
+                'user' => ['This account could not be removed because it still has linked financial records. Suspend the user instead, or contact engineering.'],
+            ]);
+        }
+    }
+
+    private function assertSafeToRemove(User $target): void
+    {
+        $walletIds = $target->wallets()->pluck('id');
+
+        if ($walletIds->isNotEmpty()) {
+            $aggregate = Wallet::query()
+                ->whereIn('id', $walletIds)
+                ->selectRaw('coalesce(sum(balance), 0) as total_balance, coalesce(sum(held_balance), 0) as total_held')
+                ->first();
+
+            $totalBalance = (int) ($aggregate->total_balance ?? 0);
+            $totalHeld = (int) ($aggregate->total_held ?? 0);
+
+            if ($totalBalance > 0 || $totalHeld > 0) {
+                throw ValidationException::withMessages([
+                    'user' => ['This user still has wallet funds. Ask them to withdraw or transfer the balance before removing the account.'],
+                ]);
+            }
+        }
+
+        $openCallbacks = Callback::query()
+            ->whereIn('status', ['pending', 'escalated'])
+            ->where(function ($query) use ($target, $walletIds): void {
+                $query->where('initiated_by', $target->getKey());
+
+                if ($walletIds->isNotEmpty()) {
+                    $query->orWhereHas('transfer', function ($transfer) use ($walletIds): void {
+                        $transfer->whereIn('sender_wallet_id', $walletIds)
+                            ->orWhereIn('receiver_wallet_id', $walletIds);
+                    });
+                }
+            })
+            ->exists();
+
+        if ($openCallbacks) {
+            throw ValidationException::withMessages([
+                'user' => ['This user has open callback protection cases. Resolve them before removing the account.'],
+            ]);
+        }
+
+        $openRecoveries = Recovery::query()
+            ->where(function ($query) use ($target, $walletIds): void {
+                $query->where('reported_by', $target->getKey());
+
+                if ($walletIds->isNotEmpty()) {
+                    $query->orWhereIn('sender_wallet_id', $walletIds)
+                        ->orWhereIn('receiver_wallet_id', $walletIds);
+                }
+            })
+            ->whereIn('status', ['held', 'escalated'])
+            ->exists();
+
+        if ($openRecoveries) {
+            throw ValidationException::withMessages([
+                'user' => ['This user has active recovery cases. Close them before removing the account.'],
+            ]);
+        }
+
+        $openOrders = DigitalOrder::query()
+            ->where(function ($query) use ($target): void {
+                $query->where('buyer_id', $target->getKey())
+                    ->orWhere('seller_id', $target->getKey());
+            })
+            ->whereIn('status', ['paid_held', 'awaiting_verification', 'shipped', 'delivered', 'disputed'])
+            ->exists();
+
+        if ($openOrders) {
+            throw ValidationException::withMessages([
+                'user' => ['This user has open marketplace orders. Settle or cancel them before removing the account.'],
+            ]);
+        }
+    }
+
+    private function revokeAccess(User $target): void
+    {
+        $target->tokens()->delete();
+
+        DB::table('sessions')->where('user_id', $target->getKey())->delete();
+        DB::table('password_reset_tokens')->where('email', $target->email)->delete();
+    }
+
+    private function anonymizedEmail(User $target): string
+    {
+        $local = 'removed+'.$target->getKey();
+
+        return substr($local, 0, 64).'@removed.retonpay.com';
     }
 
     private function assertNotLastAdmin(User $target): void

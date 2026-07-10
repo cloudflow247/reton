@@ -82,7 +82,23 @@ it('deletes a user and records audit log', function () {
         ->assertSessionHas('success');
 
     expect(User::query()->find($target->getKey()))->toBeNull();
+
+    $archived = User::withTrashed()->find($target->getKey());
+    expect($archived)->not->toBeNull()
+        ->and($archived->email)->toContain('@removed.retonpay.com')
+        ->and($archived->status)->toBe('frozen');
+
     expect(AdminAuditLog::query()->where('action', 'user.deleted')->exists())->toBeTrue();
+});
+
+it('blocks removing a user who still has wallet funds', function () {
+    $admin = readyUser(['is_admin' => true]);
+    [$target] = readyUserWithWallet(fundMinor: 50_000);
+
+    $this->actingAs($admin)->delete("/admin/users/{$target->getKey()}")
+        ->assertSessionHasErrors('user');
+
+    expect(User::query()->find($target->getKey()))->not->toBeNull();
 });
 
 it('forbids non-admins from user management', function () {

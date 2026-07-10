@@ -86,7 +86,7 @@ class AdminUsersController extends Controller
 
         $this->users->delete($request->user(), $user, $request->ip());
 
-        return back()->with('success', 'User removed.');
+        return back()->with('success', 'User removed and access revoked.');
     }
 
     /**

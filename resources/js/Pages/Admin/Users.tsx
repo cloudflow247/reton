@@ -2,7 +2,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react'
 import { useState } from 'react'
 import { AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, Field, Pill } from '@/components/ui'
-import { adminUrl } from '@/lib/admin'
+import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import { shortDate } from '@/lib/format'
 import type { PageProps } from '@/types'
 
@@ -42,7 +42,8 @@ const emptyCreate = {
 }
 
 export default function Users() {
-  const { users, filters, statusOptions, flash } = usePage<UsersProps>().props
+  const { users, filters, statusOptions, flash, errors } = usePage<UsersProps>().props
+  const adminBase = useAdminBase()
   const [search, setSearch] = useState(filters.q)
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<UserRow | null>(null)
@@ -57,7 +58,7 @@ export default function Users() {
 
   function runSearch(e: React.FormEvent) {
     e.preventDefault()
-    router.get(adminUrl('users'), { q: search || undefined }, { preserveState: true, replace: true })
+    router.get(buildAdminUrl(adminBase, 'users'), { q: search || undefined }, { preserveState: true, replace: true })
   }
 
   function openEdit(user: UserRow) {
@@ -72,7 +73,7 @@ export default function Users() {
 
   function submitCreate(e: React.FormEvent) {
     e.preventDefault()
-    createForm.post(adminUrl('users'), {
+    createForm.post(buildAdminUrl(adminBase, 'users'), {
       preserveScroll: true,
       onSuccess: () => {
         createForm.reset()
@@ -84,16 +85,30 @@ export default function Users() {
   function submitEdit(e: React.FormEvent) {
     e.preventDefault()
     if (!editing) return
-    editForm.put(adminUrl(`users/${editing.id}`), {
+    editForm.put(buildAdminUrl(adminBase, `users/${editing.id}`), {
       preserveScroll: true,
       onSuccess: () => setEditing(null),
     })
   }
 
   function removeUser(user: UserRow) {
-    if (!window.confirm(`Delete ${user.email}? This cannot be undone.`)) return
-    router.delete(adminUrl(`users/${user.id}`), { preserveScroll: true })
+    if (
+      !window.confirm(
+        `Remove ${user.email}? Login access will be revoked immediately and personal details anonymized. Financial records are kept for compliance.`,
+      )
+    ) {
+      return
+    }
+
+    router.delete(buildAdminUrl(adminBase, `users/${user.id}`), {
+      preserveScroll: true,
+      onSuccess: () => setEditing(null),
+    })
   }
+
+  const actionError =
+    (typeof errors.user === 'string' ? errors.user : errors.user?.[0]) ??
+    (typeof errors.email === 'string' ? errors.email : errors.email?.[0])
 
   const statusTone = (status: UserRow['status']) => {
     if (status === 'active') return 'mint' as const
@@ -123,6 +138,9 @@ export default function Users() {
         )}
         {flash.error && (
           <p className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
+        )}
+        {actionError && (
+          <p className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-2.5 text-sm text-danger">{actionError}</p>
         )}
 
         {creating && (
@@ -226,7 +244,7 @@ export default function Users() {
                           Edit
                         </button>
                         <button type="button" className="text-xs font-semibold text-danger hover:underline" onClick={() => removeUser(user)}>
-                          Delete
+                          Remove
                         </button>
                       </div>
                     </td>
