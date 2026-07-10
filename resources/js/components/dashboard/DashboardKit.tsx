@@ -35,7 +35,7 @@ export function BalanceHeroCard({
   const bankLabel = depositAccount?.bank_name?.trim() || 'Wema Bank'
   // Prefer the ALATPay VA for bank deposits — wallet.account_number is Reton-only.
   const displayAccount = bankAccount ?? wallet?.account_number ?? null
-  const accountKind = bankAccount ? 'Bank deposit' : 'Reton tag'
+  const accountKind = bankAccount ? 'Bank deposit' : 'RETON ID'
 
   return (
     <motion.div

@@ -129,11 +129,12 @@ function SendForm() {
     setLookupError('')
     setValue('to_wallet_id', '')
 
-    if (!/^\d{10}$/.test(account)) return
+    if (!/^R\d{9}$/i.test(account.trim())) return
 
     setResolving(true)
     let cancelled = false
-    fetch(`/lookup?account_number=${account}`, { headers: { Accept: 'application/json' } })
+    const retonId = account.trim().toUpperCase()
+    fetch(`/lookup?account_number=${encodeURIComponent(retonId)}`, { headers: { Accept: 'application/json' } })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((data) => {
         if (cancelled) return
@@ -142,8 +143,8 @@ function SendForm() {
       })
       .catch(() => {
         if (!cancelled) {
-          setLookupError('No Reton account found with that number.')
-          setError('account', { type: 'manual', message: 'No Reton account found with that number.' })
+          setLookupError('No RETON ID found with that number.')
+          setError('account', { type: 'manual', message: 'No RETON ID found with that number.' })
         }
       })
       .finally(() => !cancelled && setResolving(false))
@@ -235,15 +236,18 @@ function SendForm() {
 
           <div className="space-y-3">
             <RhfField
-              label="Recipient account number"
-              inputMode="numeric"
+              label="Recipient RETON ID"
+              inputMode="text"
               maxLength={10}
-              placeholder="10-digit Reton account number"
+              placeholder="e.g. R123456789"
               autoComplete="off"
               error={fieldErrorMessage(errors.account, serverErrors.to_wallet_id ?? lookupError)}
               {...register('account', {
                 onChange: (e) => {
-                  e.target.value = e.target.value.replace(/\D/g, '')
+                  e.target.value = e.target.value
+                    .toUpperCase()
+                    .replace(/[^R0-9]/gi, '')
+                    .slice(0, 10)
                 },
               })}
             />
@@ -288,7 +292,7 @@ function SendForm() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-text">{recipient.name}</div>
-                  <div className="font-num text-xs tracking-wider text-muted">Reton · {account}</div>
+                  <div className="font-num text-xs tracking-wider text-muted">RETON ID · {account}</div>
                 </div>
                 <CheckIcon size={18} className="text-mint" />
               </motion.div>

@@ -8,8 +8,8 @@ export const sendTransferSchema = z.object({
   to_wallet_id: z.string().uuid('Resolve the recipient account first'),
   account: z
     .string()
-    .min(1, 'Account number is required')
-    .regex(/^\d{10}$/, 'Enter a 10-digit Reton account number'),
+    .min(1, 'RETON ID is required')
+    .regex(/^R\d{9}$/i, 'Enter a valid RETON ID (R + 9 digits)'),
   amount: z
     .string()
     .min(1, 'Enter an amount')

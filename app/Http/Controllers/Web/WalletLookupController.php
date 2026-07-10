@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Domain\Wallet\Models\Wallet;
+use App\Domain\Wallet\Support\RetonId;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -12,18 +13,22 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Name enquiry for the Send form: resolves a 10-digit account number to its
- * holder. A small JSON endpoint (not Inertia) because it runs as a typeahead.
+ * Name enquiry for the Send form: resolves a RETON ID to its holder.
+ * A small JSON endpoint (not Inertia) because it runs as a typeahead.
  */
 class WalletLookupController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        $number = $request->query('account_number');
+        $number = RetonId::normalize(
+            is_string($request->query('account_number'))
+                ? $request->query('account_number')
+                : null,
+        );
 
-        if (! is_string($number) || preg_match('/^\d{10}$/', $number) !== 1) {
+        if ($number === null || ! RetonId::isValid($number)) {
             throw ValidationException::withMessages([
-                'account_number' => ['Enter a valid 10-digit account number.'],
+                'account_number' => ['Enter a valid RETON ID (R + 9 digits).'],
             ]);
         }
 

@@ -6,6 +6,7 @@ namespace App\Domain\Wallet\Models;
 
 use App\Domain\Ledger\Models\LedgerAccount;
 use App\Domain\Payments\Models\StaticAccount;
+use App\Domain\Wallet\Support\RetonId;
 use App\Support\Concerns\HasUuidKey;
 use App\Support\Money\Money;
 use Database\Factories\WalletFactory;
@@ -42,21 +43,61 @@ class Wallet extends Model
 
     protected static function booted(): void
     {
-        // Every wallet gets a short, unique, shareable account number.
+        // Every wallet gets a unique RETON ID (R + 9 digits with Luhn checksum).
         static::creating(function (Wallet $wallet): void {
             if (empty($wallet->account_number)) {
-                $wallet->account_number = self::generateAccountNumber();
+                $wallet->account_number = self::generateRetonId();
             }
         });
     }
 
-    private static function generateAccountNumber(): string
+    public static function generateRetonId(): string
     {
         do {
-            $number = (string) random_int(1_000_000_000, 9_999_999_999);
-        } while (self::where('account_number', $number)->exists());
+            $id = RetonId::generate();
+        } while (self::where('account_number', $id)->exists());
 
-        return $number;
+        return $id;
+    }
+
+    /**
+     * Re-issue legacy numeric wallet numbers as RETON IDs. Safe to run repeatedly.
+     */
+    public static function reissueLegacyAccountNumbers(): int
+    {
+        $updated = 0;
+
+        self::query()
+            ->orderBy('created_at')
+            ->each(function (Wallet $wallet) use (&$updated): void {
+                $current = (string) ($wallet->account_number ?? '');
+
+                if (RetonId::isValid($current)) {
+                    $normalized = RetonId::normalize($current);
+
+                    if ($normalized !== null && $normalized !== $current) {
+                        $wallet->forceFill(['account_number' => $normalized])->saveQuietly();
+                        $updated++;
+                    }
+
+                    return;
+                }
+
+                $meta = is_array($wallet->metadata) ? $wallet->metadata : [];
+
+                if ($current !== '') {
+                    $meta['legacy_account_number'] = $current;
+                }
+
+                $wallet->forceFill([
+                    'account_number' => self::generateRetonId(),
+                    'metadata' => $meta,
+                ])->saveQuietly();
+
+                $updated++;
+            });
+
+        return $updated;
     }
 
     /** @return BelongsTo<LedgerAccount, $this> */

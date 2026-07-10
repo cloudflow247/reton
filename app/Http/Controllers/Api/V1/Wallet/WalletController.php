@@ -11,6 +11,7 @@ use App\Domain\Fraud\Services\FraudService;
 use App\Domain\Ledger\Models\LedgerEntry;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
+use App\Domain\Wallet\Support\RetonId;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Wallet\TransferRequest;
 use App\Http\Requests\Api\V1\Wallet\WithdrawRequest;
@@ -51,16 +52,20 @@ class WalletController extends Controller
     }
 
     /**
-     * Resolve a 10-digit account number to a wallet and its holder's name, so a
-     * sender can confirm the recipient before paying — like a bank name enquiry.
+     * Resolve a RETON ID to a wallet and its holder's name, so a sender can
+     * confirm the recipient before paying — like a bank name enquiry.
      */
     public function lookup(Request $request): JsonResponse
     {
-        $number = $request->query('account_number');
+        $number = RetonId::normalize(
+            is_string($request->query('account_number'))
+                ? $request->query('account_number')
+                : null,
+        );
 
-        if (! is_string($number) || preg_match('/^\d{10}$/', $number) !== 1) {
+        if ($number === null || ! RetonId::isValid($number)) {
             throw ValidationException::withMessages([
-                'account_number' => ['Enter a valid 10-digit account number.'],
+                'account_number' => ['Enter a valid RETON ID (R + 9 digits).'],
             ]);
         }
 

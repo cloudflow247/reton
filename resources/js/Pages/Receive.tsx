@@ -42,8 +42,8 @@ export default function Receive() {
   async function share() {
     const text =
       minor > 0
-        ? `Pay me ${ngn(minor)} on Reton — account ${account} (${auth.user?.name ?? ''}).`
-        : `Pay me on Reton — account ${account} (${auth.user?.name ?? ''}).`
+        ? `Pay me ${ngn(minor)} on Reton — RETON ID ${account} (${auth.user?.name ?? ''}).`
+        : `Pay me on Reton — RETON ID ${account} (${auth.user?.name ?? ''}).`
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Pay me on Reton', text, url: payload })
@@ -109,7 +109,7 @@ export default function Receive() {
             </motion.div>
           )}
 
-          <p className="mt-5 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-white/65">Account number</p>
+          <p className="mt-5 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-white/65">RETON ID</p>
           <div className="mt-1.5 font-num text-3xl font-bold tracking-[0.14em]">{account || '—'}</div>
           <p className="mt-1.5 text-sm font-medium text-white/85">{auth.user?.name}</p>
 

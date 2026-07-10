@@ -221,7 +221,7 @@ export default function Profile() {
       <FormPanel className="divide-y divide-line !space-y-0 !p-0">
           <Row
             icon={<BankIcon size={18} />}
-            label="Reton account"
+            label="RETON ID"
             value={wallet?.account_number ?? 'Pending'}
             mono
           />
@@ -229,7 +229,7 @@ export default function Profile() {
             href="/add-money"
             icon={<ShieldIcon size={18} />}
             label="Deposit account"
-            sub="Permanent ALATPay bank number"
+            sub="Permanent ALATPay / Wema bank number"
             action="Manage"
           />
       </FormPanel>
