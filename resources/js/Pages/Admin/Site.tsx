@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Head, router, useForm, usePage } from '@inertiajs/react'
 import { AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, Field } from '@/components/ui'
-import { adminUrl } from '@/lib/admin'
+import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
 type SiteGroup = 'mail' | 'sms' | 'seo' | 'security'
@@ -99,8 +99,15 @@ function Toggle({
 
 export default function Site() {
   const { groups, flash } = usePage<SiteProps>().props
+  const adminBase = useAdminBase()
   const [tab, setTab] = useState<SiteGroup>('mail')
   const form = useForm(cleanInitial(groups[tab], tab))
+
+  const formErrors = Object.entries(form.errors).flatMap(([key, message]) => {
+    if (!message) return []
+    const text = Array.isArray(message) ? message[0] : message
+    return [`${key.replace(/_/g, ' ')}: ${text}`]
+  })
 
   function switchTab(next: SiteGroup) {
     setTab(next)
@@ -110,11 +117,12 @@ export default function Site() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.put(`${adminUrl()}/site`, { preserveScroll: true })
+    form.transform((data) => ({ ...data, group: tab }))
+    form.put(`${buildAdminUrl(adminBase)}/site`, { preserveScroll: true })
   }
 
   function sendTestMail() {
-    router.post(`${adminUrl()}/site/test-mail`, {}, { preserveScroll: true })
+    router.post(`${buildAdminUrl(adminBase)}/site/test-mail`, {}, { preserveScroll: true })
   }
 
   const ogPreview =
@@ -141,6 +149,13 @@ export default function Site() {
         )}
         {flash.error && (
           <p className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
+        )}
+        {formErrors.length > 0 && (
+          <div className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">
+            {formErrors.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
         )}
 
         <div className="flex flex-wrap gap-2">
@@ -226,17 +241,20 @@ export default function Site() {
                         label="Host"
                         value={String(form.data.smtp_host ?? '')}
                         onChange={(e) => form.setData('smtp_host', e.target.value)}
+                        error={form.errors.smtp_host}
                       />
                       <Field
                         label="Port"
                         type="number"
                         value={String(form.data.smtp_port ?? 587)}
                         onChange={(e) => form.setData('smtp_port', Number(e.target.value))}
+                        error={form.errors.smtp_port}
                       />
                       <Field
                         label="Username"
                         value={String(form.data.smtp_username ?? '')}
                         onChange={(e) => form.setData('smtp_username', e.target.value)}
+                        error={form.errors.smtp_username}
                       />
                       <SecretField
                         label="Password"
@@ -262,7 +280,7 @@ export default function Site() {
                   </div>
                 )}
                 <div className="flex flex-wrap gap-3 pt-2">
-                  <Button type="submit" disabled={form.processing}>
+                  <Button type="submit" loading={form.processing}>
                     Save email settings
                   </Button>
                   <Button type="button" variant="secondary" onClick={sendTestMail}>

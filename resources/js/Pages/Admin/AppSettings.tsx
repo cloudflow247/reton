@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Head, Link, useForm, usePage } from '@inertiajs/react'
 import { AdminLayout } from '@/components/AdminLayout'
 import { Button, Card } from '@/components/ui'
-import { adminUrl } from '@/lib/admin'
+import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
 type AppSettingsProps = PageProps<{
@@ -65,6 +65,7 @@ function SecretField({
 
 export default function AppSettings() {
   const { app, reservedAdminPaths, flash } = usePage<AppSettingsProps>().props
+  const adminBase = useAdminBase()
   const form = useForm({
     demo_enabled: app.demo_enabled,
     demo_password: app.demo_password.includes('••••') ? '' : app.demo_password,
@@ -87,7 +88,7 @@ export default function AppSettings() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.put(`${adminUrl()}/app-settings`)
+    form.put(`${buildAdminUrl(adminBase)}/app-settings`)
   }
 
   return (

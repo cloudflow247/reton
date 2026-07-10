@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Head, useForm, usePage } from '@inertiajs/react'
 import { AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, Field } from '@/components/ui'
-import { adminUrl } from '@/lib/admin'
+import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import { ngn } from '@/lib/format'
 import type { PageProps } from '@/types'
 
@@ -105,10 +105,12 @@ function KycTierFields({
 function PlatformForm({ group, initial }: { group: PlatformGroup; initial: GroupValues }) {
   const form = useForm(cleanInitial(initial, group))
   const { flash } = usePage<PlatformProps>().props
+  const adminBase = useAdminBase()
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.put(`${adminUrl()}/platform`, { preserveScroll: true })
+    form.transform((data) => ({ ...data, group }))
+    form.put(`${buildAdminUrl(adminBase)}/platform`, { preserveScroll: true })
   }
 
   return (

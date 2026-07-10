@@ -66,6 +66,35 @@ it('stores mail settings encrypted and applies runtime config', function () {
         ->and(config('reton.mail.notifications_enabled'))->toBeTrue();
 });
 
+it('stores smtp mail settings with validation feedback path', function () {
+    $admin = siteAdmin();
+
+    $this->actingAs($admin)->put('/admin/site', array_merge(
+        mailSettingsPayload([
+            'mailer' => 'smtp',
+            'smtp_host' => 'smtp.mailgun.org',
+            'smtp_username' => 'postmaster@retonpay.com',
+            'smtp_password' => 'secret-smtp-pass',
+        ]),
+        ['group' => 'mail'],
+    ))->assertRedirect()
+        ->assertSessionHas('success');
+
+    $decrypted = PlatformSetting::query()->find('mail')->decryptPayload();
+    expect($decrypted['mailer'])->toBe('smtp')
+        ->and($decrypted['smtp_host'])->toBe('smtp.mailgun.org')
+        ->and($decrypted['smtp_password'])->toBe('secret-smtp-pass');
+});
+
+it('requires smtp host when mailer is smtp', function () {
+    $admin = siteAdmin();
+
+    $this->actingAs($admin)->put('/admin/site', array_merge(
+        mailSettingsPayload(['mailer' => 'smtp', 'smtp_host' => '', 'smtp_username' => '']),
+        ['group' => 'mail'],
+    ))->assertSessionHasErrors(['smtp_host', 'smtp_username']);
+});
+
 it('sends a test email to the signed-in admin', function () {
     Mail::fake();
 

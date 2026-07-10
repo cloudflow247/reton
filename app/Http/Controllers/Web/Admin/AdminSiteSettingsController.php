@@ -49,9 +49,9 @@ class AdminSiteSettingsController extends Controller
                 'reply_to_address' => ['required', 'email', 'max:255'],
                 'notify_on_support_ticket' => ['required', 'boolean'],
                 'notify_user_on_ticket' => ['required', 'boolean'],
-                'smtp_host' => ['nullable', 'string', 'max:255'],
+                'smtp_host' => ['required_if:mailer,smtp', 'nullable', 'string', 'max:255'],
                 'smtp_port' => ['required', 'integer', 'min:1', 'max:65535'],
-                'smtp_username' => ['nullable', 'string', 'max:255'],
+                'smtp_username' => ['required_if:mailer,smtp', 'nullable', 'string', 'max:255'],
                 'smtp_password' => ['nullable', 'string', 'max:500'],
                 'smtp_encryption' => ['required', 'in:tls,ssl,none'],
             ],
@@ -87,7 +87,7 @@ class AdminSiteSettingsController extends Controller
         };
 
         $validated = $request->validate(array_merge(
-            ['group' => ['required', 'in:mail,seo,security']],
+            ['group' => ['required', 'in:mail,sms,seo,security']],
             $rules,
         ));
 
