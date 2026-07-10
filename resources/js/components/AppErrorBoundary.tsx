@@ -39,7 +39,10 @@ export class AppErrorBoundary extends Component<Props, State> {
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => this.setState({ error: null })}
+              onClick={() => {
+                this.setState({ error: null })
+                window.location.reload()
+              }}
               className="rounded-xl bg-[#0b7a57] px-4 py-2.5 text-sm font-semibold text-white"
             >
               Try again

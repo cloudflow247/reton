@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Component, type ErrorInfo, type ReactNode, useEffect, useRef, useState } from 'react'
 import { router, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CheckIcon } from '@/components/icons'
@@ -29,12 +29,30 @@ function firstError(errors: Record<string, unknown> | undefined): string | null 
   return null
 }
 
-/**
- * Global, instant feedback layer — flashes + validation errors appear as toasts
- * the moment Inertia finishes, without waiting for page scroll or inline banners.
- */
-export function ToastHost() {
-  const { flash, errors } = usePage<SharedProps & { errors?: Record<string, unknown> }>().props
+class ToastBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    console.error('Reton toast crash', error, info.componentStack)
+  }
+
+  render() {
+    if (this.state.failed) {
+      return null
+    }
+
+    return this.props.children
+  }
+}
+
+function ToastHostInner() {
+  const page = usePage<SharedProps & { errors?: Record<string, unknown> }>()
+  const flash = page.props.flash
+  const errors = page.props.errors
   const [items, setItems] = useState<ToastItem[]>([])
   const seenFlash = useRef<string>('')
   const seenError = useRef<string>('')
@@ -42,18 +60,18 @@ export function ToastHost() {
   useEffect(() => toast.subscribe(setItems), [])
 
   useEffect(() => {
-    const key = `${flash.success ?? ''}|${flash.error ?? ''}`
+    const key = `${flash?.success ?? ''}|${flash?.error ?? ''}`
     if (key === '|' || key === seenFlash.current) {
       return
     }
     seenFlash.current = key
-    if (flash.success) {
+    if (flash?.success) {
       toast.success(flash.success)
     }
-    if (flash.error) {
+    if (flash?.error) {
       toast.error(flash.error)
     }
-  }, [flash.success, flash.error])
+  }, [flash?.success, flash?.error])
 
   useEffect(() => {
     const message = firstError(errors)
@@ -113,5 +131,17 @@ export function ToastHost() {
         ))}
       </AnimatePresence>
     </div>
+  )
+}
+
+/**
+ * Global, instant feedback layer — must render inside Inertia's <App> tree
+ * so usePage() has context. Isolated so toast failures never blank the app.
+ */
+export function ToastHost() {
+  return (
+    <ToastBoundary>
+      <ToastHostInner />
+    </ToastBoundary>
   )
 }
