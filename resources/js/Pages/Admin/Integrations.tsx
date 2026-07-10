@@ -106,7 +106,11 @@ function IntegrationForm({
     router.post(`${buildAdminUrl(adminBase)}/integrations/${group}/test`, {}, { preserveScroll: true })
   }
 
-  const driver = String(form.data.driver ?? 'fake')
+  function syncVaDeposits() {
+    router.post(`${buildAdminUrl(adminBase)}/integrations/alatpay/sync-deposits`, {}, { preserveScroll: true })
+  }
+
+  const driver = String(form.data.driver ?? 'http')
 
   return (
     <form onSubmit={submit} className="space-y-5">
@@ -480,9 +484,20 @@ function IntegrationForm({
           Save {group}
         </Button>
         {group === 'alatpay' && driver === 'http' && (
-          <Button type="button" variant="ghost" onClick={testConnection}>
-            Test connection
-          </Button>
+          <>
+            <Button type="button" variant="ghost" onClick={testConnection}>
+              Test connection
+            </Button>
+            <Button type="button" variant="ghost" onClick={syncVaDeposits}>
+              Sync VA deposits
+            </Button>
+          </>
+        )}
+        {group === 'alatpay' && driver === 'fake' && (
+          <p className="w-full text-xs text-amber">
+            Driver is Demo/fake — live NIP deposits will not credit Reton wallets. Switch to Live HTTP, save, then Sync VA
+            deposits.
+          </p>
         )}
         {group === 'interswitch' && driver === 'http' && (
           <Button type="button" variant="ghost" onClick={testConnection}>

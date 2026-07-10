@@ -9,6 +9,7 @@ use App\Domain\Bills\Interswitch\Services\InterswitchTokenService;
 use App\Domain\Cards\Bridgecard\Gateways\HttpBridgecardVirtualCardGateway;
 use App\Domain\Notifications\Contracts\SmsGateway;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
+use App\Domain\Payments\Services\StaticAccountService;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,7 @@ class AdminIntegrationsController extends Controller
     public function __construct(
         private readonly PlatformSettingsService $settings,
         private readonly AlatpayGateway $alatpay,
+        private readonly StaticAccountService $staticAccounts,
         private readonly HttpInterswitchProvider $interswitch,
         private readonly HttpBridgecardVirtualCardGateway $bridgecard,
         private readonly InterswitchTokenService $interswitchTokens,
@@ -259,5 +261,19 @@ class AdminIntegrationsController extends Controller
         }
 
         return back()->with('error', 'Connection test is not available for this integration yet.');
+    }
+
+    public function syncStaticDeposits(Request $request): RedirectResponse
+    {
+        $result = $this->staticAccounts->syncAllActive();
+
+        if ($result['error'] !== null) {
+            return back()->with('error', 'VA deposit sync failed (driver='.$result['driver'].'): '.$result['error']);
+        }
+
+        return back()->with(
+            'success',
+            "VA deposit sync complete (driver={$result['driver']}): credited {$result['credited']} payment(s) across {$result['accounts']} account(s).",
+        );
     }
 }

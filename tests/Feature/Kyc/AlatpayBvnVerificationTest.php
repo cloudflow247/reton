@@ -452,7 +452,7 @@ it('polls collectionhistory per official static-wallet docs', function () {
 
         return str_contains($request->url(), 'collectionhistory')
             && ($query['BusinessId'] ?? null) === 'biz-001'
-            && ! array_key_exists('Status', $query);
+            && (int) ($query['Status'] ?? 0) === 1;
     });
 });
 

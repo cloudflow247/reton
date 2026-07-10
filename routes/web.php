@@ -156,6 +156,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding');
 
     Route::get('/add-money', [AddMoneyController::class, 'index'])->name('add-money');
+    Route::post('/add-money/check-deposits', [AddMoneyController::class, 'checkDeposits'])
+        ->middleware('throttle:12,1')
+        ->name('add-money.check-deposits');
     Route::get('/add-money/return/{reference}', [AddMoneyController::class, 'returnFromAlatpay'])->name('add-money.return');
     Route::get('/deposits/{deposit}/pay', [AddMoneyController::class, 'pay'])->name('deposits.pay');
     Route::post('/deposits/{deposit}/simulate-pay', [AddMoneyController::class, 'simulatePay'])->name('deposits.simulate-pay');

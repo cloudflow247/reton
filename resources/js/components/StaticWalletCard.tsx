@@ -77,9 +77,20 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
             </div>
           </div>
 
-          <p className="border-t border-line/80 px-5 py-3 text-[11px] leading-relaxed text-muted">
-            Tier {kyc.tier} · up to {ngn(kyc.limits.wallet_balance_max)} balance. Escrow and fraud checks still apply after credit.
-          </p>
+          <div className="space-y-2 border-t border-line/80 px-5 py-3">
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => router.post('/add-money/check-deposits', {}, { preserveScroll: true })}
+            >
+              Check for deposits
+            </Button>
+            <p className="text-[11px] leading-relaxed text-muted">
+              Tier {kyc.tier} · up to {ngn(kyc.limits.wallet_balance_max)} balance. Escrow and fraud checks still apply
+              after credit.
+            </p>
+          </div>
         </Card>
       </motion.div>
     )

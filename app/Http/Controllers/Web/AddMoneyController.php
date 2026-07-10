@@ -114,6 +114,36 @@ class AddMoneyController extends Controller
         ]);
     }
 
+    public function checkDeposits(Request $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        try {
+            $credited = $this->staticAccounts->pollActiveForUser($user, staleAfterSeconds: 0);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Could not check ALATPay for deposits: '.$e->getMessage());
+        }
+
+        if ($credited > 0) {
+            return redirect()
+                ->route('dashboard')
+                ->with(
+                    'success',
+                    $credited === 1
+                        ? 'Deposit received — your balance is updated.'
+                        : "{$credited} deposits received — your balance is updated.",
+                );
+        }
+
+        return back()->with(
+            'success',
+            'No new settled deposits yet. If you just transferred, wait a minute and check again.',
+        );
+    }
+
     public function store(InitiateDepositRequest $request): RedirectResponse
     {
         /** @var User $user */

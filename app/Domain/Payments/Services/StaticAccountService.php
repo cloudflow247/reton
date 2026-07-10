@@ -348,6 +348,55 @@ class StaticAccountService
         return $this->poll($account);
     }
 
+    /**
+     * Poll every active VA and return a summary for admin ops.
+     *
+     * @return array{driver: string, credited: int, accounts: int, error: ?string}
+     */
+    public function syncAllActive(): array
+    {
+        $driver = (string) config('services.alatpay.driver', 'http');
+
+        if ($driver === 'fake') {
+            return [
+                'driver' => $driver,
+                'credited' => 0,
+                'accounts' => 0,
+                'error' => 'ALATPay driver is still "fake". Switch to Live HTTP in Admin → Integrations, save, then sync again.',
+            ];
+        }
+
+        $credited = 0;
+        $accounts = 0;
+
+        try {
+            StaticAccount::query()
+                ->where('status', StaticAccountStatus::Active->value)
+                ->whereNotNull('account_number')
+                ->orderBy('last_polled_at')
+                ->each(function (StaticAccount $account) use (&$credited, &$accounts): void {
+                    $accounts++;
+                    $credited += $this->poll($account);
+                });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return [
+                'driver' => $driver,
+                'credited' => $credited,
+                'accounts' => $accounts,
+                'error' => $e->getMessage(),
+            ];
+        }
+
+        return [
+            'driver' => $driver,
+            'credited' => $credited,
+            'accounts' => $accounts,
+            'error' => null,
+        ];
+    }
+
     private function credit(StaticAccount $account, StaticAccountTransaction $txn): void
     {
         DB::transaction(function () use ($account, $txn): void {

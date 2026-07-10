@@ -115,6 +115,18 @@ it('shows the credited balance on the dashboard after polling', function () {
     expect($wallet->fresh()->balance)->toBe(15000);
 });
 
+it('checks deposits from add money and credits the wallet', function () {
+    [$account, $wallet] = activeStaticAccount();
+    $this->gateway->markStaticFunded($account->account_number, 100.00, 'txn-check-btn');
+
+    $this->actingAs($account->user)
+        ->post('/add-money/check-deposits')
+        ->assertRedirect(route('dashboard'))
+        ->assertSessionHas('success');
+
+    expect($wallet->fresh()->balance)->toBe(10000);
+});
+
 it('skips on-demand poll when the account was polled recently', function () {
     [$account, $wallet] = activeStaticAccount();
     $account->update(['last_polled_at' => now()]);

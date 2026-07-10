@@ -9,6 +9,7 @@ use App\Domain\Settings\Models\PlatformSetting;
 use App\Models\User;
 use App\Support\Admin\AdminPath;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -50,7 +51,8 @@ class PlatformSettingsService
     /** @var array<string, array<string, mixed>> */
     private const DEFAULTS = [
         'alatpay' => [
-            'driver' => 'fake',
+            // Live by default — fake must be chosen explicitly for local demos.
+            'driver' => 'http',
             'base_url' => 'https://apibox.alatpay.ng',
             'api_key' => '',
             'merchant_email' => '',
@@ -445,6 +447,37 @@ class PlatformSettingsService
     }
 
     /**
+     * Never run production/staging with driver=fake when merchant credentials exist —
+     * that silently skips live collection-history polls and leaves VA deposits uncredited.
+     *
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    private function normalizeAlatpayRuntime(array $values): array
+    {
+        $hasCreds = filled($values['merchant_email'] ?? null)
+            && filled($values['merchant_password'] ?? null)
+            && filled($values['business_id'] ?? null);
+
+        if (
+            ($values['driver'] ?? '') === 'fake'
+            && $hasCreds
+            && app()->environment(['production', 'staging'])
+        ) {
+            Log::warning('ALATPay driver forced from fake to http — live credentials present.');
+            $values['driver'] = 'http';
+        }
+
+        $base = rtrim((string) ($values['base_url'] ?? ''), '/');
+
+        if ($base === 'https://api.alatpay.ng' || $base === 'http://api.alatpay.ng') {
+            $values['base_url'] = 'https://apibox.alatpay.ng';
+        }
+
+        return $values;
+    }
+
+    /**
      * @param  array<string, mixed>  $values
      */
     private function forgetAlatpayMerchantSession(array $values): void
@@ -484,6 +517,10 @@ class PlatformSettingsService
     /** @param  array<string, mixed>  $values */
     private function applyGroupToConfig(string $group, array $values): void
     {
+        if ($group === 'alatpay') {
+            $values = $this->normalizeAlatpayRuntime($values);
+        }
+
         if (in_array($group, self::SERVICE_GROUPS, true)) {
             foreach ($values as $key => $value) {
                 config(["services.{$group}.{$key}" => $value]);
