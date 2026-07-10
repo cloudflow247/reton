@@ -29,7 +29,12 @@ class PollStaticAccounts extends Command
             ->whereNotNull('account_number')
             ->orderBy('last_polled_at')
             ->each(function (StaticAccount $account) use ($accounts, &$credited): void {
-                $credited += $accounts->poll($account);
+                try {
+                    $credited += $accounts->poll($account);
+                } catch (\Throwable $e) {
+                    report($e);
+                    $this->error("Failed polling {$account->account_number}: {$e->getMessage()}");
+                }
             });
 
         $this->info("Credited {$credited} static-account payment(s).");

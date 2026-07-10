@@ -272,6 +272,16 @@ class StaticAccountService
                 continue;
             }
 
+            if ($txn->transactionId === '') {
+                Log::warning('Skipping static-account transaction with empty id', [
+                    'static_account_id' => $account->id,
+                    'account_number' => $account->account_number,
+                    'amount_major' => $txn->amountMajor,
+                ]);
+
+                continue;
+            }
+
             $alreadyRecorded = Deposit::where('provider', self::STATIC_PROVIDER)
                 ->where('provider_reference', $txn->transactionId)
                 ->exists();
@@ -288,12 +298,59 @@ class StaticAccountService
                 // (provider, provider_reference) / idempotency_key constraints held.
                 // Treat as already-credited: skip without aborting the loop.
                 continue;
+            } catch (\Throwable $e) {
+                // KYC limits / ledger failures must not abort the rest of the poll
+                // (or the scheduled command for other accounts).
+                report($e);
+                Log::error('Static account credit failed', [
+                    'static_account_id' => $account->id,
+                    'provider_reference' => $txn->transactionId,
+                    'message' => $e->getMessage(),
+                ]);
             }
         }
 
         $account->update(['last_polled_at' => now()]);
 
         return $credited;
+    }
+
+    /**
+     * On-demand poll when a user opens Add Money / Dashboard so VA deposits
+     * credit even if the minute scheduler is delayed or disabled.
+     */
+    public function pollActiveForUser(User $user, int $staleAfterSeconds = 20): int
+    {
+        $account = StaticAccount::query()
+            ->where('user_id', $user->getKey())
+            ->where('status', StaticAccountStatus::Active)
+            ->whereNotNull('account_number')
+            ->latest()
+            ->first();
+
+        if ($account === null) {
+            return 0;
+        }
+
+        if (
+            $account->last_polled_at !== null
+            && $account->last_polled_at->gt(now()->subSeconds($staleAfterSeconds))
+        ) {
+            return 0;
+        }
+
+        try {
+            return $this->poll($account);
+        } catch (\Throwable $e) {
+            report($e);
+            Log::warning('Static account on-demand poll failed', [
+                'static_account_id' => $account->id,
+                'user_id' => $user->getKey(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
     }
 
     private function credit(StaticAccount $account, StaticAccountTransaction $txn): void

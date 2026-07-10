@@ -510,7 +510,11 @@ class HttpAlatpayGateway implements AlatpayGateway
     }
 
     /**
-     * Wallet collection history.
+     * Wallet collection history for one static account.
+     *
+     * ALATPay returns business-wide history (not filtered by account). We page
+     * through results and match account numbers loosely — JSON may emit the
+     * number as an int and drop a leading zero (0450041659 → 450041659).
      *
      * @see https://docs.alatpay.ng/static-wallet — GET .../staticaccount/collectionhistory
      *
@@ -518,36 +522,93 @@ class HttpAlatpayGateway implements AlatpayGateway
      */
     public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
     {
-        $response = $this->sendWithSessionRetry(
-            fn () => $this->client()->get('/alatpay-wallet/api/v1/staticaccount/collectionhistory', [
-                'PageNumber' => $page,
-                'Limit' => $limit,
-                'PageSize' => $limit,
-                'Status' => 1,
-                'BusinessId' => (string) config('services.alatpay.business_id'),
-            ]),
-        );
+        $matched = [];
+        $currentPage = max(1, $page);
+        $maxPages = 20;
 
-        if (! $response->successful()) {
-            throw AlatpayException::requestFailed('fetchStaticAccountTransactions', $response->status());
+        do {
+            $response = $this->sendWithSessionRetry(
+                fn () => $this->client()->get('/alatpay-wallet/api/v1/staticaccount/collectionhistory', [
+                    'PageNumber' => $currentPage,
+                    'Limit' => $limit,
+                    'PageSize' => $limit,
+                    'Status' => 1,
+                    'BusinessId' => (string) config('services.alatpay.business_id'),
+                ]),
+            );
+
+            if (! $response->successful()) {
+                throw AlatpayException::requestFailed('fetchStaticAccountTransactions', $response->status());
+            }
+
+            /** @var array<int, array<string, mixed>> $rows */
+            $rows = (array) $response->json(
+                'staticAccountTransactionResponses',
+                $response->json('data.staticAccountTransactionResponses', []),
+            );
+
+            foreach ($rows as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+
+                $rowAccount = (string) ($row['accountNumber'] ?? '');
+
+                if (! self::staticAccountNumbersMatch($accountNumber, $rowAccount)) {
+                    continue;
+                }
+
+                $transactionId = (string) ($row['staticAccountTransactionId'] ?? '');
+
+                if ($transactionId === '') {
+                    $transactionId = 'sat-'.hash('sha256', implode('|', [
+                        self::normalizeStaticAccountNumber($accountNumber),
+                        (string) ($row['amount'] ?? ''),
+                        (string) ($row['transactionDate'] ?? ''),
+                        (string) ($row['narration'] ?? ''),
+                    ]));
+                }
+
+                $matched[] = new StaticAccountTransaction(
+                    transactionId: $transactionId,
+                    status: (int) ($row['status'] ?? 0),
+                    accountNumber: $accountNumber,
+                    amountMajor: (float) ($row['amount'] ?? 0),
+                    narration: isset($row['narration']) ? (string) $row['narration'] : null,
+                    notificationEmail: isset($row['notificationEmail']) ? (string) $row['notificationEmail'] : null,
+                );
+            }
+
+            /** @var array<string, mixed> $paging */
+            $paging = (array) ($response->json('pagingData') ?? $response->json('data.pagingData') ?? []);
+            $hasNext = (bool) ($paging['hasNext'] ?? false);
+            $currentPage++;
+        } while ($hasNext && $currentPage <= $maxPages);
+
+        return $matched;
+    }
+
+    /**
+     * Compare VA numbers after stripping non-digits and leading zeros so
+     * "0450041659" matches JSON number 450041659.
+     */
+    public static function staticAccountNumbersMatch(string $expected, string $actual): bool
+    {
+        $left = self::normalizeStaticAccountNumber($expected);
+        $right = self::normalizeStaticAccountNumber($actual);
+
+        if ($left === '' || $right === '') {
+            return false;
         }
 
-        $rows = (array) $response->json('staticAccountTransactionResponses', $response->json('data.staticAccountTransactionResponses', []));
+        return $left === $right;
+    }
 
-        $mapped = array_map(static fn (array $row): StaticAccountTransaction => new StaticAccountTransaction(
-            transactionId: (string) ($row['staticAccountTransactionId'] ?? ''),
-            status: (int) ($row['status'] ?? 0),
-            accountNumber: (string) ($row['accountNumber'] ?? $accountNumber),
-            amountMajor: (float) ($row['amount'] ?? 0),
-            narration: isset($row['narration']) ? (string) $row['narration'] : null,
-            notificationEmail: isset($row['notificationEmail']) ? (string) $row['notificationEmail'] : null,
-        ), $rows);
+    private static function normalizeStaticAccountNumber(string $accountNumber): string
+    {
+        $digits = preg_replace('/\D+/', '', $accountNumber) ?? '';
 
-        // Docs list history per business; keep only rows for the polled account.
-        return array_values(array_filter(
-            $mapped,
-            static fn (StaticAccountTransaction $txn): bool => $txn->accountNumber === $accountNumber,
-        ));
+        return ltrim($digits, '0') ?: $digits;
     }
 
     private ?CookieJar $cookieJar = null;

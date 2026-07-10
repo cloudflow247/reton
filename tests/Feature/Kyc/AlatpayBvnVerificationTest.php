@@ -456,6 +456,110 @@ it('polls collectionhistory per official static-wallet docs', function () {
     });
 });
 
+it('matches collection history when alatpay drops a leading zero on account number', function () {
+    config(alatpayLiveConfig([
+        'services.alatpay.business_id' => 'biz-001',
+    ]));
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    fakeAlatpayMerchantSession([
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/collectionhistory*' => Http::response([
+            'staticAccountTransactionResponses' => [
+                [
+                    'staticAccountTransactionId' => 'txn-leading-zero',
+                    'status' => 1,
+                    // JSON number — leading zero stripped vs Reton VA 0450041659
+                    'accountNumber' => 450041659,
+                    'amount' => 150.00,
+                    'narration' => 'IP:MOGAJI GABRIEL ROTIMI-NIP Transfer to CLOUDFLO',
+                    'transactionDate' => '2026-07-10T10:00:00',
+                ],
+            ],
+        ], 200),
+    ], 'biz-001');
+
+    $txns = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class)
+        ->fetchStaticAccountTransactions('0450041659');
+
+    expect($txns)->toHaveCount(1)
+        ->and($txns[0]->transactionId)->toBe('txn-leading-zero')
+        ->and($txns[0]->amountMinor())->toBe(15000);
+});
+
+it('synthesizes a stable transaction id when alatpay omits staticAccountTransactionId', function () {
+    config(alatpayLiveConfig([
+        'services.alatpay.business_id' => 'biz-001',
+    ]));
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    fakeAlatpayMerchantSession([
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/collectionhistory*' => Http::response([
+            'staticAccountTransactionResponses' => [
+                [
+                    'status' => 1,
+                    'accountNumber' => '0450041659',
+                    'amount' => 150.00,
+                    'narration' => 'NIP Transfer',
+                    'transactionDate' => '2026-07-10T10:00:00',
+                ],
+            ],
+        ], 200),
+    ], 'biz-001');
+
+    $gateway = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    $first = $gateway->fetchStaticAccountTransactions('0450041659');
+    $second = $gateway->fetchStaticAccountTransactions('0450041659');
+
+    expect($first)->toHaveCount(1)
+        ->and($first[0]->transactionId)->toStartWith('sat-')
+        ->and($second[0]->transactionId)->toBe($first[0]->transactionId);
+});
+
+it('pages through collection history when hasNext is true', function () {
+    config(alatpayLiveConfig([
+        'services.alatpay.business_id' => 'biz-001',
+    ]));
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    fakeAlatpayMerchantSession([
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/collectionhistory*' => Http::sequence()
+            ->push([
+                'pagingData' => ['hasNext' => true, 'currentPage' => 1],
+                'staticAccountTransactionResponses' => [
+                    [
+                        'staticAccountTransactionId' => 'txn-other',
+                        'status' => 1,
+                        'accountNumber' => '9999999999',
+                        'amount' => 10.00,
+                    ],
+                ],
+            ], 200)
+            ->push([
+                'pagingData' => ['hasNext' => false, 'currentPage' => 2],
+                'staticAccountTransactionResponses' => [
+                    [
+                        'staticAccountTransactionId' => 'txn-page-2',
+                        'status' => 1,
+                        'accountNumber' => '0450041659',
+                        'amount' => 150.00,
+                    ],
+                ],
+            ], 200),
+    ], 'biz-001');
+
+    $txns = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class)
+        ->fetchStaticAccountTransactions('0450041659');
+
+    expect($txns)->toHaveCount(1)
+        ->and($txns[0]->transactionId)->toBe('txn-page-2');
+});
+
 it('recovers existing individual VA when alatpay says bvn already used', function () {
     config(alatpayLiveConfig());
 

@@ -85,3 +85,23 @@ it('does not credit a successful transaction with a zero amount', function () {
     expect($credited)->toBe(0)
         ->and($wallet->fresh()->balance)->toBe(0);
 });
+
+it('credits on demand when the user opens add money', function () {
+    [$account, $wallet] = activeStaticAccount();
+    $this->gateway->markStaticFunded($account->account_number, 150.00, 'txn-ondemand');
+
+    $this->actingAs($account->user)
+        ->get('/add-money')
+        ->assertOk();
+
+    expect($wallet->fresh()->balance)->toBe(15000);
+});
+
+it('skips on-demand poll when the account was polled recently', function () {
+    [$account, $wallet] = activeStaticAccount();
+    $account->update(['last_polled_at' => now()]);
+    $this->gateway->markStaticFunded($account->account_number, 150.00, 'txn-stale-skip');
+
+    expect(app(StaticAccountService::class)->pollActiveForUser($account->user))->toBe(0)
+        ->and($wallet->fresh()->balance)->toBe(0);
+});

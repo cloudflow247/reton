@@ -78,6 +78,13 @@ class AddMoneyController extends Controller
             }
         }
 
+        // VA deposits settle on ALATPay first; credit Reton on visit so users are
+        // not stuck waiting on the minute scheduler (or a missed cron tick).
+        if ($staticAccount !== null && $staticAccount->isActive()) {
+            $this->staticAccounts->pollActiveForUser($user);
+            $staticAccount->refresh();
+        }
+
         return Inertia::render('AddMoney', [
             'pendingDeposit' => $pendingDeposit,
             'openDeposits' => $openDeposits,
