@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   const adminBase = useAdminBase()
 
   const statCards = [
-    { label: 'Users', value: stats.users, Icon: UserIcon },
+    { label: 'Users', value: stats.users, Icon: UserIcon, href: `${adminBase}/users` },
     { label: 'Wallets', value: stats.wallets, Icon: ShieldIcon },
     { label: 'Deposits today', value: stats.deposits_today, Icon: BoltIcon },
     { label: 'Open callbacks', value: stats.open_callbacks, Icon: ClockIcon },
@@ -82,17 +82,31 @@ export default function AdminDashboard() {
         )}
 
         <motion.div variants={list} initial="hidden" animate="show" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {statCards.map(({ label, value, Icon }) => (
+          {statCards.map(({ label, value, Icon, href }) => (
             <motion.div key={label} variants={item}>
-              <Card className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint/10 text-mint">
-                  <Icon size={22} />
-                </div>
-                <div>
-                  <div className="text-2xl font-num font-bold">{value.toLocaleString()}</div>
-                  <div className="text-xs text-muted">{label}</div>
-                </div>
-              </Card>
+              {href ? (
+                <Link href={href} className="block transition hover:opacity-90">
+                  <Card className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint/10 text-mint">
+                      <Icon size={22} />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-num font-bold">{value.toLocaleString()}</div>
+                      <div className="text-xs text-muted">{label}</div>
+                    </div>
+                  </Card>
+                </Link>
+              ) : (
+                <Card className="flex items-center gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint/10 text-mint">
+                    <Icon size={22} />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-num font-bold">{value.toLocaleString()}</div>
+                    <div className="text-xs text-muted">{label}</div>
+                  </div>
+                </Card>
+              )}
             </motion.div>
           ))}
         </motion.div>

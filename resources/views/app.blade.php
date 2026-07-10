@@ -13,11 +13,13 @@
             $keywords = (string) ($seo['keywords'] ?? '');
             $robots = (string) ($seo['robots'] ?? 'index,follow');
             $locale = (string) ($seo['locale'] ?? 'en_NG');
-            $ogImagePath = (string) ($seo['og_image'] ?? '/og-banner.svg');
-            $ogImage = str_starts_with($ogImagePath, 'http') ? $ogImagePath : url($ogImagePath);
+            $publicBase = rtrim((string) (config('reton.links.public_base') ?: config('app.url')), '/');
+            $ogImagePath = (string) ($seo['og_image'] ?? '/og-banner.png');
+            $ogImage = str_starts_with($ogImagePath, 'http') ? $ogImagePath : $publicBase.$ogImagePath;
             $canonical = url()->current();
             $twitterSite = (string) ($seo['twitter_site'] ?? '');
             $googleVerification = (string) ($seo['google_site_verification'] ?? '');
+            $ogMime = str_ends_with(strtolower($ogImagePath), '.png') ? 'image/png' : (str_ends_with(strtolower($ogImagePath), '.jpg') || str_ends_with(strtolower($ogImagePath), '.jpeg') ? 'image/jpeg' : 'image/svg+xml');
         @endphp
 
         <title inertia>{{ $title }}</title>
@@ -39,7 +41,7 @@
             <meta name="google-site-verification" content="{{ $googleVerification }}">
         @endif
 
-        {{-- Open Graph --}}
+        {{-- Open Graph (PNG/JPG required for WhatsApp, Facebook, LinkedIn) --}}
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="{{ $siteName }}">
         <meta property="og:title" content="{{ $title }}">
@@ -47,6 +49,8 @@
         <meta property="og:url" content="{{ $canonical }}">
         <meta property="og:locale" content="{{ $locale }}">
         <meta property="og:image" content="{{ $ogImage }}">
+        <meta property="og:image:secure_url" content="{{ $ogImage }}">
+        <meta property="og:image:type" content="{{ $ogMime }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="{{ $siteName }} — {{ $description }}">
@@ -66,16 +70,18 @@
                 '@context' => 'https://schema.org',
                 '@type' => 'WebApplication',
                 'name' => $siteName,
-                'url' => config('reton.links.public_base') ?: config('app.url'),
+                'url' => $publicBase ?: config('app.url'),
                 'description' => $description,
                 'applicationCategory' => 'FinanceApplication',
                 'operatingSystem' => 'Web',
+                'image' => $ogImage,
                 'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'NGN'],
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
 
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
         <link rel="icon" type="image/svg+xml" href="/shield.svg">
-        <link rel="apple-touch-icon" href="/shield.svg">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
         <link rel="manifest" href="/site.webmanifest">
 
         @routes

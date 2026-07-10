@@ -68,7 +68,9 @@ use App\Domain\Transfers\Services\TransferService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Policies\WalletPolicy;
 use App\Domain\Wallet\Services\WalletService;
+use App\Models\User;
 use App\Observers\TransferMarketplaceObserver;
+use App\Policies\UserPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -163,6 +165,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Wallet lives in a domain namespace, so register its policy explicitly
         // rather than relying on convention-based discovery.
+        Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Wallet::class, WalletPolicy::class);
         Gate::policy(Transfer::class, TransferPolicy::class);
         Gate::policy(DigitalListing::class, DigitalListingPolicy::class);

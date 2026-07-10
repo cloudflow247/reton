@@ -88,7 +88,7 @@ it('stores seo settings and exposes them in the page shell', function () {
         'title' => 'Reton Pay — trust-first wallet',
         'description' => 'Callback protection for African payments.',
         'keywords' => 'fintech, nigeria, wallet',
-        'og_image' => '/og-banner.svg',
+        'og_image' => '/og-banner.png',
         'twitter_site' => '@retonpay',
         'robots' => 'index,follow',
         'google_site_verification' => '',
@@ -101,7 +101,9 @@ it('stores seo settings and exposes them in the page shell', function () {
     $this->actingAsGuest()->get('/about')
         ->assertOk()
         ->assertSee('Callback protection for African payments.', false)
-        ->assertSee('og-banner.svg', false);
+        ->assertSee('og-banner.png', false)
+        ->assertSee('og:image:secure_url', false)
+        ->assertSee('image/png', false);
 });
 
 it('applies security headers on web responses', function () {
@@ -119,6 +121,15 @@ it('serves robots.txt from seo settings', function () {
         ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
         ->assertSee('User-agent: *')
         ->assertSee('Sitemap:');
+});
+
+it('exposes default png open graph image for social previews', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('/og-banner.png', false)
+        ->assertSee('og:image:secure_url', false)
+        ->assertSee('image/png', false)
+        ->assertSee('apple-touch-icon.png', false);
 });
 
 it('forbids non-admins from site settings', function () {

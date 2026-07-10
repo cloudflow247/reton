@@ -339,7 +339,7 @@ return [
         'title' => env('RETON_SEO_TITLE', 'Reton — payments you can take back'),
         'description' => env('RETON_SEO_DESCRIPTION', 'Reton is Africa\'s trust-first wallet with Callback Protection, wrong-transfer recovery, and real-time fraud checks — settled on ALAT by Wema.'),
         'keywords' => env('RETON_SEO_KEYWORDS', 'fintech, nigeria, wallet, callback protection, wrong transfer recovery, ALATPay, trust-first payments'),
-        'og_image' => env('RETON_SEO_OG_IMAGE', '/og-banner.svg'),
+        'og_image' => env('RETON_SEO_OG_IMAGE', '/og-banner.png'),
         'twitter_site' => env('RETON_SEO_TWITTER', '@retonpay'),
         'robots' => env('RETON_SEO_ROBOTS', 'index,follow'),
         'google_site_verification' => env('RETON_SEO_GOOGLE_VERIFICATION', ''),

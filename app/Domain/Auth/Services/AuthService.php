@@ -10,6 +10,7 @@ use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
@@ -51,6 +52,12 @@ class AuthService
 
         if ($user === null || ! Hash::check($password, (string) $user->password)) {
             throw InvalidCredentialsException::make();
+        }
+
+        if (! $user->isActive()) {
+            throw ValidationException::withMessages([
+                'email' => ['This account has been suspended. Contact support for help.'],
+            ]);
         }
 
         $user->forceFill(['last_login_at' => now()])->save();

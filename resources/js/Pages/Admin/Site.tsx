@@ -349,7 +349,7 @@ export default function Site() {
                   label="Open Graph image path"
                   value={String(form.data.og_image ?? '')}
                   onChange={(e) => form.setData('og_image', e.target.value)}
-                  hint="Relative path (e.g. /og-banner.svg) or full URL. Recommended 1200×630."
+                  hint="PNG or JPG at 1200×630 (e.g. /og-banner.png) or full HTTPS URL. Required for WhatsApp & social previews."
                 />
                 {ogPreview && (
                   <div className="overflow-hidden rounded-xl border border-line">
