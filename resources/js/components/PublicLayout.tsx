@@ -90,6 +90,9 @@ export function PublicLayout({ children }: { children: ReactNode }) {
               <p className="max-w-xs text-sm leading-relaxed text-muted">
                 Trust-first digital banking for Africa — payments you can take back.
               </p>
+              <p className="max-w-xs text-sm leading-relaxed text-muted">
+                7, Greenland Estate, Ikorodu, Lagos State, Nigeria
+              </p>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-mint/10 px-3 py-1 text-xs font-medium text-mint">
                 <LockIcon size={13} /> Bank-grade security
               </span>
@@ -99,7 +102,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <FooterCol title="Legal" links={[['Terms', '/'], ['Privacy', '/'], ['Compliance', '/security']]} />
           </div>
           <div className="mt-12 flex flex-col gap-2 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-            <span>© 2026 Reton Pte Ltd · retonpay.com</span>
+            <span>© 2026 Reton · 7, Greenland Estate, Ikorodu, Lagos State, Nigeria</span>
             <span>Made for a safer Africa.</span>
           </div>
         </div>

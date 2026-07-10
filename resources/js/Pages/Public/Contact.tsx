@@ -4,11 +4,14 @@ import { Head } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { PublicLayout } from '@/components/PublicLayout'
 import { Button, Field } from '@/components/ui'
-import { ChatIcon, CheckIcon, MailIcon, PhoneIcon } from '@/components/icons'
+import { ChatIcon, CheckIcon, MailIcon, MapPinIcon, PhoneIcon } from '@/components/icons'
+
+const OFFICE_ADDRESS = '7, Greenland Estate, Ikorodu, Lagos State, Nigeria'
 
 const channels = [
   { Icon: MailIcon, label: 'Email us', value: 'support@retonpay.com', href: 'mailto:support@retonpay.com' },
   { Icon: PhoneIcon, label: 'Call us', value: '+234 700 000 0000', href: 'tel:+2347000000000' },
+  { Icon: MapPinIcon, label: 'Visit us', value: OFFICE_ADDRESS, href: null },
   { Icon: ChatIcon, label: 'In-app chat', value: 'Mon–Sat, 8am–8pm WAT', href: null },
 ]
 
@@ -58,7 +61,7 @@ export default function Contact() {
                   </span>
                   <div>
                     <div className="font-display text-sm font-semibold">{label}</div>
-                    <div className="text-sm text-muted">{value}</div>
+                    <div className={`text-sm text-muted ${label === 'Visit us' ? 'leading-relaxed' : ''}`}>{value}</div>
                   </div>
                 </div>
               )
