@@ -1,9 +1,9 @@
 <laravel-boost-guidelines>
 === .ai/core rules ===
 
-## Reton — Trust-First FinTech
+## Reton — trust-first fintech
 
-Reton is Africa's trust-first payment platform (ALATPay Buildathon MVP). Real money flows through this system — never generate demo or placeholder payment code.
+Reton is Africa’s trust-first payment platform (ALATPay Buildathon MVP). Real money can flow through this system — never ship demo or placeholder payment code for live rails.
 
 ### Architecture (required)
 
@@ -25,6 +25,7 @@ Reton is Africa's trust-first payment platform (ALATPay Buildathon MVP). Real mo
 - Laravel 12, PHP 8.4, PostgreSQL, Redis, Horizon, Sanctum, Reverb.
 - Frontend: Inertia v2, React 19, TypeScript, Tailwind v4, shadcn-style UI in `resources/js/`.
 - Admin integration credentials and site settings are configured via the admin dashboard (`PlatformSettingsService`); env vars are fallbacks until saved.
+- Default BVN provider for funding is ALATPay OTP (`services.kyc.bvn_provider`); Dojah remains available for NIN / alternate BVN.
 
 ### Security (non-negotiable)
 

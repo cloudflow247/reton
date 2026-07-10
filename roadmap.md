@@ -1,32 +1,32 @@
-# Reton Product & Compliance Roadmap
+# Reton product & compliance roadmap
 
-**Africa's Trust-First Payment Platform**  
-Last updated: July 2026 · Status: ALATPay Buildathon MVP
+**Africa’s trust-first payment platform**  
+Last updated: July 2026 · Status: ALATPay Buildathon MVP → production hardening
 
 ---
 
 ## Executive summary
 
-Reton is not another generic wallet clone. The product thesis is **trust at the moment money moves**: Callback Protection, wrong-transfer recovery, fraud signals, merchant verification, and a visible transaction timeline on every payment.
+Reton is not another generic wallet. The product thesis is **trust at the moment money moves**: Callback Protection, wrong-transfer recovery, fraud signals, merchant verification, and a visible timeline on every payment.
 
-This roadmap sequences work from **buildathon demo** → **licensed soft launch** → **production compliance** → **scale**, aligned with Nigeria's regulatory reality (CBN KYC tiers, NFIU AML expectations, licensed payment rails via ALATPay/Wema).
+This roadmap sequences work from **buildathon demo** → **licensed soft launch** → **compliance-ready operations** → **scale**, aligned with Nigeria’s regulatory reality (CBN KYC tiers, NFIU AML expectations, licensed rails via ALATPay / Wema).
 
 | Horizon | Goal | Primary audience |
 |---------|------|------------------|
 | **Now (Phase 0)** | Win the buildathon with a polished live demo | Judges, investors |
 | **0–3 months (Phase 1)** | Real users on Tier 1, licensed settlement | Early adopters, ALATPay partner |
-| **3–9 months (Phase 2)** | Compliance-ready operations | Regulators, bank partner, enterprise merchants |
+| **3–9 months (Phase 2)** | Compliance-ready operations | Regulators, bank partner, merchants |
 | **9–18 months (Phase 3)** | Category leader in trust-layer payments | Consumers, SMEs, API partners |
 
 ---
 
 ## Strategic principles
 
-1. **Licensed rails first** — Reton orchestrates trust; settlement and primary AML obligations sit with ALATPay/Wema until Reton holds its own license.
-2. **CBN-style KYC by default** — Tier 1 at ₦50k single / ₦200k daily inflow / ₦300k balance; higher limits only after BVN/NIN verification (Dojah).
-3. **Never claim full AML compliance** without STR workflow, sanctions screening, and an MLRO — position as **AML-ready foundation**.
-4. **Demo ≠ production** — fake drivers, demo accounts, and admin-tunable limits are acceptable for demo; production requires live KYB on every integration.
-5. **Ship trust features judges can see** — Callback Protection timeline, recovery cases, fraud alerts, and KYC tier badges beat feature breadth.
+1. **Licensed rails first** — Reton orchestrates trust; settlement and primary AML obligations sit with ALATPay/Wema until Reton holds its own licence.
+2. **CBN-style KYC by default** — Tier 1 at ₦50k single / ₦200k daily inflow / ₦300k balance; higher limits only after BVN (ALATPay OTP) and NIN (Dojah) verification.
+3. **Never claim full AML compliance** without STR workflow, sanctions screening, and an MLRO — position as an **AML-ready foundation**.
+4. **Demo ≠ production** — fake drivers and demo accounts are fine for demos; production needs live KYB on every integration.
+5. **Ship trust features people can see** — Callback Protection timeline, recovery cases, fraud alerts, and KYC badges beat feature breadth.
 
 ---
 
@@ -36,25 +36,26 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Authentication & PIN | ✅ | Sanctum, transaction PIN, lockout |
+| Authentication & PIN | ✅ | Sanctum, 4-digit transaction PIN, lockout |
 | Double-entry wallet | ✅ | Fund, transfer, beneficiaries, statements |
-| ALATPay integration | ✅ | Fake + HTTP gateway, webhooks, deposits |
+| ALATPay integration | ✅ | Fake + HTTP gateway, webhooks, deposits, BVN OTP |
 | **Callback Protection** | ✅ | Protected transfers, hold/release, timeline |
-| Wrong-transfer recovery | ✅ | Eligibility rules, hold, admin escalation path |
+| Wrong-transfer recovery | ✅ | Eligibility rules, hold, admin escalation |
 | Fraud engine | ✅ | Rule-based scoring, velocity, holds, alerts |
 | Transaction timeline | ✅ | Every money movement logged |
-| KYC tiers (1–3) | ✅ | Limits enforced; Dojah BVN/NIN wired |
+| KYC tiers (1–3) | ✅ | Limits enforced; BVN via ALATPay; NIN via Dojah |
 | Bills (Interswitch / Remita) | ✅ | Gateway abstraction, reconcile paths |
 | Virtual cards (Bridgecard) | ✅ | Issue, fund, freeze; fake + HTTP |
 | Digital marketplace | ✅ | Escrow, disputes, auto-refund scheduler |
 | Physical marketplace | ✅ | Giglogistics integration, hub verification |
 | AI support chat | ✅ | Rule-based assistant + ticket escalation |
-| Admin control panel | ✅ | Encrypted settings, integrations, platform rules, audit log |
+| Admin control panel | ✅ | Encrypted settings, integrations, audit log |
 
 ### Admin & configuration ✅
 
-- **Integrations** — ALATPay, Interswitch, Remita, Dojah, Bridgecard, Giglogistics (encrypted DB, masked secrets)
-- **Platform** — KYC limits, fraud thresholds, callback/recovery windows, marketplace timing, FX/cards, Horizon access
+- **Integrations** — ALATPay, Interswitch, Remita, Dojah, Bridgecard, Giglogistics, Termii
+- **Platform** — KYC limits, fraud thresholds, callback/recovery windows, marketplace timing
+- **Site** — email, SEO, security headers, rate limits
 - **App** — Demo mode, admin URL, public URL, mobile deep-link identifiers
 
 ### Intentionally deferred ⏸
@@ -65,7 +66,6 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 | Native iOS/Android apps | Deep links scaffolded; apps Phase 3 |
 | Biller payment code admin UI | Env/config for now; low demo impact |
 | Granular admin roles | Single `is_admin` sufficient for MVP |
-| Monnify / alternate KYC | Dojah already integrated |
 
 ---
 
@@ -125,10 +125,11 @@ GIGLOGISTICS_DRIVER=fake
 
 | Task | Priority | Notes |
 |------|----------|-------|
-| Dojah production KYB (`DOJAH_DRIVER=http`, live keys in admin) | P0 | Required for real BVN/NIN |
+| ALATPay production keys for BVN OTP (`ALATPAY_DRIVER=http`) | P0 | Default BVN path for funding |
+| Dojah production KYB for NIN / optional BVN | P1 | Tier 3 and alternate provider |
 | Tier 1 live on signup (phone/email) — **keep CBN ₦50k limits** | P0 | Already configured |
-| Tier 2 BVN flow in Profile — production tested | P0 | |
-| Tier 3 NIN + address — production tested | P1 | |
+| Tier 2 BVN flow in Profile / Add Money — production tested | P0 | ALATPay OTP |
+| Tier 3 NIN + address — production tested | P1 | Dojah |
 | KYC consent copy reviewed by legal | P1 | NDPR alignment |
 
 ### 1.3 Integrations (production)

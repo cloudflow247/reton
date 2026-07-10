@@ -1,58 +1,65 @@
 # Deploying Reton to Laravel Cloud
 
-Reton is a Laravel 12 + Inertia (React 18 / Vite) app. It needs Postgres,
-Redis, the Laravel scheduler, and a Vite asset build. There is **no SSR** and
-**no queue worker is required** (nothing dispatches `ShouldQueue` jobs yet —
-the scheduler runs commands synchronously).
+This guide walks through a production-ready deploy of Reton on [Laravel Cloud](https://cloud.laravel.com/). Reton is a Laravel 12 + Inertia (React 19 / Vite) app. You will need PostgreSQL, Redis, the scheduler, a Vite asset build, and — for live payments — ALATPay credentials.
+
+---
 
 ## 1. Provision resources
 
-In the Laravel Cloud environment, attach:
+In your Laravel Cloud environment, attach:
 
-| Resource   | Why                                                            |
-|------------|---------------------------------------------------------------|
-| PostgreSQL | Primary database (`DB_CONNECTION=pgsql`).                      |
-| Redis      | Cache + scheduler `withoutOverlapping` locks (`CACHE_STORE=redis`). |
+| Resource | Why |
+|----------|-----|
+| **PostgreSQL** | Primary database (`DB_CONNECTION=pgsql`) |
+| **Redis** | Cache, queues, and scheduler locks (`CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`) |
 
-Laravel Cloud injects the `DB_*` and `REDIS_*` connection variables for
-attached resources automatically — do **not** set them by hand.
+Laravel Cloud injects `DB_*` and `REDIS_*` for attached resources. Do not set those by hand unless you know you are overriding them on purpose.
+
+Enable a **queue worker** (Horizon or `queue:work`) so webhooks, notifications, and async side effects can run. Enable the **scheduler** so funding polls and marketplace expiry commands keep running.
+
+---
 
 ## 2. Environment variables
 
-Set these in the environment's **Variables** tab. Start from `.env.example`;
-the production-specific values are:
+Set these in the environment **Variables** tab. Start from `.env.example`. Production essentials:
 
 ```ini
 APP_NAME=Reton
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://<your-domain>
-APP_KEY=                      # use "Generate" in the dashboard, or `php artisan key:generate --show`
+APP_KEY=                      # Generate in the dashboard, or: php artisan key:generate --show
 
-SESSION_DRIVER=database       # sessions table ships in the default users migration
+SESSION_DRIVER=database
 QUEUE_CONNECTION=redis
 CACHE_STORE=redis
 
-# ── ALATPay (Wema) — required for live payments ──
+# ── ALATPay (Wema) — required for live payments & BVN OTP ──
 ALATPAY_DRIVER=http
 ALATPAY_BASE_URL=https://api.alatpay.ng
 ALATPAY_API_KEY=<secret>
 ALATPAY_BUSINESS_ID=<secret>
 ALATPAY_BUSINESS_BVN=<secret>
 ALATPAY_WEBHOOK_SECRET=<secret>
+ALATPAY_TIMEOUT=12
+
+# ── KYC ──
+KYC_BVN_PROVIDER=alatpay      # alatpay (default) or dojah
 
 # ── Reton ──
 RETON_DEFAULT_CURRENCY=NGN
-RETON_DEMO_MODE=false         # keep OFF in production (hides demo logins)
+RETON_DEMO_MODE=false         # keep OFF on public production
 ```
 
-Mail defaults to the `log` driver; point it at a real transport before sending
-user mail.
+You can also store ALATPay and other integration secrets in **Admin → Integrations** after the first deploy. Env values remain fallbacks until admin settings are saved.
 
-## 3. Build / deploy command
+Configure real mail (SMTP or a provider) before sending verification and support email. The default `log` mailer is fine only for staging.
 
-Laravel Cloud auto-detects `composer install` and the Vite build
-(`npm ci && npm run build`) from `package.json`. Set the **Deploy Command** to:
+---
+
+## 3. Deploy command
+
+Laravel Cloud typically runs `composer install` and the Vite build (`npm ci && npm run build`) from `package.json`. Set the **Deploy Command** to:
 
 ```bash
 php artisan migrate --force
@@ -61,142 +68,89 @@ php artisan route:cache
 php artisan event:cache
 ```
 
-`migrate --force` is required because deploys run non-interactively. Asset
-output (`public/build`) is git-ignored and produced fresh on every deploy.
+`migrate --force` is required because deploys are non-interactive. Compiled assets in `public/build` are git-ignored and rebuilt on every deploy.
+
+---
 
 ## 4. Scheduler
 
-Enable the **Scheduler** toggle on the app. It runs `schedule:run` each minute,
-which drives `static-accounts:poll` — the primary funding path for AlatPay
-static accounts (it polls every minute; crediting is idempotent and serialised
-with `withoutOverlapping`). Without the scheduler, inbound deposits are not
-credited.
+Turn on the **Scheduler** toggle. It runs `schedule:run` every minute and drives jobs such as:
+
+- `static-accounts:poll` — credits inbound ALATPay static-account funding (idempotent, overlap-safe)
+- Marketplace and protection expiry commands
+
+Without the scheduler, deposits and time-based trust flows will stall.
+
+---
 
 ## 5. Health check
 
-The app exposes `/up` (configured in `bootstrap/app.php`). Point the Cloud
-health check at it.
+Point the Cloud health check at `/up` (registered in `bootstrap/app.php`).
 
-## 6. Enabling demo mode (staging only)
+---
 
-Demo mode surfaces one-click demo logins on the sign-in screen so reviewers can
-try the app instantly. It is gated on **both** an env flag and seeded accounts —
-migrations alone do not create them. **Never enable on a public/production
-environment**: the demo accounts share publicly-known credentials.
+## 6. Demo mode (staging only)
 
-1. Set the variable (saving triggers a redeploy so `config:cache` picks it up):
+Demo mode shows one-click logins so reviewers can try the product quickly. It needs **both** the env flag and seeded accounts. **Never enable this on a public production site** — demo credentials are well known.
+
+1. Set:
 
    ```ini
    RETON_DEMO_MODE=true
-   # optional — these are the defaults:
    RETON_DEMO_PASSWORD=demo1234
    RETON_DEMO_PIN=1234
    ```
 
-2. Seed the demo accounts once, via the environment's Commands runner:
+2. Seed once from the Commands runner:
 
    ```bash
    php artisan db:seed --class=DemoSeeder --force
    ```
 
-   Idempotent (skips existing accounts); only needed once per database.
+3. Sign-in shows demo buttons. Password `demo1234`, PIN `1234`.
 
-3. The sign-in page now shows the demo buttons. Credentials: password
-   `demo1234`, transaction PIN `1234`. Ada Obi is funded ₦750,000, Bola Ade
-   ₦120,000.
+To disable, set `RETON_DEMO_MODE=false` and redeploy. Seeded users remain in the database but are no longer offered on the login screen.
 
-To disable, set `RETON_DEMO_MODE=false` and redeploy — the buttons disappear;
-the seeded accounts remain in the database but are no longer surfaced.
+---
 
 ## 7. Troubleshooting
 
-### Build fails downloading dependencies (`composer install`, HTTP 400/403)
+### Composer install fails with HTTP 400/403 from GitHub
 
-Symptom — the build aborts partway through `composer install` with errors like:
+Often rate-limiting on unauthenticated dist downloads. Redeploy first. If it keeps happening, add a GitHub PAT (classic, no scopes required for public packages):
 
-```
-Failed to download laravel/serializable-closure from dist: The
-"https://codeload.github.com/..." file could not be downloaded (HTTP/2 400)
-Source fallback is disabled. Not trying alternative sources.
+```ini
+COMPOSER_AUTH={"github-oauth":{"github.com":"ghp_yourtokenhere"}}
 ```
 
-This is **not** a code/lockfile problem (the same `composer.lock` installs fine
-locally). It's GitHub rate-limiting **unauthenticated** dist downloads from the
-build runner — intermittent, so the build often reaches 70–90% first.
+### 500 on first database query (SQLite fallback)
 
-1. **Redeploy.** These 400s are frequently transient; a retry often passes.
-2. **If it recurs, authenticate Composer** (durable fix). Create a GitHub
-   Personal Access Token (classic — **no scopes needed** for public packages;
-   the token alone lifts the anonymous rate limit), then add to the
-   environment's Variables:
+If Postgres is not attached, Laravel may fall back to SQLite and look for a missing `database.sqlite` file. Attach PostgreSQL, remove any leftover `DB_CONNECTION=sqlite`, redeploy, then `php artisan migrate --force`.
 
-   ```ini
-   COMPOSER_AUTH={"github-oauth":{"github.com":"ghp_yourtokenhere"}}
-   ```
+### “Something went wrong” or blank dashboard after login
 
-   (single-line JSON). Redeploy — Composer now authenticates every codeload
-   request and stops hitting the throttle.
+1. Hard-refresh after a deploy so the browser picks up the new Vite manifest.
+2. Check the browser console for React errors.
+3. Confirm Postgres is healthy and migrations have run.
+4. Reverb is optional: without `VITE_REVERB_*` at build time, live trust reloads are off, but Dashboard and Protection should still render.
 
-### 500 on the first DB query — Postgres not attached (SQLite fallback)
+### BVN OTP not arriving
 
-Symptom — pages that don't query the database render fine, but the first real
-query (e.g. signing in) 500s with:
+- ALATPay driver must be `http` with a valid API key and Business ID (env or Admin → Integrations).
+- ALATPay sends the BVN OTP SMS — Termii is not involved in that path.
+- If the driver is `fake`, no SMS is sent; use the demo code shown in the UI (`123456`).
 
-```
-Database file at path [/var/www/html/database/database.sqlite] does not exist.
-(Connection: sqlite, ...)
-```
-
-`config/database.php` defaults to `env('DB_CONNECTION', 'sqlite')`. With **no
-Postgres attached** the connection falls back to SQLite, pointing at a database
-file that does not exist on the Cloud runtime — so every query fails.
-
-1. Attach a **PostgreSQL** database to the environment. Laravel Cloud then
-   injects `DB_CONNECTION=pgsql` + `DB_HOST/PORT/DATABASE/USERNAME/PASSWORD`.
-2. In Variables, ensure there is **no leftover `DB_CONNECTION=sqlite`** (or a
-   `DB_DATABASE` pointing at a `.sqlite` file) overriding the injected values.
-3. Redeploy (so `config:cache` picks up the new vars), then run
-   `php artisan migrate --force` (and `db:seed --class=DemoSeeder --force` if
-   using demo mode) from the Commands tab.
-
-### Blank dashboard after login (Inertia shell loads, page is empty)
-
-Symptom — login succeeds and the URL is `/dashboard`, but the content area is
-empty (no nav, no balance card). The browser tab title may still update.
-
-1. **Open DevTools → Console** on the deployed site. A JavaScript error on the
-   Dashboard chunk (often from Reverb/Echo) prevents React from mounting.
-2. **Reverb is optional for v1 Cloud deploys.** The frontend only connects when
-   `VITE_REVERB_APP_KEY` was present at **build time**. If you have not
-   provisioned Reverb yet, redeploy after pulling the latest code — Dashboard
-   and Protection work without WebSockets; live trust reloads are simply disabled.
-3. **When you add Reverb later**, set build-time variables on Laravel Cloud
-   (same values as runtime):
-
-   ```ini
-   BROADCAST_CONNECTION=reverb
-   REVERB_APP_ID=reton
-   REVERB_APP_KEY=<generated>
-   REVERB_APP_SECRET=<generated>
-   REVERB_HOST=<your-reverb-host>
-   REVERB_PORT=443
-   REVERB_SCHEME=https
-   VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
-   VITE_REVERB_HOST="${REVERB_HOST}"
-   VITE_REVERB_PORT="${REVERB_PORT}"
-   VITE_REVERB_SCHEME="${REVERB_SCHEME}"
-   ```
-
-4. Confirm **Postgres is attached** (see above) — a 500 on the first dashboard
-   query can also present as a blank Inertia page if the error body is empty.
+---
 
 ## 8. First-deploy checklist
 
 - [ ] Postgres + Redis attached
-- [ ] `APP_KEY` generated, `APP_ENV=production`, `APP_DEBUG=false`
+- [ ] Queue worker / Horizon running
+- [ ] `APP_KEY` set, `APP_ENV=production`, `APP_DEBUG=false`
 - [ ] `RETON_DEMO_MODE=false`
-- [ ] ALATPay credentials set
-- [ ] Deploy command includes `migrate --force` + cache warmers
+- [ ] ALATPay live credentials configured
+- [ ] Deploy command includes `migrate --force` and cache warmers
 - [ ] Scheduler enabled
 - [ ] Health check → `/up`
-- [ ] Custom domain + TLS, `APP_URL` matches
+- [ ] Custom domain + TLS; `APP_URL` matches the public URL
+- [ ] Mail transport configured for verification emails

@@ -1,32 +1,24 @@
-# Reton V1.0 — Build Roadmap
+> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../README.md), [roadmap](../../roadmap.md), and [deploy guide](../DEPLOY.md).
 
-**Date:** 2026-06-22
-**Status:** Approved (shape)
-**Audience:** Small team (2–4 engineers) + compliance
-**Source spec:** `CLAUDE.md` (Reton Pte Ltd master prompt)
+# Reton V1.0 — build roadmap
+
+**Date:** 22 June 2026  
+**Status:** Historical (shape approved)  
+**Audience:** Small team (2–4 engineers) + compliance  
 
 ---
 
 ## 1. Purpose & framing
 
-`CLAUDE.md` describes a full payments platform: ~20 business domains, a Laravel 12
-modular monolith, multiple Golang gRPC microservices, three React apps, and a full
-observability stack. That is a multi-quarter program of work, not a single build.
+The original master brief described a full payments platform across many domains. That is a multi-quarter programme — not a single sprint.
 
-This document sequences that work for a **2–4 person team** so that the platform's
-only real differentiator — **trust mechanics (Callback protection + wrong-transfer
-Recovery)** — is proven as early as possible, without architectural dead-ends.
+This document sequences work for a small team so the real differentiator — **trust mechanics (Callback Protection + wrong-transfer recovery)** — is proven early, without painting the architecture into a corner.
 
 ### The core thesis
 
-Reton competes with Kuda, OPay, FairMoney, and Moniepoint. Bills, airtime, crypto,
-and betting are commodity features those incumbents already do well. Reton's wedge is
-**trust**: protected transfers, callbacks, and recovery. Therefore the build order is
-derived from one question: *what does the moat depend on?*
+Bills, airtime, and betting are commodity features. Reton’s wedge is **trust**: protected transfers, callbacks, and recovery. Build order follows one question: *what does the moat depend on?*
 
-The answer is an **immutable, double-entry ledger**. Every trust feature is ultimately
-a controlled manipulation of held funds. If the ledger is wrong, nothing above it can
-be trusted. So the ledger is the spine, and everything sequences off it.
+The answer is an **immutable, double-entry ledger**. Every trust feature is a controlled manipulation of held funds. If the ledger is wrong, nothing above it can be trusted. The ledger is the spine; everything else sequences from it.
 
 ---
 

@@ -1,6 +1,6 @@
 # Reton release brief — 30 June 2026
 
-Team walkthrough of what shipped today: new pages, money flows, and how pieces connect.
+A team walkthrough of what shipped that day: new pages, money flows, and how the pieces connect. Use this when onboarding someone to the product or rehearsing a demo.
 
 **Screenshots:** [`screenshots/`](screenshots/) (9 captures, 1280×900 @2x)  
 **Regenerate:** with the app running (`php artisan serve`), run `node scripts/capture-release-screenshots.mjs`

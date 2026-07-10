@@ -1,3 +1,5 @@
+> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../README.md), [roadmap](../../roadmap.md), and [deploy guide](../DEPLOY.md).
+
 # Request Money (AlatPay Payment Link) — Design Spec
 
 **Date:** 2026-06-23

@@ -1,3 +1,5 @@
+> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../README.md), [roadmap](../../roadmap.md), and [deploy guide](../DEPLOY.md).
+
 # Reton M0 — Foundation (Design Spec)
 
 **Date:** 2026-06-22

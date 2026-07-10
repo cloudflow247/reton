@@ -1,35 +1,42 @@
 # Changelog
 
-All notable changes to Reton are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to Reton are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
 ### Added
-- **Smooth onboarding** — paginated login/signup with Reton logo, email verification on signup, HTML email templates (verify + support), and a 3-step onboarding wizard (welcome → PIN → fund).
-- **Admin site settings** — email notifications (`support@retonpay.com` default), SEO / Open Graph / JSON-LD, security headers (HSTS, CSP, frame options), auth rate limits, and robots/sitemap — all editable from admin → Site; SMTP secrets encrypted at rest.
-- **Admin platform settings** — all `RETON_*` business rules and integration credentials (Dojah, Remita, KYC tiers, fraud, callback/recovery windows, marketplace timing, FX/cards, Horizon access) editable from the admin dashboard; encrypted at rest with masked secrets, audit logs, and env fallbacks until saved.
-- **Dojah KYC verification** — BVN and NIN identity checks via `KycVerificationGateway` (fake sandbox + HTTP production), name/DOB matching, consent requirement, rate limiting, and audit logs without storing raw identifiers.
-- **AI Customer Support** — in-app chat at `/support` with rule-based assistant: transaction lookup by reference (TRF-, DEP-, CBK-, RCV-, BILL-, PO-), callback protection explanations, wrong-transfer recovery guidance, live trust score, and human escalation via support tickets (`TKT-…`). Open tickets surface on the admin dashboard.
-- **Platform admin** — secret admin path, encrypted integration settings, audit logs, promote/revoke admins, and control-center dashboard (ALATPay, Interswitch, Giglogistics, Dojah health).
-- **Virtual cards** — Bridgecard/Interswitch gateway abstraction, issue/fund/freeze flows, and Cards UI.
-- **Physical marketplace** — shipments, hub verification, item codes, and Giglogistics webhook sync.
-- **Withdraw & receive** — dedicated web flows for bank cash-out and inbound funding.
-- **Dashboard UI refresh** — shadcn-style cards, responsive 8/4 desktop grid, mobile-first balance hero, KYC tier badge, compliance posture strip, and trust sidebar.
-- **Explanatory desktop nav** — labeled primary actions (Home, Send, Withdraw, Bills, Cards), nested **More** menu (Activity, Shop, Protection), and top-right **profile avatar menu** with Profile, PIN, and Sign out.
+- **ALATPay BVN verification** — Tier 2 funding unlock via ALATPay static-wallet OTP (SMS from ALATPay). Dojah remains available for NIN / alternate BVN when configured.
+- **Instant toasts** — global success and error feedback that appears as soon as Inertia finishes a request, without waiting to scroll to an inline banner.
+- **Office address** — public Contact page and footer list 7, Greenland Estate, Ikorodu, Lagos State, Nigeria.
+- **Smooth onboarding** — paginated login/signup with Reton branding, email verification, HTML mail templates, and a short wizard (welcome → PIN → fund).
+- **Admin site settings** — email notifications, SEO / Open Graph / JSON-LD, security headers, auth rate limits, robots/sitemap — editable under Admin → Site; SMTP secrets encrypted at rest.
+- **Admin platform settings** — business rules and integration credentials editable from the admin dashboard; encrypted at rest with masked secrets, audit logs, and env fallbacks until saved.
+- **Dojah KYC** — BVN/NIN checks via gateway abstraction (fake + HTTP), consent, rate limits, and audit logs without storing raw identifiers in plain text.
+- **AI Customer Support** — in-app chat at `/support` with transaction lookup, protection guidance, recovery help, trust score, and ticket escalation (`TKT-…`).
+- **Platform admin** — secret admin path, encrypted integrations, audit logs, and a control-center dashboard.
+- **Virtual cards** — Bridgecard/Interswitch abstraction with issue, fund, and freeze flows.
+- **Physical marketplace** — shipments, hub verification, item codes, Giglogistics webhook sync.
+- **Withdraw & receive** — dedicated bank cash-out and inbound funding flows.
+- **Dashboard refresh** — clearer balance hero, KYC badge, trust sidebar, and mobile-first layout.
 
-### Configuration
-- `DOJAH_DRIVER`, `DOJAH_BASE_URL`, `DOJAH_APP_ID`, `DOJAH_SECRET_KEY` — identity verification (see `.env.example`).
-- Bridgecard, Interswitch, Giglogistics, and admin-path settings documented in `.env.example` / admin Integrations.
+### Changed
+- **PIN** — transaction PIN is exactly four digits across onboarding, settings, and payment confirmation.
+- **BVN for funding** — Add Money and Profile share the same OTP gate; static deposit account CTA waits until BVN is verified.
+- **ALATPay HTTP client** — shorter timeouts, clearer provider error messages, and credential checks before BVN provision.
 
 ### Fixed
-- **Admin route conflict** — `/dashboard` no longer matches the configurable admin `{adminPrefix}` wildcard; user dashboard routes register first and admin path validation runs before the admin gate.
-- Bill payment RRR tests now respect injected fake provider instances.
-- Buttons no longer stack icon above label — shared `.btn` uses horizontal flex, consistent radius, and focus rings.
-- Header nav no longer overlaps the Reton wordmark; Sign out no longer wraps onto two lines.
-- Auto-refund no longer skips the physical-shipment guard (unreachable `PaidHeld` double-check removed).
-- Bill `reconcile()` routes Remita RRR bills to the Remita gateway instead of the default Interswitch provider.
-- Generic callbacks on shipped / awaiting-verification physical orders no longer always throw `disputeNotAllowed()`.
-- Redundant `preg_replace(...) ?? ''` coalescing removed from KYC and Interswitch phone/reference helpers.
+- Dashboard crash for new users when Getting Started passed the wrong icon prop to `StepRow`.
+- Production-wide “Something went wrong” caused by mounting the toast host outside Inertia’s page context.
+- Fake ALATPay BVN confirm failing across HTTP requests (wallet OTP state now cache-backed).
+- Null/partial list props on Protection, Marketplace, Bills, Add Money, Withdraw, and Support no longer blank the page.
+- Admin App Settings “Platform” link no longer called a hooks helper from JSX.
+- Admin route conflict — user `/dashboard` registers ahead of the configurable admin prefix.
+- Bill payment RRR tests respect injected fake providers; Remita reconcile routes correctly.
+- Shared button and header layout polish (icons, wordmark, Sign out wrapping).
+
+### Configuration
+- `KYC_BVN_PROVIDER` — `alatpay` (default) or `dojah`.
+- `DOJAH_*`, Bridgecard, Interswitch, Giglogistics, Termii, and admin-path settings — see `.env.example` and Admin → Integrations.
 
 ## [2026-06-30]
 
