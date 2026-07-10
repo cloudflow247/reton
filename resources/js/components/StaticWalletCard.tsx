@@ -2,7 +2,7 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Link, router, useForm, usePage } from '@inertiajs/react'
 import { Button, Card, CopyRow, Pill } from '@/components/ui'
-import { BankIcon, CheckIcon, ShieldIcon } from '@/components/icons'
+import { BankIcon, ShieldIcon } from '@/components/icons'
 import { ngn } from '@/lib/format'
 import type { KycProfile, PageProps, StaticAccount, Wallet } from '@/types'
 
