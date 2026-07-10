@@ -171,11 +171,12 @@ class AdminIntegrationsController extends Controller
             }
 
             try {
-                $this->alatpay->fetchTransaction('health-check-'.now()->timestamp);
+                // Must hit Static Wallet — bank-transfer 404 was a false "credentials OK".
+                $this->alatpay->pingStaticWallet();
 
-                return back()->with('success', 'ALATPay API reachable (credentials accepted).');
+                return back()->with('success', 'ALATPay Static Wallet API reachable (secret key + Business ID accepted).');
             } catch (\Throwable $e) {
-                return back()->with('error', 'ALATPay test failed: '.$e->getMessage());
+                return back()->with('error', 'ALATPay Static Wallet test failed: '.$e->getMessage());
             }
         }
 

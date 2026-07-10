@@ -154,16 +154,18 @@ function IntegrationForm({
       {group === 'alatpay' && (
         <>
           <SecretField
-            label="API key"
+            label="Secret / Subscription key"
             name="api_key"
             value={String(form.data.api_key ?? '')}
             isSet={!!form.data.api_key_set}
             onChange={(v) => form.setData('api_key', v)}
+            hint="Ocp-Apim-Subscription-Key from ALATPay — the Secret key, not the Public key used by the web checkout plugin."
           />
           <Field
             label="Business ID"
             value={String(form.data.business_id ?? '')}
             onChange={(e) => form.setData('business_id', e.target.value)}
+            hint="UUID of your business in the ALATPay merchant portal."
           />
           <SecretField
             label="Business BVN"
@@ -171,7 +173,7 @@ function IntegrationForm({
             value={String(form.data.business_bvn ?? '')}
             isSet={!!form.data.business_bvn_set}
             onChange={(v) => form.setData('business_bvn', v)}
-            hint="Required for static wallet provisioning on live ALATPay."
+            hint="Director / shareholder BVN for Collection wallets only — not used for customer Tier-2 BVN OTP."
           />
           <SecretField
             label="Webhook secret"
@@ -194,9 +196,9 @@ function IntegrationForm({
             </div>
           )}
           <p className="rounded-xl border border-mint/20 bg-mint/[0.04] px-4 py-3 text-xs leading-relaxed text-muted">
-            <span className="font-semibold text-text">BVN verification</span> for wallet funding uses ALATPay Static
-            Wallet OTP (same credentials). Users receive an SMS code linked to their BVN before they can add money.
-            Driver must be Live HTTP, with API key, Business ID, and Base URL set to apibox.
+            <span className="font-semibold text-text">BVN verification</span> uses ALATPay Static Wallet OTP with the
+            Secret key above (same credentials). Test connection now calls the Static Wallet API — not bank transfer —
+            so a green test means customer BVN OTP can authenticate.
           </p>
         </>
       )}

@@ -246,6 +246,11 @@ class FakeAlatpayGateway implements AlatpayGateway
         $this->recordStaticTransaction($accountNumber, 1, $amountMajor, $transactionId);
     }
 
+    public function pingStaticWallet(): void
+    {
+        // Fake driver always accepts configured credentials.
+    }
+
     public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
     {
         return $this->staticTransactions[$accountNumber] ?? [];

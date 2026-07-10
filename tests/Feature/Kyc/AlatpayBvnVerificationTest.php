@@ -239,3 +239,81 @@ it('parses nested data null by falling back to root payload', function () {
 
     expect(app(KycService::class)->hasPendingAlatpayBvn($user))->toBeTrue();
 });
+
+it('surfaces secret-key guidance when static wallet returns 401', function () {
+    config([
+        'services.alatpay.driver' => 'http',
+        'services.alatpay.api_key' => 'public-key-by-mistake',
+        'services.alatpay.business_id' => 'test-business',
+        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
+    ]);
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    Http::fake([
+        'apibox.alatpay.ng/alatpay-wallet/*' => Http::response([
+            'statusCode' => 401,
+            'message' => 'Access denied due to invalid subscription key or wrong API endpoint.',
+        ], 401),
+    ]);
+
+    $user = alatpayKycUser();
+
+    $this->actingAs($user)->from('/add-money')->post('/profile/kyc/tier-2', [
+        'bvn' => '22109876543',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHasErrors('bvn');
+
+    $errors = session('errors')->getBag('default')->get('bvn');
+    expect($errors[0])->toContain('Access denied');
+});
+
+it('admin alatpay test hits static wallet not bank-transfer', function () {
+    config([
+        'services.alatpay.driver' => 'http',
+        'services.alatpay.api_key' => 'secret-key',
+        'services.alatpay.business_id' => 'biz-static',
+        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
+        'services.alatpay.business_bvn' => '22109876543',
+    ]);
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    Http::fake([
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount*' => Http::response([
+            'hasStaticWallet' => false,
+            'staticAccountResponses' => [],
+        ], 200),
+        'apibox.alatpay.ng/bank-transfer/*' => Http::response(['error' => 'should not be called'], 404),
+    ]);
+
+    $admin = \App\Models\User::factory()->create(['is_admin' => true]);
+
+    // Ensure settings ready check passes
+    app(\App\Domain\Settings\Services\PlatformSettingsService::class)->updateGroup('alatpay', [
+        'driver' => 'http',
+        'base_url' => 'https://apibox.alatpay.ng',
+        'api_key' => 'secret-key',
+        'business_id' => 'biz-static',
+        'business_bvn' => '22109876543',
+        'webhook_secret' => '',
+        'timeout' => 15,
+    ], $admin);
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+
+    $this->actingAs($admin)->post('/admin/integrations/alatpay/test')
+        ->assertRedirect()
+        ->assertSessionHas('success')
+        ->assertSessionMissing('error');
+
+    Http::assertSent(fn (\Illuminate\Http\Client\Request $request) => str_contains($request->url(), 'alatpay-wallet/api/v1/staticaccount')
+        && $request->method() === 'GET');
+
+    Http::assertNotSent(fn (\Illuminate\Http\Client\Request $request) => str_contains($request->url(), 'bank-transfer'));
+});

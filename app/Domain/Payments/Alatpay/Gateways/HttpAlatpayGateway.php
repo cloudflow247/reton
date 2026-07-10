@@ -176,17 +176,57 @@ class HttpAlatpayGateway implements AlatpayGateway
         );
     }
 
+    public function pingStaticWallet(): void
+    {
+        $this->assertConfigured('pingStaticWallet');
+
+        try {
+            $response = $this->client()->get('/alatpay-wallet/api/v1/staticaccount', [
+                'pageNumber' => 1,
+                'limit' => 1,
+                'businessId' => (string) config('services.alatpay.business_id'),
+            ]);
+        } catch (ConnectionException|RequestException $e) {
+            throw AlatpayException::requestFailed(
+                'pingStaticWallet',
+                503,
+                'Could not reach ALATPay Static Wallet. Check Base URL (https://apibox.alatpay.ng).',
+            );
+        }
+
+        $payload = $response->json();
+
+        if ($response->successful()) {
+            return;
+        }
+
+        Log::warning('ALATPay pingStaticWallet failed', [
+            'status' => $response->status(),
+            'base_url' => config('services.alatpay.base_url'),
+            'body' => $payload ?? $response->body(),
+        ]);
+
+        throw AlatpayException::requestFailed(
+            'pingStaticWallet',
+            $response->status(),
+            $this->extractErrorMessage($payload) ?? $this->authFailureHint($response->status()),
+        );
+    }
+
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
     {
         $this->assertConfigured('provisionStaticAccount');
 
         try {
-            $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount', [
-                'businessId' => config('services.alatpay.business_id'),
-                'staticWalletType' => $request->walletType,
-                'bvn' => $request->bvn,
-                'email' => $request->email,
-            ]);
+            $response = $this->client()->post(
+                '/alatpay-wallet/api/v1/staticaccount',
+                array_filter([
+                    'businessId' => config('services.alatpay.business_id'),
+                    'staticWalletType' => $request->walletType,
+                    'bvn' => $request->bvn,
+                    'email' => $request->email,
+                ], static fn (mixed $value): bool => $value !== null && $value !== ''),
+            );
         } catch (ConnectionException|RequestException $e) {
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
@@ -207,7 +247,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
                 $response->status(),
-                $this->extractErrorMessage($payload),
+                $this->extractErrorMessage($payload) ?? $this->authFailureHint($response->status()),
             );
         }
 
@@ -335,9 +375,20 @@ class HttpAlatpayGateway implements AlatpayGateway
         return Http::baseUrl($this->resolvedBaseUrl())
             ->timeout((int) config('services.alatpay.timeout', 12))
             ->connectTimeout(4)
-            ->withHeaders(['Ocp-Apim-Subscription-Key' => (string) config('services.alatpay.api_key')])
+            ->withHeaders([
+                'Ocp-Apim-Subscription-Key' => trim((string) config('services.alatpay.api_key')),
+            ])
             ->acceptJson()
             ->asJson();
+    }
+
+    private function authFailureHint(int $status): string
+    {
+        if (in_array($status, [401, 403], true)) {
+            return 'Use the ALATPay Secret / Subscription key (Ocp-Apim-Subscription-Key), not the Public key from the web plugin. Confirm Static Wallet is enabled for this Business ID.';
+        }
+
+        return 'ALATPay Static Wallet request failed.';
     }
 
     /**

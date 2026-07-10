@@ -31,7 +31,7 @@ final class AlatpayException extends RuntimeException
 
         return match ($status) {
             400, 404, 422 => 'ALATPay rejected that BVN. Double-check the number — it must be your real BVN, not a demo value.',
-            401, 403 => 'ALATPay credentials were rejected. Ask an admin to check API key and Business ID in Integrations.',
+            401, 403 => 'ALATPay rejected the Secret key or Business ID for Static Wallet. In Admin → Integrations use the Subscription/Secret key (not the Public key), then click Test connection.',
             408, 503, 504 => 'ALATPay timed out or is unreachable. Please try again in a moment.',
             default => $fallback,
         };

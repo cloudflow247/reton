@@ -34,6 +34,12 @@ interface AlatpayGateway
 
     public function fetchTransfer(string $providerReference): ?RemoteTransaction;
 
+    /**
+     * Verify secret key + Business ID against the Static Wallet API
+     * (the same product used for BVN OTP). Must not treat unrelated 404s as success.
+     */
+    public function pingStaticWallet(): void;
+
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse;
 
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse;

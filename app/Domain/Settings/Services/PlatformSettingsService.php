@@ -400,6 +400,12 @@ class PlatformSettingsService
             unset($input["{$field}_set"]);
         }
 
+        foreach (['api_key', 'business_id', 'business_bvn', 'webhook_secret', 'base_url'] as $trimField) {
+            if (isset($input[$trimField]) && is_string($input[$trimField])) {
+                $input[$trimField] = trim($input[$trimField]);
+            }
+        }
+
         $payload = array_merge(
             self::DEFAULTS[$group],
             array_intersect_key($input, self::DEFAULTS[$group]),
