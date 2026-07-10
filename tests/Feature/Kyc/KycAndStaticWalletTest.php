@@ -11,6 +11,7 @@ use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
@@ -66,6 +67,32 @@ it('provisions an individual static account when bvn is verified', function () {
         ->assertSessionHas('success');
 
     expect(StaticAccount::query()->where('wallet_id', $wallet->id)->first()?->wallet_type)->toBe(StaticWalletType::Individual);
+});
+
+it('returns a validation error instead of 500 when alatpay provision fails', function () {
+    config([
+        'services.kyc.bvn_provider' => 'alatpay',
+        'services.alatpay.driver' => 'http',
+        'services.alatpay.api_key' => 'bad-key',
+        'services.alatpay.merchant_email' => null,
+        'services.alatpay.merchant_password' => null,
+        'services.alatpay.business_id' => 'biz',
+        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
+    ]);
+
+    app()->forgetInstance(AlatpayGateway::class);
+
+    Http::fake([
+        'apibox.alatpay.ng/*' => Http::response(['message' => 'Access denied'], 401),
+    ]);
+
+    [$user, $wallet] = readyUserWithWallet();
+
+    $this->actingAs($user)->from('/add-money')->post('/static-account', ['wallet_id' => $wallet->id])
+        ->assertRedirect('/add-money')
+        ->assertSessionHasErrors('wallet');
+
+    expect(StaticAccount::query()->where('wallet_id', $wallet->id)->exists())->toBeFalse();
 });
 
 it('renders add money with kyc and static account props', function () {

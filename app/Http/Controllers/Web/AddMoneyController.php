@@ -11,6 +11,7 @@ use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Models\Deposit;
 use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Payments\Services\AlatpayDepositService;
+use App\Domain\Payments\Services\StaticAccountService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Payment\InitiateDepositRequest;
@@ -21,6 +22,7 @@ use App\Models\User;
 use App\Support\Money\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -30,6 +32,7 @@ class AddMoneyController extends Controller
     public function __construct(
         private readonly AlatpayDepositService $deposits,
         private readonly KycService $kyc,
+        private readonly StaticAccountService $staticAccounts,
     ) {}
 
     public function index(Request $request): Response
@@ -60,6 +63,20 @@ class AddMoneyController extends Controller
         $staticAccount = $wallet
             ? StaticAccount::query()->where('wallet_id', $wallet->getKey())->latest()->first()
             : null;
+
+        // Already BVN-verified but missing a linked VA (e.g. verified before auto-link):
+        // recover/provision quietly so Add Money shows the account immediately.
+        if (
+            $wallet !== null
+            && $profile->bvn_verified_at !== null
+            && ($staticAccount === null || ! $staticAccount->isActive())
+        ) {
+            try {
+                $staticAccount = $this->staticAccounts->provisionForWallet($user, $wallet);
+            } catch (ValidationException) {
+                // Page still loads; StaticWalletCard can offer a manual retry.
+            }
+        }
 
         return Inertia::render('AddMoney', [
             'pendingDeposit' => $pendingDeposit,

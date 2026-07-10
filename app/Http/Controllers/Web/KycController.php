@@ -37,7 +37,7 @@ class KycController extends Controller
         $returnTo = $this->safeReturnTo((string) ($validated['return_to'] ?? ''));
 
         if ($result instanceof UserKyc) {
-            $message = 'BVN verified — you can now fund your wallet and open your ALATPay deposit account.';
+            $message = 'BVN verified — your permanent deposit account is ready.';
 
             return $returnTo !== null
                 ? redirect($returnTo)->with('success', $message)
@@ -61,7 +61,7 @@ class KycController extends Controller
 
         $this->kyc->confirmAlatpayTier2($user, $validated['otp'], $request->ip());
 
-        $message = 'BVN verified — you can now fund your wallet and open your ALATPay deposit account.';
+        $message = 'BVN verified — your permanent deposit account is ready. Transfer any amount anytime.';
         $returnTo = $this->safeReturnTo((string) ($validated['return_to'] ?? ''));
 
         return $returnTo !== null

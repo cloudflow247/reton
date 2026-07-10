@@ -59,6 +59,9 @@ export function BvnVerificationGate({
     toast.info('Confirming code…', 2000)
     otpForm.post('/profile/kyc/tier-2/confirm', {
       preserveScroll: true,
+      onSuccess: () => {
+        toast.success('BVN verified — your deposit account is ready', 4000)
+      },
     })
   }
 

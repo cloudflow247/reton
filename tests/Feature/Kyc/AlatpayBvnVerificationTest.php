@@ -86,6 +86,11 @@ it('initiates alatpay bvn verification and requires otp confirmation', function 
     expect($kyc->tier->value)->toBe(2)
         ->and($kyc->bvn_verified_at)->not->toBeNull()
         ->and(KycVerificationLog::query()->where('user_id', $user->id)->where('status', 'success')->exists())->toBeTrue();
+
+    $account = \App\Domain\Payments\Models\StaticAccount::query()->where('user_id', $user->id)->first();
+    expect($account)->not->toBeNull()
+        ->and($account?->status->value)->toBe('active')
+        ->and($account?->account_number)->not->toBeNull();
 });
 
 it('rejects invalid alatpay otp without upgrading tier', function () {
@@ -490,6 +495,11 @@ it('recovers existing individual VA when alatpay says bvn already used', functio
     $kyc = app(KycService::class)->forUser($user->fresh());
     expect($kyc->tier->value)->toBe(2)
         ->and($kyc->bvn_verified_at)->not->toBeNull();
+
+    $account = \App\Domain\Payments\Models\StaticAccount::query()->where('user_id', $user->id)->first();
+    expect($account)->not->toBeNull()
+        ->and($account?->account_number)->toBe('0444652607')
+        ->and($account?->status->value)->toBe('active');
 });
 
 it('still blocks bvn already linked to another reton user', function () {

@@ -70,7 +70,13 @@ class ReceiveController extends Controller
             'otp' => ['required', 'string', 'min:4', 'max:8'],
         ]);
 
-        $this->staticAccounts->verify($staticAccount, $validated['otp']);
+        try {
+            $this->staticAccounts->verify($staticAccount, $validated['otp']);
+        } catch (\App\Domain\Payments\Alatpay\Exceptions\AlatpayException $e) {
+            return back()->withErrors([
+                'otp' => $e->userFacingMessage('Invalid or expired code. Try again.'),
+            ]);
+        }
 
         return back()->with('success', 'Deposit account activated — share the number to receive bank transfers.');
     }

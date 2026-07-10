@@ -8,8 +8,10 @@ use App\Domain\Kyc\Services\KycLimitService;
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
+use App\Domain\Payments\Alatpay\Data\StaticAccountResponse;
 use App\Domain\Payments\Alatpay\Data\StaticAccountTransaction;
 use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
+use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Enums\DepositStatus;
 use App\Domain\Payments\Enums\StaticAccountStatus;
 use App\Domain\Payments\Enums\StaticWalletType;
@@ -21,6 +23,7 @@ use App\Models\User;
 use App\Support\Money\Money;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -58,8 +61,13 @@ class StaticAccountService
             ->latest()
             ->first();
 
-        if ($existing !== null) {
+        if ($existing !== null && $existing->isActive() && filled($existing->account_number)) {
             return $existing;
+        }
+
+        // Incomplete rows (failed mid-provision) should be retried, not stuck forever.
+        if ($existing !== null && ! $existing->isActive()) {
+            $existing->delete();
         }
 
         $profile = $this->kyc->forUser($user);
@@ -73,6 +81,74 @@ class StaticAccountService
         }
 
         return $this->provision($user, $wallet, $type, $bvn);
+    }
+
+    /**
+     * Persist an ALATPay Individual VA that was already verified (BVN OTP / recovery).
+     * Does not call ALATPay again.
+     */
+    public function linkVerifiedIndividualAccount(
+        User $user,
+        string $providerReference,
+        string $accountNumber,
+        ?string $accountName = null,
+        ?string $bankName = 'ALAT by Wema',
+    ): StaticAccount {
+        $wallet = $this->wallets->open($user, 'NGN');
+
+        $ownedByOther = StaticAccount::query()
+            ->where('account_number', $accountNumber)
+            ->where('user_id', '!=', $user->getKey())
+            ->exists();
+
+        if ($ownedByOther) {
+            throw ValidationException::withMessages([
+                'bvn' => ['This deposit account is already linked to another Reton user.'],
+            ]);
+        }
+
+        $existing = StaticAccount::query()
+            ->where('wallet_id', $wallet->getKey())
+            ->latest()
+            ->first();
+
+        $attributes = [
+            'user_id' => $user->getKey(),
+            'provider' => self::PROVIDER,
+            'provider_reference' => $providerReference,
+            'wallet_type' => StaticWalletType::Individual,
+            'status' => StaticAccountStatus::Active,
+            'account_number' => $accountNumber,
+            'account_name' => $accountName,
+            'bank_name' => $bankName ?? 'ALAT by Wema',
+            'otp_tracking_id' => null,
+            'email' => $user->email,
+        ];
+
+        if ($existing !== null) {
+            $existing->update($attributes);
+
+            return $existing->refresh();
+        }
+
+        return StaticAccount::create([
+            'wallet_id' => $wallet->getKey(),
+            ...$attributes,
+        ]);
+    }
+
+    /**
+     * @see linkVerifiedIndividualAccount()
+     */
+    public function linkFromProviderResponse(User $user, StaticAccountResponse $response): StaticAccount
+    {
+        return $this->linkVerifiedIndividualAccount(
+            $user,
+            $response->providerReference,
+            $response->accountNumber,
+            $response->accountName,
+            $response->bankName,
+        );
     }
 
     public function provision(User $user, Wallet $wallet, StaticWalletType $type, ?string $bvn = null): StaticAccount
@@ -90,12 +166,36 @@ class StaticAccountService
             'email' => $user->email,
         ]);
 
-        $response = $this->gateway->provisionStaticAccount(new StaticAccountRequest(
-            walletType: $type->providerCode(),
-            bvn: $bvn,
-            email: (string) $user->email,
-            reference: 'SA-'.Str::upper((string) Str::ulid()),
-        ));
+        try {
+            $response = $this->gateway->provisionStaticAccount(new StaticAccountRequest(
+                walletType: $type->providerCode(),
+                bvn: $bvn,
+                email: (string) $user->email,
+                reference: 'SA-'.Str::upper((string) Str::ulid()),
+            ));
+        } catch (AlatpayException $e) {
+            $account->delete();
+
+            Log::warning('Static account provision failed', [
+                'user_id' => $user->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+
+            throw ValidationException::withMessages([
+                'wallet' => [$e->userFacingMessage('Could not open your deposit account. Please try again in a moment.')],
+            ]);
+        } catch (\Throwable $e) {
+            $account->delete();
+
+            Log::error('Static account provision crashed', [
+                'user_id' => $user->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+
+            throw ValidationException::withMessages([
+                'wallet' => ['Could not open your deposit account. Please try again in a moment.'],
+            ]);
+        }
 
         if ($response->accountNumber !== null) {
             $ownedByOther = StaticAccount::query()
@@ -122,6 +222,7 @@ class StaticAccountService
         if ($response->otpTrackingId === null && $response->accountNumber !== null) {
             $attributes['account_number'] = $response->accountNumber;
             $attributes['account_name'] = $response->accountName;
+            $attributes['bank_name'] = 'ALAT by Wema';
             $attributes['status'] = StaticAccountStatus::Active;
         }
 

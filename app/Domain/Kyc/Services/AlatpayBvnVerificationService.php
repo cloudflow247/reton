@@ -7,19 +7,26 @@ namespace App\Domain\Kyc\Services;
 use App\Domain\Kyc\Enums\KycTier;
 use App\Domain\Kyc\Models\UserKyc;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
+use App\Domain\Payments\Alatpay\Data\StaticAccountProvisionResponse;
 use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
+use App\Domain\Payments\Alatpay\Data\StaticAccountResponse;
 use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Enums\StaticWalletType;
+use App\Domain\Payments\Services\StaticAccountService;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
  * BVN verification via ALATPay Static Wallet OTP (Individual wallet provision).
+ *
+ * On successful OTP (or duplicate-BVN recovery), the Individual VA is linked to
+ * the user's Reton wallet immediately — no separate "Open account" step.
  *
  * @see https://docs.alatpay.ng/static-wallet
  */
@@ -101,7 +108,10 @@ class AlatpayBvnVerificationService
         }
 
         if ($response->otpTrackingId === null && $response->accountNumber !== null) {
-            return $this->finalizeTier2($user, $bvn, $dob, $ipAddress);
+            $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
+            $this->linkDepositAccountFromProvision($user, $response);
+
+            return 'BVN verified — your permanent deposit account is ready.';
         }
 
         if ($response->staticWalletId === '' || $response->otpTrackingId === null) {
@@ -128,7 +138,7 @@ class AlatpayBvnVerificationService
         return 'We sent a verification code to the phone linked to your BVN. Enter it below to unlock funding.';
     }
 
-    /** Step 2 — confirm OTP and activate Tier 2. */
+    /** Step 2 — confirm OTP, activate Tier 2, and link the deposit VA. */
     public function confirm(User $user, string $otp, ?string $ipAddress = null): UserKyc
     {
         $pending = Cache::get($this->cacheKey($user));
@@ -146,7 +156,7 @@ class AlatpayBvnVerificationService
         }
 
         try {
-            $this->gateway->verifyStaticAccount(new StaticAccountVerifyRequest(
+            $verified = $this->gateway->verifyStaticAccount(new StaticAccountVerifyRequest(
                 staticWalletId: (string) $pending['static_wallet_id'],
                 otp: $otp,
                 trackingId: (string) $pending['tracking_id'],
@@ -162,17 +172,10 @@ class AlatpayBvnVerificationService
         $dob = Carbon::parse((string) $pending['dob']);
         Cache::forget($this->cacheKey($user));
 
-        return $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
-    }
+        $kyc = $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
+        $this->linkDepositAccountFromVerify($user, $verified);
 
-    /**
-     * @return non-empty-string
-     */
-    private function finalizeTier2(User $user, string $bvn, Carbon $dob, ?string $ipAddress): string
-    {
-        $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
-
-        return 'BVN verified — you can now fund your wallet.';
+        return $kyc;
     }
 
     private function finalizeTier2Record(User $user, string $bvn, Carbon $dob, ?string $ipAddress): UserKyc
@@ -201,6 +204,39 @@ class AlatpayBvnVerificationService
 
             return $kyc->refresh();
         });
+    }
+
+    private function linkDepositAccountFromVerify(User $user, StaticAccountResponse $response): void
+    {
+        try {
+            app(StaticAccountService::class)->linkFromProviderResponse($user, $response);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to link deposit account after BVN OTP', [
+                'user_id' => $user->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function linkDepositAccountFromProvision(User $user, StaticAccountProvisionResponse $response): void
+    {
+        if ($response->accountNumber === null || $response->staticWalletId === '') {
+            return;
+        }
+
+        try {
+            app(StaticAccountService::class)->linkVerifiedIndividualAccount(
+                $user,
+                $response->staticWalletId,
+                $response->accountNumber,
+                $response->accountName,
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to link recovered deposit account after BVN', [
+                'user_id' => $user->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function assertBvnAvailable(User $user, string $bvn): void
