@@ -51,21 +51,21 @@ const gettingStarted = [
     title: 'Add money',
     detail: 'Fund your wallet via bank transfer or ALATPay checkout.',
     href: '/add-money',
-    Icon: PlusIcon,
+    icon: PlusIcon,
   },
   {
     step: 2,
     title: 'Set your PIN',
     detail: 'Secure every send, bill pay, and withdrawal with a 4-digit PIN.',
     href: '/pin',
-    Icon: LockIcon,
+    icon: LockIcon,
   },
   {
     step: 3,
     title: 'Send or withdraw',
     detail: 'Move money to Reton friends or your own bank — same name only.',
     href: '/send',
-    Icon: SendIcon,
+    icon: SendIcon,
   },
 ] as const
 

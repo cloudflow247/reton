@@ -15,7 +15,8 @@ type ProfileMenuProps = {
 export function ProfileMenu({ user, needsPin, profileActive, onNavigate }: ProfileMenuProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const firstName = user.name.split(' ')[0] ?? user.name
+  const displayName = user.name?.trim() || user.email || 'Account'
+  const firstName = displayName.split(' ')[0] ?? displayName
 
   useEffect(() => {
     if (!open) return
@@ -52,7 +53,7 @@ export function ProfileMenu({ user, needsPin, profileActive, onNavigate }: Profi
             : 'border-line bg-surface text-text hover:border-mint/25 hover:bg-surface-2',
         )}
       >
-        <UserAvatar name={user.name} size={30} ring={false} />
+        <UserAvatar name={displayName} size={30} ring={false} />
         <span className="hidden min-w-0 truncate text-xs font-semibold sm:inline">{firstName}</span>
         <ChevronDownIcon size={14} className={cn('shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
@@ -63,9 +64,9 @@ export function ProfileMenu({ user, needsPin, profileActive, onNavigate }: Profi
           className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_18px_44px_-22px_rgba(16,40,33,0.45)]"
         >
           <div className="flex items-center gap-3 border-b border-line px-4 py-3.5">
-            <UserAvatar name={user.name} size={44} />
+            <UserAvatar name={displayName} size={44} />
             <div className="min-w-0">
-              <p className="truncate font-semibold text-text">{user.name}</p>
+              <p className="truncate font-semibold text-text">{displayName}</p>
               <p className="truncate text-xs text-muted">{user.email}</p>
             </div>
           </div>

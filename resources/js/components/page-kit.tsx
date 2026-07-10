@@ -348,14 +348,18 @@ export function StepRow({
   title,
   detail,
   href,
-  icon: Icon,
+  icon,
+  Icon,
 }: {
   step: number
   title: string
   detail: string
   href: string
-  icon: IconCmp
+  icon?: IconCmp
+  Icon?: IconCmp
 }) {
+  const Glyph = icon ?? Icon
+
   return (
     <Link
       href={href}
@@ -366,7 +370,7 @@ export function StepRow({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 text-sm font-semibold">
-          <Icon size={15} className="text-mint" /> {title}
+          {Glyph ? <Glyph size={15} className="text-mint" /> : null} {title}
         </span>
         <span className="block text-xs text-muted">{detail}</span>
       </span>
