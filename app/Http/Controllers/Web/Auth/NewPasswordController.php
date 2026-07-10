@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Auth;
 
+use App\Domain\Auth\Services\BrowserSessionService;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Web\Concerns\RedirectsAfterAuth;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -22,6 +22,8 @@ use Inertia\Response;
 class NewPasswordController extends Controller
 {
     use RedirectsAfterAuth;
+
+    public function __construct(private readonly BrowserSessionService $sessions) {}
 
     public function create(Request $request, string $token): Response
     {
@@ -61,8 +63,8 @@ class NewPasswordController extends Controller
         $user = User::query()->where('email', $request->string('email')->toString())->first();
 
         if ($user !== null) {
-            Auth::guard('web')->login($user, remember: true);
-            $request->session()->regenerate();
+            // Password already rotated — other browser sessions fail AuthenticateSession.
+            $this->sessions->startFresh($request, $user);
 
             return redirect()->intended($this->redirectAfterAuth($user));
         }

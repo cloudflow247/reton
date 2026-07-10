@@ -468,7 +468,7 @@ export default function Site() {
                 />
                 <Toggle
                   label="Secure session cookies"
-                  hint="Requires HTTPS. Set Force HTTPS first in production."
+                  hint="Sets the Secure flag on session cookies. Enable with Force HTTPS in production."
                   checked={Boolean(form.data.session_secure_cookie)}
                   onChange={(v) => form.setData('session_secure_cookie', v)}
                 />

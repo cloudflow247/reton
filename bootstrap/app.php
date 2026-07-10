@@ -37,6 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
+        // Bind sessions to the password hash so password changes / login on
+        // another device invalidate leftover browser sessions.
+        $middleware->authenticateSessions();
+
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'admin.path' => EnsureAdminPath::class,

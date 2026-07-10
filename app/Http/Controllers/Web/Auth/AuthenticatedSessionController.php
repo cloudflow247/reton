@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Auth;
 use App\Domain\Auth\Data\DeviceContext;
 use App\Domain\Auth\Exceptions\InvalidCredentialsException;
 use App\Domain\Auth\Services\AuthService;
+use App\Domain\Auth\Services\BrowserSessionService;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Web\Concerns\RedirectsAfterAuth;
 use App\Http\Controllers\Web\Concerns\RemembersRedirect;
@@ -23,7 +24,10 @@ class AuthenticatedSessionController extends Controller
     use RedirectsAfterAuth;
     use RemembersRedirect;
 
-    public function __construct(private readonly AuthService $auth) {}
+    public function __construct(
+        private readonly AuthService $auth,
+        private readonly BrowserSessionService $sessions,
+    ) {}
 
     public function create(Request $request): Response
     {
@@ -37,10 +41,12 @@ class AuthenticatedSessionController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
+        $password = $request->string('password')->toString();
+
         try {
             $user = $this->auth->login(
                 $request->string('email')->toString(),
-                $request->string('password')->toString(),
+                $password,
                 DeviceContext::fromRequest($request),
             );
         } catch (InvalidCredentialsException $e) {
@@ -49,9 +55,12 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        // Establish the session for the web guard and rotate the session id.
-        Auth::guard('web')->login($user, remember: true);
-        $request->session()->regenerate();
+        $this->sessions->start(
+            $request,
+            $user,
+            $password,
+            $request->boolean('remember'),
+        );
 
         return redirect()->intended($this->redirectAfterAuth($user));
     }

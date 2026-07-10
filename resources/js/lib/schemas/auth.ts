@@ -5,6 +5,7 @@ const trimmed = (msg: string) => z.string().trim().min(1, msg)
 export const loginSchema = z.object({
   email: trimmed('Email is required').email('Enter a valid email address'),
   password: trimmed('Password is required'),
+  remember: z.boolean().optional().default(false),
 })
 
 export type LoginFormValues = z.infer<typeof loginSchema>

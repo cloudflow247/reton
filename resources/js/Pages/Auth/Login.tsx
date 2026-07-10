@@ -57,7 +57,7 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: prefilledEmail ?? '', password: '' },
+    defaultValues: { email: prefilledEmail ?? '', password: '', remember: false },
     mode: 'onBlur',
     shouldUnregister: false,
   })
@@ -102,6 +102,7 @@ export default function Login() {
     const payload = {
       email: resolvedEmail,
       password: values.password,
+      remember: Boolean(values.remember),
     }
 
     setProcessing(true)
@@ -238,7 +239,15 @@ export default function Login() {
                   error={passwordError}
                   {...register('password')}
                 />
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+                    <input
+                      type="checkbox"
+                      className="size-4 rounded border-line text-mint focus:ring-mint/40"
+                      {...register('remember')}
+                    />
+                    Stay signed in
+                  </label>
                   <Link href="/forgot-password" className="text-xs font-semibold text-mint hover:underline">
                     Forgot password?
                   </Link>

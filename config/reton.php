@@ -361,7 +361,10 @@ return [
         'permissions_policy' => env('RETON_SECURITY_PERMISSIONS_POLICY', 'camera=(), microphone=(), geolocation=()'),
         'csp_enabled' => (bool) env('RETON_SECURITY_CSP_ENABLED', true),
         'csp_report_only' => (bool) env('RETON_SECURITY_CSP_REPORT_ONLY', true),
-        'session_secure_cookie' => (bool) env('RETON_SECURITY_SECURE_COOKIES', false),
+        'session_secure_cookie' => (bool) env(
+            'RETON_SECURITY_SECURE_COOKIES',
+            env('APP_ENV') === 'production',
+        ),
         'auth_rate_limit' => (int) env('RETON_SECURITY_AUTH_RATE_LIMIT', 10),
     ],
 
