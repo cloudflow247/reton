@@ -12,7 +12,10 @@ use Illuminate\Validation\ValidationException;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    config(['services.dojah.driver' => 'fake']);
+    config([
+        'services.kyc.bvn_provider' => 'dojah',
+        'services.dojah.driver' => 'fake',
+    ]);
 });
 
 function kycUser(string $name = 'Reton Test User'): User
@@ -24,6 +27,8 @@ function kycUser(string $name = 'Reton Test User'): User
 }
 
 it('verifies bvn via dojah fake before tier 2 upgrade', function () {
+    config(['services.kyc.bvn_provider' => 'dojah']);
+
     $user = kycUser();
 
     $kyc = app(KycService::class)->upgradeToTier2($user, '22334455667', '1990-05-15', '127.0.0.1');
@@ -33,12 +38,14 @@ it('verifies bvn via dojah fake before tier 2 upgrade', function () {
 });
 
 it('rejects bvn when date of birth does not match dojah record', function () {
+    config(['services.kyc.bvn_provider' => 'dojah']);
     $user = kycUser();
 
     app(KycService::class)->upgradeToTier2($user, '22334455667', '1999-01-01');
 })->throws(ValidationException::class);
 
 it('rejects bvn when profile name does not match registry name', function () {
+    config(['services.kyc.bvn_provider' => 'dojah']);
     $user = kycUser('Ada Obi');
 
     app(KycService::class)->upgradeToTier2($user, '22334455667', '1990-05-15');
@@ -94,6 +101,7 @@ it('allows tier 2 upgrade without a transaction pin for add money funding', func
 
 it('returns validation errors instead of server errors when dojah is unavailable', function () {
     config([
+        'services.kyc.bvn_provider' => 'dojah',
         'services.dojah.driver' => 'http',
         'services.dojah.app_id' => '',
         'services.dojah.secret_key' => '',

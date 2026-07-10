@@ -174,8 +174,8 @@ export default function Profile() {
                   checked={tier2.data.identity_consent}
                   onChange={(e) => tier2.setData('identity_consent', e.target.checked)}
                 />
-                I consent to Reton verifying my BVN with our licensed identity partner (Dojah) under NDPR. My
-                number is encrypted and never stored in plain text.
+                I consent to Reton verifying my BVN with ALATPay under NDPR. ALATPay will send an OTP to the phone
+                linked to my BVN. My number is encrypted and never stored in plain text.
               </label>
               {tier2.errors.identity_consent && <p className="text-xs text-danger">{tier2.errors.identity_consent}</p>}
               <Button type="submit" loading={tier2.processing} className="w-full">

@@ -1,23 +1,25 @@
 import { motion } from 'framer-motion'
 
-const labels = ['Account', 'Contact', 'Security', 'Verify', 'Reset']
+const labels = ['Welcome', 'PIN', 'Done']
 
 export function AuthStepIndicator({ step, total }: { step: number; total: number }) {
   const progressPct =
-    total <= 1 ? 100 : Math.min(99, Math.round(((step + 0.5) / total) * 100))
+    total <= 1 ? 100 : step >= total - 1 ? 100 : Math.round(((step + 1) / total) * 100)
 
   return (
     <div aria-label={`Step ${step + 1} of ${total}`}>
       <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted">
-        <span>Step {step + 1} of {total}</span>
+        <span>
+          Step {step + 1} of {total}
+        </span>
         <span className="text-mint">{progressPct}%</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         {Array.from({ length: total }, (_, i) => (
-          <div key={i} className="flex flex-1 items-center gap-2">
+          <div key={i} className="flex flex-1 items-center gap-1.5 sm:gap-2">
             <motion.span
               layout
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 sm:h-9 sm:w-9 ${
                 i < step
                   ? 'bg-mint text-white shadow-[0_6px_16px_-8px_rgba(9,79,57,0.8)]'
                   : i === step
@@ -34,10 +36,7 @@ export function AuthStepIndicator({ step, total }: { step: number; total: number
               )}
             </motion.span>
             {i < total - 1 && (
-              <motion.span
-                layout
-                className="relative h-1 flex-1 overflow-hidden rounded-full bg-line"
-              >
+              <motion.span layout className="relative h-1 flex-1 overflow-hidden rounded-full bg-line">
                 <motion.span
                   className="absolute inset-y-0 left-0 rounded-full bg-mint"
                   initial={false}
@@ -49,7 +48,7 @@ export function AuthStepIndicator({ step, total }: { step: number; total: number
           </div>
         ))}
       </div>
-      <p className="mt-2 hidden text-xs text-muted sm:block">{labels[step] ?? 'Continue'}</p>
+      <p className="mt-2 text-xs text-muted">{labels[step] ?? 'Continue'}</p>
     </div>
   )
 }

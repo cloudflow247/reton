@@ -41,34 +41,47 @@ class AdminDashboardController extends Controller
                 'alatpay' => [
                     'ready' => $this->settings->isIntegrationReady('alatpay'),
                     'driver' => config('services.alatpay.driver'),
+                    'subtitle' => 'Payments & BVN verification',
+                    'bvn_ready' => $this->settings->isBvnVerificationReady(),
                 ],
                 'interswitch' => [
                     'ready' => $this->settings->isIntegrationReady('interswitch'),
                     'driver' => config('services.interswitch.driver'),
+                    'subtitle' => 'Bills & airtime',
                 ],
                 'giglogistics' => [
                     'ready' => $this->settings->isIntegrationReady('giglogistics'),
                     'driver' => config('services.giglogistics.driver'),
+                    'subtitle' => 'Marketplace shipping',
                 ],
                 'dojah' => [
                     'ready' => $this->settings->isDojahReady(),
                     'driver' => config('services.dojah.driver'),
+                    'subtitle' => 'Tier 3 NIN (optional)',
                 ],
                 'remita' => [
                     'ready' => $this->settings->isRemitaReady(),
                     'driver' => config('services.remita.driver'),
+                    'subtitle' => 'RRR payments',
                 ],
                 'termii' => [
                     'ready' => $this->settings->isTermiiReady(),
                     'driver' => config('services.termii.driver'),
+                    'subtitle' => 'SMS & WhatsApp',
                 ],
                 'bridgecard' => [
                     'ready' => $this->settings->isVirtualCardsReady(),
                     'driver' => config('services.bridgecard.driver'),
+                    'subtitle' => 'Virtual cards',
                 ],
                 'mail' => [
                     'ready' => (bool) config('reton.mail.notifications_enabled'),
                     'driver' => config('mail.default'),
+                    'subtitle' => 'Email notifications',
+                ],
+                'bvn' => [
+                    'provider' => $this->settings->bvnProviderLabel(),
+                    'ready' => $this->settings->isBvnVerificationReady(),
                 ],
             ],
             'recentAudit' => AdminAuditLog::query()

@@ -22,7 +22,7 @@ const tabs: { id: IntegrationGroup; label: string }[] = [
   { id: 'interswitch', label: 'Interswitch (Bills)' },
   { id: 'remita', label: 'Remita (RRR)' },
   { id: 'bridgecard', label: 'Bridgecard (Cards)' },
-  { id: 'dojah', label: 'Dojah (KYC)' },
+  { id: 'dojah', label: 'Dojah (NIN / Tier 3)' },
   { id: 'termii', label: 'Termii (SMS)' },
   { id: 'giglogistics', label: 'Giglogistics' },
 ]
@@ -188,6 +188,10 @@ function IntegrationForm({
               <CopyRow label="Webhook URL (register in ALATPay)" value={webhookUrl} mono />
             </div>
           )}
+          <p className="rounded-xl border border-mint/20 bg-mint/[0.04] px-4 py-3 text-xs leading-relaxed text-muted">
+            <span className="font-semibold text-text">BVN verification</span> for wallet funding uses ALATPay Static
+            Wallet OTP (same credentials). Users receive an SMS code linked to their BVN before they can add money.
+          </p>
         </>
       )}
 
@@ -358,7 +362,7 @@ function IntegrationForm({
               onChange={(e) => form.setData('timeout', Number(e.target.value))}
             />
             <p className="text-xs text-muted">
-              BVN & NIN verification for KYC tier upgrades —{' '}
+              Optional Tier 3 NIN verification — BVN for funding is handled by ALATPay.{' '}
               <a href="https://docs.dojah.io" target="_blank" rel="noreferrer" className="text-mint hover:underline">
                 Dojah API
               </a>

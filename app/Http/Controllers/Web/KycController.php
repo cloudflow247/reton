@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Kyc\Models\UserKyc;
 use App\Domain\Kyc\Services\KycService;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -26,21 +27,46 @@ class KycController extends Controller
             'return_to' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $this->kyc->upgradeToTier2(
+        $result = $this->kyc->upgradeToTier2(
             $user,
             $validated['bvn'],
             $validated['date_of_birth'],
             $request->ip(),
         );
 
-        $message = 'BVN verified — you can now fund your wallet and open your ALATPay deposit account.';
+        $returnTo = $this->safeReturnTo((string) ($validated['return_to'] ?? ''));
 
-        $returnTo = (string) ($validated['return_to'] ?? '');
-        if ($returnTo !== '' && str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')) {
-            return redirect($returnTo)->with('success', $message);
+        if ($result instanceof UserKyc) {
+            $message = 'BVN verified — you can now fund your wallet and open your ALATPay deposit account.';
+
+            return $returnTo !== null
+                ? redirect($returnTo)->with('success', $message)
+                : redirect()->route('profile')->with('success', $message);
         }
 
-        return redirect()->route('profile')->with('success', $message);
+        $redirect = $returnTo !== null ? redirect($returnTo) : redirect()->back();
+
+        return $redirect->with('success', $result);
+    }
+
+    public function confirmTier2(Request $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'otp' => ['required', 'string', 'regex:/^\d{4,8}$/'],
+            'return_to' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $this->kyc->confirmAlatpayTier2($user, $validated['otp'], $request->ip());
+
+        $message = 'BVN verified — you can now fund your wallet and open your ALATPay deposit account.';
+        $returnTo = $this->safeReturnTo((string) ($validated['return_to'] ?? ''));
+
+        return $returnTo !== null
+            ? redirect($returnTo)->with('success', $message)
+            : redirect()->route('profile')->with('success', $message);
     }
 
     public function upgradeTier3(Request $request): RedirectResponse
@@ -66,5 +92,14 @@ class KycController extends Controller
         );
 
         return redirect()->route('profile')->with('success', 'Full KYC complete — your limits have been raised.');
+    }
+
+    private function safeReturnTo(string $returnTo): ?string
+    {
+        if ($returnTo !== '' && str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')) {
+            return $returnTo;
+        }
+
+        return null;
     }
 }

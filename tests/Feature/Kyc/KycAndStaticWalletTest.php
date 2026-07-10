@@ -16,6 +16,10 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     config()->set('services.alatpay.business_bvn', '22222222222');
+    config([
+        'services.kyc.bvn_provider' => 'dojah',
+        'services.dojah.driver' => 'fake',
+    ]);
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
 });
 

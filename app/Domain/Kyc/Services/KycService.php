@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  * Identity verification aligned with ALATPay static-wallet tiers.
  *
  * Tier 1 — basic profile (default): collection static wallet, lower limits.
- * Tier 2 — BVN verified via Dojah: individual static wallet on ALATPay.
+ * Tier 2 — BVN verified via ALATPay OTP (default) or Dojah: individual static wallet on ALATPay.
  * Tier 3 — NIN + address verified via Dojah: highest limits.
  */
 class KycService
@@ -27,6 +27,7 @@ class KycService
     public function __construct(
         private readonly KycVerificationGateway $verification,
         private readonly KycAuditService $audit,
+        private readonly AlatpayBvnVerificationService $alatpayBvn,
     ) {}
 
     public function forUser(User $user): UserKyc
@@ -56,7 +57,36 @@ class KycService
         return $bvn;
     }
 
-    public function upgradeToTier2(User $user, string $bvn, string $dateOfBirth, ?string $ipAddress = null): UserKyc
+    public function upgradeToTier2(User $user, string $bvn, string $dateOfBirth, ?string $ipAddress = null): UserKyc|string
+    {
+        if ($this->bvnProvider() === 'alatpay') {
+            return $this->alatpayBvn->initiate($user, $bvn, $dateOfBirth, $ipAddress);
+        }
+
+        return $this->upgradeToTier2ViaDojah($user, $bvn, $dateOfBirth, $ipAddress);
+    }
+
+    public function confirmAlatpayTier2(User $user, string $otp, ?string $ipAddress = null): UserKyc
+    {
+        return $this->alatpayBvn->confirm($user, $otp, $ipAddress);
+    }
+
+    public function hasPendingAlatpayBvn(User $user): bool
+    {
+        return $this->alatpayBvn->hasPending($user);
+    }
+
+    public function pendingAlatpayBvnHint(User $user): ?string
+    {
+        return $this->alatpayBvn->pendingHint($user);
+    }
+
+    public function bvnProvider(): string
+    {
+        return (string) config('services.kyc.bvn_provider', 'alatpay');
+    }
+
+    private function upgradeToTier2ViaDojah(User $user, string $bvn, string $dateOfBirth, ?string $ipAddress = null): UserKyc
     {
         $bvn = (string) preg_replace('/\D/', '', $bvn);
 
@@ -198,6 +228,10 @@ class KycService
 
     private function providerName(): string
     {
+        if ($this->bvnProvider() === 'alatpay') {
+            return config('services.alatpay.driver') === 'fake' ? 'alatpay_fake' : 'alatpay';
+        }
+
         return config('services.dojah.driver') === 'fake' ? 'dojah_fake' : 'dojah';
     }
 

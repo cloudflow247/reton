@@ -159,7 +159,13 @@ class FakeAlatpayGateway implements AlatpayGateway
 
         $this->staticWallets[$staticWalletId] = ['accountNumber' => $accountNumber, 'otpTrackingId' => 'OTP-'.$request->reference];
 
-        return new StaticAccountProvisionResponse($staticWalletId, 'OTP-'.$request->reference, null, null);
+        return new StaticAccountProvisionResponse(
+            $staticWalletId,
+            'OTP-'.$request->reference,
+            null,
+            null,
+            'An OTP has been sent to the phone linked to your BVN. Demo code: 123456',
+        );
     }
 
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse

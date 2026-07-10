@@ -49,24 +49,24 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="relative min-h-full overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden">
       <div className="aurora" aria-hidden />
-      <div className="relative mx-auto max-w-lg px-6 py-10 sm:py-16">
+      <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-8 pb-10 sm:px-6 sm:py-12">
         <Head title="Welcome to Reton" />
 
         <div className="flex flex-col items-center text-center">
-          <AuthBrand size="lg" layout="stacked" />
+          <AuthBrand size="md" layout="stacked" />
         </div>
 
-        <div className="card shield-glow mt-8 p-7 sm:p-8">
+        <div className="card shield-glow mt-6 flex-1 p-5 sm:mt-8 sm:p-7">
           <AuthStepIndicator step={step} total={3} />
 
-          {flash.success && (
-            <p className="mb-4 rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
+          {flash.success && step !== 2 && (
+            <p className="mb-4 mt-4 rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
           )}
 
           {flash.error && (
-            <p className="mb-4 rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
+            <p className="mb-4 mt-4 rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
           )}
 
           <AnimatePresence mode="wait">
@@ -152,21 +152,21 @@ export default function Onboarding() {
             )}
 
             {step === 2 && (
-              <motion.div key="fund" {...slide} transition={{ duration: 0.25 }} className="text-center">
-                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-mint/15 text-mint">
+              <motion.div key="fund" {...slide} transition={{ duration: 0.25 }} className="mt-5 text-center sm:mt-6">
+                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-mint/15 text-mint ring-1 ring-mint/20">
                   <CheckIcon size={28} />
                 </span>
-                <h1 className="mt-4 font-display text-2xl font-bold tracking-tight">You're all set</h1>
-                <p className="mt-2 text-sm text-muted">
-                  Your wallet is secured. Add money now or explore the dashboard — you can fund anytime.
+                <h1 className="mt-4 font-display text-xl font-bold tracking-tight sm:text-2xl">You&apos;re all set</h1>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+                  Your wallet is secured with a 4-digit PIN. Add money now or explore the dashboard — you can fund anytime.
                 </p>
                 <div className="mt-6 flex flex-col gap-3">
-                  <Link href="/add-money" className="btn w-full bg-mint py-2.5 text-sm font-semibold text-white">
+                  <Link href="/add-money" className="btn w-full bg-mint py-3 text-sm font-semibold text-white">
                     Add money now
                   </Link>
                   <Link
                     href="/dashboard"
-                    className="btn w-full border border-line bg-surface py-2.5 text-sm font-semibold text-text transition hover:border-mint/35"
+                    className="btn w-full border border-line bg-surface py-3 text-sm font-semibold text-text transition hover:border-mint/35"
                   >
                     Go to dashboard
                   </Link>
@@ -176,7 +176,7 @@ export default function Onboarding() {
           </AnimatePresence>
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 flex justify-center sm:mt-8">
           <PoweredByAlatInline />
         </div>
       </div>

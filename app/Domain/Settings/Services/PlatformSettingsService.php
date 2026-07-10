@@ -344,6 +344,23 @@ class PlatformSettingsService
         return $this->isIntegrationReady('dojah');
     }
 
+    public function isBvnVerificationReady(): bool
+    {
+        if ((string) config('services.kyc.bvn_provider', 'alatpay') === 'dojah') {
+            return $this->isDojahReady();
+        }
+
+        $values = $this->effectiveGroup('alatpay');
+
+        return ($values['driver'] ?? '') === 'fake'
+            || (! empty($values['api_key']) && ! empty($values['business_id']));
+    }
+
+    public function bvnProviderLabel(): string
+    {
+        return (string) config('services.kyc.bvn_provider', 'alatpay') === 'dojah' ? 'Dojah' : 'ALATPay';
+    }
+
     public function isTermiiReady(): bool
     {
         return $this->isIntegrationReady('termii');

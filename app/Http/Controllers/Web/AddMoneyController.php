@@ -66,6 +66,9 @@ class AddMoneyController extends Controller
             'openDeposits' => $openDeposits,
             'kyc' => (new KycResource($profile))->resolve(),
             'staticAccount' => $staticAccount ? (new StaticAccountResource($staticAccount))->resolve() : null,
+            'bvnPendingOtp' => $this->kyc->hasPendingAlatpayBvn($user),
+            'bvnOtpHint' => $this->kyc->pendingAlatpayBvnHint($user),
+            'bvnProvider' => $this->kyc->bvnProvider(),
         ]);
     }
 

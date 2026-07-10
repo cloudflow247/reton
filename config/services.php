@@ -102,6 +102,11 @@ return [
     |--------------------------------------------------------------------------
     | @see https://docs.dojah.io
     */
+    'kyc' => [
+        // BVN verification for wallet funding: alatpay (OTP via static wallet) or dojah.
+        'bvn_provider' => env('KYC_BVN_PROVIDER', 'alatpay'),
+    ],
+
     'dojah' => [
         'driver' => env('DOJAH_DRIVER', 'fake'),
         'base_url' => env('DOJAH_BASE_URL', 'https://sandbox.dojah.io'),

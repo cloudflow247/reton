@@ -7,6 +7,14 @@ import { shortDate } from '@/lib/format'
 import { useAdminBase } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
+type IntegrationRow = {
+  key: string
+  ready: boolean
+  driver: string
+  subtitle?: string
+  bvn_ready?: boolean
+}
+
 type AdminDashboardProps = PageProps<{
   stats: {
     users: number
@@ -18,10 +26,15 @@ type AdminDashboardProps = PageProps<{
     open_support_tickets: number
   }
   integrations: {
-    alatpay: { ready: boolean; driver: string }
-    interswitch: { ready: boolean; driver: string }
-    giglogistics: { ready: boolean; driver: string }
-    dojah: { ready: boolean; driver: string }
+    alatpay: IntegrationRow
+    interswitch: IntegrationRow
+    giglogistics: IntegrationRow
+    dojah: IntegrationRow
+    remita: IntegrationRow
+    termii: IntegrationRow
+    bridgecard: IntegrationRow
+    mail: IntegrationRow
+    bvn: { provider: string; ready: boolean }
   }
   recentAudit: {
     id: string
@@ -55,11 +68,15 @@ export default function AdminDashboard() {
     { label: 'Support tickets', value: stats.open_support_tickets, Icon: ChatIcon },
   ]
 
-  const integrationRows = [
+  const integrationRows: IntegrationRow[] = [
     { key: 'ALATPay', ...integrations.alatpay },
+    { key: 'BVN verification', ready: integrations.bvn.ready, driver: integrations.bvn.provider, subtitle: `via ${integrations.bvn.provider}` },
     { key: 'Interswitch', ...integrations.interswitch },
+    { key: 'Termii', ...integrations.termii },
+    { key: 'Bridgecard', ...integrations.bridgecard },
+    { key: 'Dojah', ...integrations.dojah },
+    { key: 'Remita', ...integrations.remita },
     { key: 'Giglogistics', ...integrations.giglogistics },
-    { key: 'Dojah KYC', ...integrations.dojah },
   ]
 
   return (
@@ -113,21 +130,24 @@ export default function AdminDashboard() {
 
         <div className="grid gap-5 lg:grid-cols-2">
           <Card>
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="font-display text-lg font-semibold">Integrations</h2>
               <Link
                 href={`${adminBase}/integrations`}
-                className="flex items-center gap-1 text-sm font-medium text-mint hover:underline"
+                className="flex shrink-0 items-center gap-1 text-sm font-medium text-mint hover:underline"
               >
                 Configure <ChevronRightIcon size={16} />
               </Link>
             </div>
             <ul className="divide-y divide-line">
               {integrationRows.map((row) => (
-                <li key={row.key} className="flex items-center justify-between py-3">
-                  <div>
+                <li key={row.key} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
                     <div className="text-sm font-semibold">{row.key}</div>
-                    <div className="text-xs text-muted capitalize">{row.driver} driver</div>
+                    <div className="truncate text-xs text-muted capitalize">
+                      {row.subtitle ? `${row.subtitle} · ` : ''}
+                      {row.driver} {row.key === 'ALATPay' && row.bvn_ready === false ? '· BVN needs setup' : ''}
+                    </div>
                   </div>
                   {row.ready ? (
                     <Pill tone="mint">
@@ -169,9 +189,9 @@ export default function AdminDashboard() {
           <ul className="mt-3 space-y-2 text-sm text-muted">
             <li>API keys and webhook secrets are encrypted with your server&apos;s APP_KEY before storage.</li>
             <li>The admin UI only shows masked values (last 4 characters). Leave a secret field blank to keep the current value.</li>
+            <li>BVN verification for wallet funding uses ALATPay Static Wallet OTP — configure API key &amp; Business ID under Integrations.</li>
             <li>Audit logs record who changed what — never the secret values themselves.</li>
             <li>Customize the admin URL under App settings so <code className="text-text">/admin</code> is not guessable.</li>
-            <li>Keep .env out of git. Promote admins with: php artisan reton:admin your@email.com</li>
           </ul>
         </Card>
       </div>

@@ -19,6 +19,9 @@ type AddMoneyProps = PageProps<{
   openDeposits: Deposit[]
   kyc: KycProfile
   staticAccount: StaticAccount | null
+  bvnPendingOtp?: boolean
+  bvnOtpHint?: string | null
+  bvnProvider?: string
 }>
 
 const methods: {
@@ -60,7 +63,8 @@ const methodLabel: Record<DepositMethod, string> = {
 }
 
 export default function AddMoney() {
-  const { auth, flash, pendingDeposit, openDeposits, kyc, staticAccount } = usePage<AddMoneyProps>().props
+  const { auth, flash, pendingDeposit, openDeposits, kyc, staticAccount, bvnPendingOtp, bvnOtpHint, bvnProvider } =
+    usePage<AddMoneyProps>().props
   const wallet = auth.wallets[0]
 
   const [amount, setAmount] = useState('')
@@ -139,7 +143,11 @@ export default function AddMoney() {
         <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />
 
         {!kyc.bvn_verified ? (
-          <BvnVerificationGate />
+          <BvnVerificationGate
+            pendingOtp={bvnPendingOtp}
+            otpHint={bvnOtpHint}
+            provider={bvnProvider}
+          />
         ) : (
           <>
         {openDeposits.length > 0 && (

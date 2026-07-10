@@ -16,5 +16,6 @@ final readonly class StaticAccountProvisionResponse
         public ?string $otpTrackingId,
         public ?string $accountNumber = null,
         public ?string $accountName = null,
+        public ?string $otpHint = null,
     ) {}
 }

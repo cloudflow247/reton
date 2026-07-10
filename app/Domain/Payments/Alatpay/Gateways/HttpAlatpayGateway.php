@@ -18,7 +18,9 @@ use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -175,12 +177,16 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
     {
-        $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount', [
-            'businessId' => config('services.alatpay.business_id'),
-            'staticWalletType' => $request->walletType,
-            'bvn' => $request->bvn,
-            'email' => $request->email,
-        ]);
+        try {
+            $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount', [
+                'businessId' => config('services.alatpay.business_id'),
+                'staticWalletType' => $request->walletType,
+                'bvn' => $request->bvn,
+                'email' => $request->email,
+            ]);
+        } catch (ConnectionException|RequestException $e) {
+            throw AlatpayException::requestFailed('provisionStaticAccount', 503);
+        }
 
         if (! $response->successful()) {
             throw AlatpayException::requestFailed('provisionStaticAccount', $response->status());
@@ -194,11 +200,18 @@ class HttpAlatpayGateway implements AlatpayGateway
             throw AlatpayException::requestFailed('provisionStaticAccount', $response->status());
         }
 
+        $otpTrackingId = isset($data['otpTrackingID'])
+            ? (string) $data['otpTrackingID']
+            : (isset($data['otpTrackingId']) ? (string) $data['otpTrackingId'] : null);
+
+        $message = (string) ($data['message'] ?? $response->json('message', ''));
+
         return new StaticAccountProvisionResponse(
             staticWalletId: $staticWalletId,
-            otpTrackingId: isset($data['otpTrackingId']) ? (string) $data['otpTrackingId'] : null,
+            otpTrackingId: $otpTrackingId !== '' ? $otpTrackingId : null,
             accountNumber: isset($data['accountNumber']) ? (string) $data['accountNumber'] : null,
             accountName: isset($data['accountName']) ? (string) $data['accountName'] : null,
+            otpHint: $message !== '' ? $message : null,
         );
     }
 
