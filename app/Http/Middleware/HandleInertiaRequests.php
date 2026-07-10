@@ -62,6 +62,12 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             // Only expose the secret admin URL to administrators.
             'adminPath' => ($user !== null && $user->is_admin) ? AdminPath::url() : null,
+            // Product surfaces gated behind Coming Soon until live providers are ready.
+            'features' => [
+                'withdraw' => (bool) config('reton.features.withdraw', false),
+                'bills' => (bool) config('reton.features.bills', false),
+                'cards' => (bool) config('reton.features.cards', false),
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

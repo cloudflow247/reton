@@ -20,6 +20,7 @@ beforeEach(function () {
         'reton.bills.provider' => 'interswitch',
         'services.interswitch.driver' => 'fake',
         'services.remita.driver' => 'fake',
+        'reton.features.bills' => true,
     ]);
     $this->gateway = new FakeBillProvider;
     $this->app->instance(BillProviderGateway::class, $this->gateway);
@@ -131,6 +132,36 @@ it('rejects a bill with the wrong pin and moves no money', function () {
         'amount' => 200_00,
         'pin' => '9999',
     ])->assertSessionHasErrors('pin');
+
+    expect($wallet->fresh()->balance)->toBe(100000)
+        ->and(BillPayment::count())->toBe(0);
+});
+
+it('shows coming soon when bills are disabled', function () {
+    config(['reton.features.bills' => false]);
+    [$user] = billWebUser();
+
+    $this->actingAs($user)->get('/bills')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('ComingSoon')
+            ->where('feature', 'bills'));
+});
+
+it('rejects bill posts when the feature is disabled', function () {
+    config(['reton.features.bills' => false]);
+    [$user, $wallet] = billWebUser(1_000_00);
+
+    $this->actingAs($user)->post('/bills', [
+        'wallet_id' => $wallet->id,
+        'category' => 'airtime',
+        'biller_code' => 'mtn',
+        'biller_name' => 'MTN',
+        'customer_reference' => '08030000000',
+        'amount' => 200_00,
+        'pin' => '1234',
+    ])->assertRedirect()
+        ->assertSessionHas('error');
 
     expect($wallet->fresh()->balance)->toBe(100000)
         ->and(BillPayment::count())->toBe(0);

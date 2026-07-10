@@ -62,7 +62,7 @@ function nextTodo(needsPin: boolean, isNewUser: boolean) {
 }
 
 export default function Dashboard() {
-  const { auth, activity, summary, kycTier } = usePage<
+  const { auth, activity, summary, kycTier, features } = usePage<
     PageProps<{
       activity: StatementEntry[]
       summary: DashboardSummary
@@ -84,6 +84,9 @@ export default function Dashboard() {
   const isNewUser = recent.length === 0
   const todo = nextTodo(needsPin, isNewUser)
   const copyAccount = wallet?.account_number ?? ''
+  const billsSoon = features?.bills === false
+  const withdrawSoon = features?.withdraw === false
+  const cardsSoon = features?.cards === false
 
   const trust = summary ?? {
     pending_callbacks: 0,
@@ -201,8 +204,8 @@ export default function Dashboard() {
             <div className="grid grid-cols-4 gap-2">
               <QuickAction href="/send" label="Send" Icon={SendIcon} primary />
               <QuickAction href="/add-money" label="Add" Icon={PlusIcon} />
-              <QuickAction href="/bills" label="Bills" Icon={BillIcon} />
-              <QuickAction href="/withdraw" label="Cash out" Icon={BankIcon} />
+              <QuickAction href="/bills" label="Bills" Icon={BillIcon} soon={billsSoon} />
+              <QuickAction href="/withdraw" label="Cash out" Icon={BankIcon} soon={withdrawSoon} />
             </div>
           </motion.div>
 
@@ -308,12 +311,19 @@ export default function Dashboard() {
               href="/cards"
               className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 transition hover:border-mint/30"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint/10 text-mint">
+              <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-mint/10 text-mint">
                 <CardIcon size={18} />
+                {cardsSoon && (
+                  <span className="absolute -right-1 -top-1 rounded-full bg-amber px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white">
+                    Soon
+                  </span>
+                )}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold">Cards</span>
-                <span className="block text-xs text-muted">Virtual cards for online spend</span>
+                <span className="block text-xs text-muted">
+                  {cardsSoon ? 'Virtual cards coming soon' : 'Virtual cards for online spend'}
+                </span>
               </span>
               <ChevronRightIcon size={16} className="text-muted" />
             </Link>
@@ -331,22 +341,30 @@ function QuickAction({
   label,
   Icon,
   primary = false,
+  soon = false,
 }: {
   href: string
   label: string
   Icon: (p: { size?: number; className?: string }) => JSX.Element
   primary?: boolean
+  soon?: boolean
 }) {
   return (
     <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
       <Link
         href={href}
-        className={`elevate flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition ${
+        title={soon ? `${label} — coming soon` : label}
+        className={`elevate relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition ${
           primary
             ? 'border-mint/30 bg-mint text-white shadow-[0_12px_28px_-16px_rgba(9,79,57,0.5)] hover:bg-mint-strong'
             : 'border-line bg-surface hover:border-mint/30'
         }`}
       >
+        {soon && (
+          <span className="absolute right-1.5 top-1.5 rounded-md bg-amber/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber">
+            Soon
+          </span>
+        )}
         <Icon size={20} className={primary ? 'text-white' : 'text-mint'} />
         <span className={`text-[11px] font-semibold ${primary ? 'text-white' : 'text-text'}`}>{label}</span>
       </Link>

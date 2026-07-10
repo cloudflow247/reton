@@ -28,15 +28,16 @@ type NavItem = {
   end?: boolean
   Icon: (p: { size?: number; className?: string }) => JSX.Element
   hint?: string
+  feature?: keyof SharedProps['features']
 }
 
 /** Always visible — core money actions with labels. */
 const primaryNav: NavItem[] = [
   { to: '/dashboard', label: 'Home', end: true, Icon: HomeIcon, hint: 'Wallet & overview' },
   { to: '/send', label: 'Send', Icon: SendIcon, hint: 'Transfer money' },
-  { to: '/withdraw', label: 'Withdraw', Icon: BankIcon, hint: 'Cash out to bank' },
-  { to: '/bills', label: 'Bills', Icon: BillIcon, hint: 'Airtime, power & more' },
-  { to: '/cards', label: 'Cards', Icon: CardIcon, hint: 'Virtual cards' },
+  { to: '/withdraw', label: 'Withdraw', Icon: BankIcon, hint: 'Cash out to bank', feature: 'withdraw' },
+  { to: '/bills', label: 'Bills', Icon: BillIcon, hint: 'Airtime, power & more', feature: 'bills' },
+  { to: '/cards', label: 'Cards', Icon: CardIcon, hint: 'Virtual cards', feature: 'cards' },
 ]
 
 /** Nested under More — still labeled, keeps the bar readable. */
@@ -48,7 +49,7 @@ const moreNav: NavItem[] = [
 
 const dockLeft: NavItem[] = [
   { to: '/dashboard', label: 'Home', end: true, Icon: HomeIcon },
-  { to: '/bills', label: 'Bills', Icon: BillIcon },
+  { to: '/bills', label: 'Bills', Icon: BillIcon, feature: 'bills' },
 ]
 const dockRight: NavItem[] = [
   { to: '/add-money', label: 'Add', Icon: PlusIcon },
@@ -58,6 +59,7 @@ const dockRight: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const page = usePage<SharedProps>()
   const user = page.props.auth?.user
+  const features = page.props.features
   const adminBase = useAdminBase()
   const pathname = page.url.split('?')[0]
   const needsPin = !user?.has_transaction_pin
@@ -66,6 +68,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const active = (to: string, end?: boolean) => (end ? pathname === to : pathname.startsWith(to))
   const moreActive = moreNav.some(({ to, end }) => active(to, end))
+  const isSoon = (feature?: keyof SharedProps['features']) =>
+    feature !== undefined && features?.[feature] === false
 
   useEffect(() => {
     setMoreOpen(false)
@@ -98,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <nav className="hidden min-w-0 flex-1 items-center justify-start gap-0.5 pl-1 lg:flex" aria-label="Primary">
           {primaryNav.map((item) => (
-            <NavLink key={item.to} item={item} on={active(item.to, item.end)} />
+            <NavLink key={item.to} item={item} on={active(item.to, item.end)} soon={isSoon(item.feature)} />
           ))}
 
           <div className="relative" ref={moreRef}>
@@ -224,7 +228,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="dock relative mx-auto flex max-w-[22rem] items-end justify-between rounded-[1.35rem] px-1.5 py-1.5 shadow-[0_12px_40px_-18px_rgba(16,40,33,0.55)]">
           {dockLeft.map((n) => (
-            <DockItem key={n.to} {...n} on={active(n.to, n.end)} />
+            <DockItem key={n.to} {...n} on={active(n.to, n.end)} soon={isSoon(n.feature)} />
           ))}
 
           <Link
@@ -238,7 +242,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           {dockRight.map((n) => (
-            <DockItem key={n.to} {...n} on={active(n.to, n.end)} />
+            <DockItem key={n.to} {...n} on={active(n.to, n.end)} soon={isSoon(n.feature)} />
           ))}
         </div>
       </nav>
@@ -246,12 +250,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   )
 }
 
-function NavLink({ item, on }: { item: NavItem; on: boolean }) {
+function NavLink({ item, on, soon }: { item: NavItem; on: boolean; soon?: boolean }) {
   const { to, label, Icon } = item
   return (
     <Link
       href={to}
-      title={item.hint ?? label}
+      title={soon ? `${label} — coming soon` : (item.hint ?? label)}
       className="relative shrink-0 rounded-full px-3 py-2 text-sm font-medium"
     >
       {on && (
@@ -268,6 +272,11 @@ function NavLink({ item, on }: { item: NavItem; on: boolean }) {
       >
         <Icon size={16} />
         <span>{label}</span>
+        {soon && (
+          <span className="rounded-md bg-amber/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber">
+            Soon
+          </span>
+        )}
       </span>
     </Link>
   )
@@ -278,12 +287,14 @@ function DockItem({
   label,
   Icon,
   on,
+  soon,
 }: {
   to: string
   label: string
   end?: boolean
   Icon: (p: { size?: number; className?: string }) => JSX.Element
   on: boolean
+  soon?: boolean
 }) {
   return (
     <Link
@@ -291,13 +302,17 @@ function DockItem({
       className={`relative flex min-w-[3.5rem] flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[10px] font-semibold transition-colors ${
         on ? 'text-mint' : 'text-muted'
       }`}
+      title={soon ? `${label} — coming soon` : label}
     >
       <span
-        className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
+        className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition ${
           on ? 'bg-mint/15 text-mint' : 'text-muted'
         }`}
       >
         <Icon size={20} />
+        {soon && (
+          <span className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-amber ring-2 ring-surface" />
+        )}
       </span>
       {label}
       {on && (

@@ -390,4 +390,20 @@ return [
         'escalate_min' => (int) env('RETON_FRAUD_ESCALATE_MIN', 90),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Product feature flags
+    |--------------------------------------------------------------------------
+    |
+    | Flip these on when the underlying provider is live (Wema Debit Wallet for
+    | withdraw, Interswitch for bills, Bridgecard for cards). Off = Coming Soon.
+    |
+    */
+
+    'features' => [
+        'withdraw' => (bool) env('RETON_FEATURE_WITHDRAW', false),
+        'bills' => (bool) env('RETON_FEATURE_BILLS', false),
+        'cards' => (bool) env('RETON_FEATURE_CARDS', false),
+    ],
+
 ];

@@ -14,6 +14,7 @@ use App\Domain\Fraud\Exceptions\FraudBlockedException;
 use App\Domain\Fraud\Services\FraudService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Web\Concerns\RendersComingSoon;
 use App\Http\Controllers\Web\Concerns\VerifiesPin;
 use App\Http\Requests\Api\V1\Bill\PayBillRequest;
 use App\Http\Resources\Api\V1\BillPaymentResource;
@@ -28,6 +29,7 @@ use Inertia\Response;
 
 class BillsController extends Controller
 {
+    use RendersComingSoon;
     use VerifiesPin;
 
     public function __construct(
@@ -38,6 +40,13 @@ class BillsController extends Controller
 
     public function index(Request $request): Response
     {
+        if ($soon = $this->comingSoonIfDisabled('bills', [
+            'title' => 'Bill payments',
+            'description' => 'Airtime, data, electricity, and cable TV are next. We’re locking in live Interswitch settlement before opening this to everyone.',
+        ])) {
+            return $soon;
+        }
+
         /** @var User $user */
         $user = $request->user();
 
@@ -66,6 +75,10 @@ class BillsController extends Controller
      */
     public function lookup(Request $request): JsonResponse
     {
+        if (! (bool) config('reton.features.bills', false)) {
+            abort(503, 'Bill payments are coming soon.');
+        }
+
         $rrr = $request->query('rrr');
 
         if (! is_string($rrr) || preg_match('/^\d{12}$/', $rrr) !== 1) {
@@ -92,6 +105,13 @@ class BillsController extends Controller
 
     public function store(PayBillRequest $request): RedirectResponse
     {
+        if ($denied = $this->denyIfComingSoon(
+            'bills',
+            'Bill payments are coming soon. Your balance was not charged.',
+        )) {
+            return $denied;
+        }
+
         /** @var User $user */
         $user = $request->user();
 

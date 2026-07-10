@@ -155,7 +155,9 @@ it('renders each authenticated screen', function (string $path, string $componen
     'dashboard' => ['/dashboard', 'Dashboard'],
     'send' => ['/send', 'Send'],
     'add money' => ['/add-money', 'AddMoney'],
-    'bills' => ['/bills', 'Bills'],
+    'bills' => ['/bills', 'ComingSoon'],
+    'withdraw' => ['/withdraw', 'ComingSoon'],
+    'cards' => ['/cards', 'ComingSoon'],
     'receive' => ['/receive', 'Receive'],
     'activity' => ['/activity', 'Activity'],
     'profile' => ['/profile', 'Profile'],
@@ -174,7 +176,10 @@ it('shares the authenticated user and wallets with every page', function () {
             ->where('auth.wallets.0.id', $wallet->id)
             ->has('summary')
             ->has('activity')
-            ->has('kycTier'));
+            ->has('kycTier')
+            ->where('features.withdraw', false)
+            ->where('features.bills', false)
+            ->where('features.cards', false));
 });
 
 it('passes transfers, callbacks and recoveries to the protection page', function () {

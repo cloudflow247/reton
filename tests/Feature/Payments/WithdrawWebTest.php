@@ -17,6 +17,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    config(['reton.features.withdraw' => true]);
 });
 
 /**
@@ -153,6 +154,35 @@ it('does not debit the wallet when outbound payouts are unavailable', function (
     $gateway->shouldReceive('supportsOutboundTransfers')->andReturn(false);
     $this->app->instance(AlatpayGateway::class, $gateway);
 
+    [$user, $wallet] = withdrawWebUser();
+
+    $this->actingAs($user)->post('/withdraw', [
+        'wallet_id' => $wallet->id,
+        'amount' => 400_00,
+        'bank_code' => '044',
+        'account_number' => '0123456789',
+        'account_name' => 'ADA LOVELACE',
+        'pin' => '1234',
+    ])->assertRedirect()
+        ->assertSessionHas('error');
+
+    expect($wallet->fresh()->balance)->toBe(100000)
+        ->and(Payout::count())->toBe(0);
+});
+
+it('shows coming soon when withdraw is disabled', function () {
+    config(['reton.features.withdraw' => false]);
+    [$user] = withdrawWebUser();
+
+    $this->actingAs($user)->get('/withdraw')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('ComingSoon')
+            ->where('feature', 'withdraw'));
+});
+
+it('rejects withdraw posts when the feature is disabled', function () {
+    config(['reton.features.withdraw' => false]);
     [$user, $wallet] = withdrawWebUser();
 
     $this->actingAs($user)->post('/withdraw', [

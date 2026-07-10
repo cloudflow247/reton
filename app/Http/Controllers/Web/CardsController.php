@@ -12,6 +12,7 @@ use App\Domain\Cards\Services\FxQuoteService;
 use App\Domain\Cards\Services\VirtualCardService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Web\Concerns\RendersComingSoon;
 use App\Http\Controllers\Web\Concerns\VerifiesPin;
 use App\Http\Resources\Api\V1\VirtualCardResource;
 use App\Models\User;
@@ -25,6 +26,7 @@ use Inertia\Response;
 
 class CardsController extends Controller
 {
+    use RendersComingSoon;
     use VerifiesPin;
 
     public function __construct(
@@ -36,6 +38,13 @@ class CardsController extends Controller
 
     public function index(Request $request): Response
     {
+        if ($soon = $this->comingSoonIfDisabled('cards', [
+            'title' => 'Virtual cards',
+            'description' => 'NGN and USD cards for online spend are on the way. We’re finishing live Bridgecard issuing before this goes live.',
+        ])) {
+            return $soon;
+        }
+
         /** @var User $user */
         $user = $request->user();
         $cards = $this->cards->forUser($user);
@@ -70,6 +79,13 @@ class CardsController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if ($denied = $this->denyIfComingSoon(
+            'cards',
+            'Virtual cards are coming soon. Your balance was not charged.',
+        )) {
+            return $denied;
+        }
+
         /** @var User $user */
         $user = $request->user();
 
@@ -98,6 +114,13 @@ class CardsController extends Controller
 
     public function fund(Request $request, VirtualCard $card): RedirectResponse
     {
+        if ($denied = $this->denyIfComingSoon(
+            'cards',
+            'Virtual cards are coming soon. Your balance was not charged.',
+        )) {
+            return $denied;
+        }
+
         /** @var User $user */
         $user = $request->user();
 
@@ -125,6 +148,10 @@ class CardsController extends Controller
 
     public function quote(Request $request): JsonResponse
     {
+        if (! (bool) config('reton.features.cards', false)) {
+            abort(503, 'Virtual cards are coming soon.');
+        }
+
         $validated = $request->validate([
             'source_currency' => ['required', 'string', 'size:3'],
             'target_currency' => ['required', 'string', 'size:3'],
@@ -146,6 +173,10 @@ class CardsController extends Controller
 
     public function reveal(Request $request): JsonResponse
     {
+        if (! (bool) config('reton.features.cards', false)) {
+            abort(503, 'Virtual cards are coming soon.');
+        }
+
         /** @var User $user */
         $user = $request->user();
 
@@ -180,6 +211,13 @@ class CardsController extends Controller
 
     private function toggleFreeze(Request $request, bool $freeze): RedirectResponse
     {
+        if ($denied = $this->denyIfComingSoon(
+            'cards',
+            'Virtual cards are coming soon.',
+        )) {
+            return $denied;
+        }
+
         /** @var User $user */
         $user = $request->user();
 

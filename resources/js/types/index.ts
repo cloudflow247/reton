@@ -23,6 +23,13 @@ export type DemoInfo = {
   accounts: { name: string; email: string }[]
 }
 
+/** Feature flags shared with every page (Coming Soon when false). */
+export type FeatureFlags = {
+  withdraw: boolean
+  bills: boolean
+  cards: boolean
+}
+
 /** Props shared with every page via HandleInertiaRequests::share(). */
 export type SharedProps = {
   auth: {
@@ -32,6 +39,7 @@ export type SharedProps = {
   demo: DemoInfo | null
   /** Secret admin panel base path — only set for platform administrators. */
   adminPath: string | null
+  features: FeatureFlags
   flash: {
     success: string | null
     error: string | null

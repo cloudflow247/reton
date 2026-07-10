@@ -14,6 +14,7 @@ use App\Domain\Payments\Models\Payout;
 use App\Domain\Payments\Services\PayoutService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Web\Concerns\RendersComingSoon;
 use App\Http\Controllers\Web\Concerns\VerifiesPin;
 use App\Http\Resources\Api\V1\PayoutResource;
 use App\Models\User;
@@ -29,10 +30,18 @@ use Throwable;
 
 class WithdrawController extends Controller
 {
+    use RendersComingSoon;
     use VerifiesPin;
 
     public function index(Request $request, AlatpayGateway $alatpay): Response
     {
+        if ($soon = $this->comingSoonIfDisabled('withdraw', [
+            'title' => 'Withdraw to bank',
+            'description' => 'Cash out to your own bank account is almost ready. We’re finishing Wema Debit Wallet payouts so every withdrawal is safe and same-name only.',
+        ])) {
+            return $soon;
+        }
+
         /** @var User $user */
         $user = $request->user();
 
@@ -51,6 +60,13 @@ class WithdrawController extends Controller
         FraudService $fraud,
         KycLimitService $kycLimits,
     ): RedirectResponse {
+        if ($denied = $this->denyIfComingSoon(
+            'withdraw',
+            'Bank withdrawals are coming soon. Your balance was not charged.',
+        )) {
+            return $denied;
+        }
+
         /** @var User $user */
         $user = $request->user();
 

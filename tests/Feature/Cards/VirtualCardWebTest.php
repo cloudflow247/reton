@@ -17,7 +17,10 @@ use Inertia\Testing\AssertableInertia as Assert;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    config(['services.bridgecard.driver' => 'fake']);
+    config([
+        'services.bridgecard.driver' => 'fake',
+        'reton.features.cards' => true,
+    ]);
     $this->app->instance(VirtualCardGateway::class, new FakeBridgecardVirtualCardGateway);
 });
 
@@ -145,4 +148,32 @@ it('returns fx quote for cross-currency funding', function () {
         ->getJson('/cards/fund/quote?source_currency=NGN&target_currency=USD&target_amount_minor=1000')
         ->assertOk()
         ->assertJsonStructure(['source_amount_minor', 'target_amount_minor', 'rate']);
+});
+
+it('shows coming soon when cards are disabled', function () {
+    config(['reton.features.cards' => false]);
+    [$user] = cardUser();
+
+    $this->actingAs($user)
+        ->get('/cards')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('ComingSoon')
+            ->where('feature', 'cards'));
+});
+
+it('rejects card issue when the feature is disabled', function () {
+    config(['reton.features.cards' => false]);
+    [$user, $wallet] = cardUser();
+
+    $this->actingAs($user)
+        ->post('/cards', [
+            'wallet_id' => $wallet->id,
+            'currency' => 'NGN',
+            'pin' => '1234',
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    expect(VirtualCard::where('user_id', $user->id)->count())->toBe(0);
 });
