@@ -163,6 +163,24 @@ it('preserves secrets when masked placeholders are submitted', function () {
         ->and($decrypted['timeout'])->toBe(25);
 });
 
+it('tests alatpay connection using the integration slug not the admin path', function () {
+    $admin = adminUser();
+    app(PlatformSettingsService::class)->updateGroup('alatpay', [
+        'driver' => 'fake',
+        'base_url' => 'https://apibox.alatpay.ng',
+        'api_key' => 'test-key',
+        'business_id' => 'biz-001',
+        'business_bvn' => '22334455667',
+        'webhook_secret' => '',
+        'timeout' => 15,
+    ], $admin);
+
+    $this->actingAs($admin)->post('/admin/integrations/alatpay/test')
+        ->assertRedirect()
+        ->assertSessionHas('success')
+        ->assertSessionMissing('error');
+});
+
 it('writes audit logs without secret values', function () {
     $admin = adminUser();
 

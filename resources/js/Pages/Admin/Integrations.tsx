@@ -4,7 +4,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react'
 import { AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, CopyRow, Field, Pill } from '@/components/ui'
 import { CheckIcon } from '@/components/icons'
-import { adminUrl } from '@/lib/admin'
+import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
 type IntegrationGroup = 'alatpay' | 'interswitch' | 'bridgecard' | 'giglogistics' | 'dojah' | 'remita' | 'termii'
@@ -95,15 +95,15 @@ function IntegrationForm({
 }) {
   const form = useForm(cleanInitial(initial, group))
   const { flash } = usePage<IntegrationsProps>().props
-  const base = adminUrl()
+  const adminBase = useAdminBase()
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.post(`${base}/integrations/save`, { preserveScroll: true })
+    form.post(`${buildAdminUrl(adminBase)}/integrations/save`, { preserveScroll: true })
   }
 
   function testConnection() {
-    router.post(`${base}/integrations/${group}/test`, {}, { preserveScroll: true })
+    router.post(`${buildAdminUrl(adminBase)}/integrations/${group}/test`, {}, { preserveScroll: true })
   }
 
   const driver = String(form.data.driver ?? 'fake')

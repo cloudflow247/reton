@@ -157,8 +157,10 @@ class AdminIntegrationsController extends Controller
         return back()->with('success', ucfirst($group).' settings saved and applied.');
     }
 
-    public function test(Request $request, string $integration): RedirectResponse
+    public function test(Request $request, string $adminPrefix, string $integration): RedirectResponse
     {
+        unset($adminPrefix);
+
         if ($integration === 'alatpay') {
             if (! $this->settings->isIntegrationReady('alatpay')) {
                 return back()->with('error', 'Add API key, Business ID, and Business BVN before testing.');
