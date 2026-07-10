@@ -59,22 +59,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     return back()->with('error', $e->getMessage());
                 }
 
-                // Temporarily surface unexpected withdraw failures so production can
-                // be diagnosed without Cloud log access. Remove once fixed.
-                if (
-                    $request->routeIs('withdraw', 'withdraw.store')
-                    && ! $e instanceof ValidationException
-                    && ! $e instanceof AuthenticationException
-                    && ! $e instanceof AuthorizationException
-                    && ! $e instanceof HttpExceptionInterface
-                ) {
-                    report($e);
-
-                    return redirect()
-                        ->route('dashboard')
-                        ->with('error', 'Withdraw failed: '.$e->getMessage());
-                }
-
                 return null;
             }
 

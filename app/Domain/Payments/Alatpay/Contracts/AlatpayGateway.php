@@ -30,6 +30,12 @@ interface AlatpayGateway
 
     public function fetchTransaction(string $providerReference): ?RemoteTransaction;
 
+    /**
+     * Whether this gateway can send money to external bank accounts.
+     * ALATPay collections (apibox) cannot — that needs Wema Debit Wallet.
+     */
+    public function supportsOutboundTransfers(): bool;
+
     public function initiateTransfer(TransferRequest $request): TransferResponse;
 
     public function fetchTransfer(string $providerReference): ?RemoteTransaction;

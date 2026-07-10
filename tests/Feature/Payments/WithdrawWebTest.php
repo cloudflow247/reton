@@ -43,7 +43,7 @@ it('renders the withdraw page with banks', function () {
             ->component('Withdraw')
             ->has('banks')
             ->where('accountNameHint', 'ADA LOVELACE')
-            ->where('build', 'withdraw-2026-07-10c')
+            ->where('payoutsAvailable', true)
             ->has('recentPayouts', 0));
 });
 
@@ -146,4 +146,25 @@ it('rejects a withdrawal with the wrong pin', function () {
     ])->assertSessionHasErrors('pin');
 
     expect($wallet->fresh()->balance)->toBe(100000);
+});
+
+it('does not debit the wallet when outbound payouts are unavailable', function () {
+    $gateway = Mockery::mock(AlatpayGateway::class);
+    $gateway->shouldReceive('supportsOutboundTransfers')->andReturn(false);
+    $this->app->instance(AlatpayGateway::class, $gateway);
+
+    [$user, $wallet] = withdrawWebUser();
+
+    $this->actingAs($user)->post('/withdraw', [
+        'wallet_id' => $wallet->id,
+        'amount' => 400_00,
+        'bank_code' => '044',
+        'account_number' => '0123456789',
+        'account_name' => 'ADA LOVELACE',
+        'pin' => '1234',
+    ])->assertRedirect()
+        ->assertSessionHas('error');
+
+    expect($wallet->fresh()->balance)->toBe(100000)
+        ->and(Payout::count())->toBe(0);
 });

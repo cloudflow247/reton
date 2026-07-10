@@ -28,6 +28,7 @@ type Props = PageProps<{
   banks: Bank[]
   accountNameHint: string
   recentPayouts: Payout[]
+  payoutsAvailable?: boolean
 }>
 
 function stepFor(bankCode: string, accountNumber: string, accountName: string, amount: string, pin: string): number {
@@ -37,7 +38,12 @@ function stepFor(bankCode: string, accountNumber: string, accountName: string, a
   return 4
 }
 
-export default function Withdraw({ banks: banksProp, accountNameHint, recentPayouts: recentPayoutsProp }: Props) {
+export default function Withdraw({
+  banks: banksProp,
+  accountNameHint,
+  recentPayouts: recentPayoutsProp,
+  payoutsAvailable = true,
+}: Props) {
   const { auth, flash } = usePage<Props>().props
   const wallet = auth.wallets[0]
   const done = flash.payout
@@ -63,6 +69,7 @@ export default function Withdraw({ banks: banksProp, accountNameHint, recentPayo
   const step = stepFor(bankCode, accountNumber, accountName, amount, pin)
 
   const canSubmit =
+    payoutsAvailable &&
     !!wallet &&
     minor >= 10000 &&
     !overBalance &&
@@ -142,6 +149,13 @@ export default function Withdraw({ banks: banksProp, accountNameHint, recentPayo
         Bank account must match <span className="font-semibold text-text">{auth.user?.name}</span>. Third-party
         accounts are blocked.
       </InfoStrip>
+
+      {!payoutsAvailable && (
+        <InfoStrip tone="amber" title="Withdrawals paused">
+          Bank payouts need Wema Debit Wallet access (separate from ALATPay deposits). Your balance is safe — try
+          again once payouts are enabled, or contact support.
+        </InfoStrip>
+      )}
 
       <PageSteps steps={['Bank', 'Name', 'Pay']} current={Math.min(step, 3)} />
 

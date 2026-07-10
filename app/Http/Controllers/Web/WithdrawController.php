@@ -9,6 +9,7 @@ use App\Domain\Fraud\Data\FraudContext;
 use App\Domain\Fraud\Exceptions\FraudBlockedException;
 use App\Domain\Fraud\Services\FraudService;
 use App\Domain\Kyc\Services\KycLimitService;
+use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Models\Payout;
 use App\Domain\Payments\Services\PayoutService;
 use App\Domain\Wallet\Models\Wallet;
@@ -30,7 +31,7 @@ class WithdrawController extends Controller
 {
     use VerifiesPin;
 
-    public function index(Request $request): Response
+    public function index(Request $request, AlatpayGateway $alatpay): Response
     {
         /** @var User $user */
         $user = $request->user();
@@ -39,8 +40,7 @@ class WithdrawController extends Controller
             'banks' => NigerianBanks::all(),
             'accountNameHint' => strtoupper((string) $user->name),
             'recentPayouts' => $this->recentPayoutsFor($user),
-            // Deploy probe — confirm Cloud picked up this build (remove after fix).
-            'build' => 'withdraw-2026-07-10c',
+            'payoutsAvailable' => $alatpay->supportsOutboundTransfers(),
         ]);
     }
 

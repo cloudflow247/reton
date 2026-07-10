@@ -8,6 +8,7 @@ use App\Domain\Payments\Alatpay\AlatpaySignatureVerifier;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
 use App\Domain\Payments\Enums\PayoutStatus;
+use App\Domain\Payments\Exceptions\PayoutUnavailableException;
 use App\Domain\Payments\Services\PayoutService;
 use App\Domain\Wallet\Exceptions\InsufficientFundsException;
 use App\Domain\Wallet\Models\Wallet;
@@ -79,6 +80,20 @@ it('refuses a payout that exceeds the available balance', function () {
 
     request_payout($user, $wallet, 500_00);
 })->throws(InsufficientFundsException::class);
+
+it('does not reserve funds when the gateway cannot disburse', function () {
+    $gateway = Mockery::mock(AlatpayGateway::class);
+    $gateway->shouldReceive('supportsOutboundTransfers')->andReturn(false);
+    $this->app->instance(AlatpayGateway::class, $gateway);
+
+    [$user, $wallet] = payee(1_000_00);
+
+    expect(fn () => request_payout($user, $wallet, 400_00))
+        ->toThrow(PayoutUnavailableException::class);
+
+    expect($wallet->fresh()->balance)->toBe(100000)
+        ->and(settlementMinor())->toBe(0);
+});
 
 it('settles the payout when AlatPay confirms the transfer', function () {
     [$user, $wallet] = payee(1_000_00);

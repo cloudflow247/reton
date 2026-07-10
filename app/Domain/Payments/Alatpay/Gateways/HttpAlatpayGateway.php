@@ -131,53 +131,47 @@ class HttpAlatpayGateway implements AlatpayGateway
         );
     }
 
+    /**
+     * ALATPay on apibox (docs.alatpay.ng) is collection-only. Outbound NIP payouts
+     * require Wema's separate Debit Wallet API (playground.alat.ng) with its own
+     * access key, securityInfo, and bank-profiled auth callback — not the same
+     * merchant subscription used for Static Wallet / bank-transfer collections.
+     *
+     * @see https://docs.alatpay.ng/
+     * @see https://playground.alat.ng/api-debit-wallet
+     */
+    public function supportsOutboundTransfers(): bool
+    {
+        return (bool) config('services.alatpay.debit_wallet.enabled', false)
+            && filled(config('services.alatpay.debit_wallet.access_key'));
+    }
+
     public function initiateTransfer(TransferRequest $request): TransferResponse
     {
-        $response = $this->client()->post('/transfer/api/v1/transfers', [
-            'businessId' => config('services.alatpay.business_id'),
-            'amount' => $request->amount->amount,
-            'currency' => $request->amount->currency,
-            'reference' => $request->reference,
-            'narration' => $request->narration,
-            'beneficiary' => [
-                'bankCode' => $request->bankCode,
-                'accountNumber' => $request->accountNumber,
-                'accountName' => $request->accountName,
-            ],
-        ]);
-
-        if (! $response->successful()) {
-            throw AlatpayException::requestFailed('initiateTransfer', $response->status());
+        if (! $this->supportsOutboundTransfers()) {
+            throw AlatpayException::requestFailed(
+                'initiateTransfer',
+                503,
+                'Outbound bank transfers are not enabled. ALATPay collections cannot disburse; configure Wema Debit Wallet credentials.',
+            );
         }
 
-        $data = (array) $response->json('data', []);
-
-        return new TransferResponse(
-            providerReference: (string) ($data['transferId'] ?? $request->reference),
-            status: $this->normaliseStatus((string) ($data['status'] ?? 'pending')),
+        // Debit Wallet: POST /debit-wallet/api/Shared/ProcessClientTransfer
+        // Requires bank-onboarded access key + securityInfo callback — wire when live.
+        throw AlatpayException::requestFailed(
+            'initiateTransfer',
+            501,
+            'Wema Debit Wallet payout adapter is not implemented yet.',
         );
     }
 
     public function fetchTransfer(string $providerReference): ?RemoteTransaction
     {
-        $response = $this->client()->get('/transfer/api/v1/transfers/'.$providerReference);
-
-        if ($response->status() === 404) {
+        if (! $this->supportsOutboundTransfers()) {
             return null;
         }
 
-        if (! $response->successful()) {
-            throw AlatpayException::requestFailed('fetchTransfer', $response->status());
-        }
-
-        $data = (array) $response->json('data', []);
-
-        return new RemoteTransaction(
-            providerReference: $providerReference,
-            status: $this->normaliseStatus((string) ($data['status'] ?? 'pending')),
-            amount: (int) ($data['amount'] ?? 0),
-            currency: (string) ($data['currency'] ?? 'NGN'),
-        );
+        return null;
     }
 
     /**

@@ -108,6 +108,11 @@ class FakeAlatpayGateway implements AlatpayGateway
         ];
     }
 
+    public function supportsOutboundTransfers(): bool
+    {
+        return true;
+    }
+
     public function initiateTransfer(TransferRequest $request): TransferResponse
     {
         $providerReference = 'ALT-TRF-'.$request->reference;

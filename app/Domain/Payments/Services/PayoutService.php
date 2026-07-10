@@ -12,6 +12,7 @@ use App\Domain\Ledger\Services\SystemAccountResolver;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Enums\PayoutStatus;
+use App\Domain\Payments\Exceptions\PayoutUnavailableException;
 use App\Domain\Payments\Models\Payout;
 use App\Domain\Payments\Models\WebhookEvent;
 use App\Domain\Wallet\Models\Wallet;
@@ -49,6 +50,11 @@ class PayoutService
         string $accountNumber,
         string $accountName,
     ): Payout {
+        // Fail before any ledger movement when the live gateway cannot disburse.
+        if (! $this->gateway->supportsOutboundTransfers()) {
+            throw PayoutUnavailableException::make();
+        }
+
         return DB::transaction(function () use ($user, $wallet, $amount, $bankCode, $accountNumber, $accountName): Payout {
             $reference = 'PO-'.Str::upper((string) Str::ulid());
 

@@ -48,6 +48,13 @@ return [
         'business_bvn' => env('ALATPAY_BUSINESS_BVN'),
         'webhook_secret' => env('ALATPAY_WEBHOOK_SECRET', ''),
         'timeout' => (int) env('ALATPAY_TIMEOUT', 12),
+        // Outbound NIP payouts are NOT part of ALATPay collections (apibox).
+        // They require Wema Debit Wallet (playground.alat.ng) — separate onboarding.
+        'debit_wallet' => [
+            'enabled' => (bool) env('ALATPAY_DEBIT_WALLET_ENABLED', false),
+            'base_url' => env('ALATPAY_DEBIT_WALLET_BASE_URL', 'https://playground.alat.ng'),
+            'access_key' => env('ALATPAY_DEBIT_WALLET_ACCESS_KEY'),
+        ],
     ],
 
     'remita' => [
