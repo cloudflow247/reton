@@ -21,37 +21,35 @@ use App\Support\Banking\NigerianBanks;
 use App\Support\Money\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class WithdrawController extends Controller
 {
     use VerifiesPin;
-
-    public function __construct(
-        private readonly PayoutService $payouts,
-        private readonly PinService $pins,
-        private readonly FraudService $fraud,
-        private readonly KycLimitService $kycLimits,
-    ) {}
 
     public function index(Request $request): Response
     {
         /** @var User $user */
         $user = $request->user();
 
-        $recent = Payout::where('user_id', $user->getKey())->latest()->limit(5)->get();
-
         return Inertia::render('Withdraw', [
             'banks' => NigerianBanks::all(),
-            'accountNameHint' => strtoupper($user->name),
-            'recentPayouts' => PayoutResource::collection($recent)->resolve(),
+            'accountNameHint' => mb_strtoupper((string) $user->name, 'UTF-8'),
+            'recentPayouts' => $this->recentPayoutsFor($user),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        PayoutService $payouts,
+        PinService $pins,
+        FraudService $fraud,
+        KycLimitService $kycLimits,
+    ): RedirectResponse {
         /** @var User $user */
         $user = $request->user();
 
@@ -66,20 +64,20 @@ class WithdrawController extends Controller
 
         $wallet = Wallet::findOrFail($validated['wallet_id']);
         $this->authorize('operate', $wallet);
-        $this->verifyPin($this->pins, $user, $validated['pin']);
+        $this->verifyPin($pins, $user, $validated['pin']);
 
-        $accountName = strtoupper(trim($validated['account_name']));
+        $accountName = mb_strtoupper(trim($validated['account_name']), 'UTF-8');
 
-        if (! AccountNameMatcher::matches($accountName, $user->name)) {
+        if (! AccountNameMatcher::matches($accountName, (string) $user->name)) {
             throw ValidationException::withMessages([
                 'account_name' => ['Bank account name must match your Reton profile name ('.$user->name.').'],
             ]);
         }
 
         $amount = Money::of($validated['amount'], $wallet->currency);
-        $this->kycLimits->assertCanSpend($user, $wallet, $amount);
+        $kycLimits->assertCanSpend($user, $wallet, $amount);
 
-        $assessment = $this->fraud->evaluate(new FraudContext(
+        $assessment = $fraud->evaluate(new FraudContext(
             user: $user,
             wallet: $wallet,
             amount: $amount,
@@ -92,7 +90,7 @@ class WithdrawController extends Controller
             throw FraudBlockedException::make();
         }
 
-        $payout = $this->payouts->request(
+        $payout = $payouts->request(
             $user,
             $wallet,
             $amount,
@@ -102,5 +100,32 @@ class WithdrawController extends Controller
         );
 
         return redirect()->route('withdraw')->with('payout', (new PayoutResource($payout))->resolve());
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function recentPayoutsFor(User $user): array
+    {
+        if (! Schema::hasTable('payouts')) {
+            return [];
+        }
+
+        try {
+            $recent = Payout::query()
+                ->where('user_id', $user->getKey())
+                ->latest()
+                ->limit(5)
+                ->get();
+
+            /** @var list<array<string, mixed>> $resolved */
+            $resolved = PayoutResource::collection($recent)->resolve();
+
+            return $resolved;
+        } catch (Throwable $e) {
+            report($e);
+
+            return [];
+        }
     }
 }

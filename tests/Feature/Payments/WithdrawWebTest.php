@@ -42,7 +42,61 @@ it('renders the withdraw page with banks', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Withdraw')
             ->has('banks')
-            ->where('accountNameHint', 'ADA LOVELACE'));
+            ->where('accountNameHint', 'ADA LOVELACE')
+            ->has('recentPayouts', 0));
+});
+
+it('renders recent payouts on the withdraw page', function () {
+    [$user, $wallet] = withdrawWebUser();
+
+    Payout::create([
+        'reference' => 'PO-RECENT001',
+        'user_id' => $user->id,
+        'wallet_id' => $wallet->id,
+        'provider' => 'alatpay',
+        'status' => 'pending',
+        'amount' => 25_000,
+        'currency' => 'NGN',
+        'bank_code' => '044',
+        'account_number' => '0123456789',
+        'account_name' => 'ADA LOVELACE',
+    ]);
+
+    $this->actingAs($user)->get('/withdraw')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Withdraw')
+            ->has('recentPayouts', 1)
+            ->where('recentPayouts.0.reference', 'PO-RECENT001')
+            ->where('recentPayouts.0.status', 'pending'));
+});
+
+it('still renders withdraw when a payout has an unexpected status value', function () {
+    [$user, $wallet] = withdrawWebUser();
+
+    $payout = Payout::create([
+        'reference' => 'PO-BADSTATUS',
+        'user_id' => $user->id,
+        'wallet_id' => $wallet->id,
+        'provider' => 'alatpay',
+        'status' => 'pending',
+        'amount' => 10_000,
+        'currency' => 'NGN',
+        'bank_code' => '044',
+        'account_number' => '0123456789',
+        'account_name' => 'ADA LOVELACE',
+    ]);
+
+    \Illuminate\Support\Facades\DB::table('payouts')
+        ->where('id', $payout->id)
+        ->update(['status' => 'bogus']);
+
+    $this->actingAs($user)->get('/withdraw')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Withdraw')
+            ->has('recentPayouts', 1)
+            ->where('recentPayouts.0.status', 'bogus'));
 });
 
 it('initiates a withdrawal when the account name matches the profile', function () {
