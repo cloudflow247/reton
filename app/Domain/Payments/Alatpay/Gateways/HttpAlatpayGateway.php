@@ -18,9 +18,12 @@ use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
+use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Cookie\SetCookie;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -186,12 +189,14 @@ class HttpAlatpayGateway implements AlatpayGateway
         $this->assertConfigured('pingStaticWallet');
 
         try {
-            $response = $this->client()->get('/alatpay-wallet/api/v1/staticaccount', [
-                'PageNumber' => 1,
-                'Limit' => 1,
-                'Status' => 1,
-                'BusinessId' => (string) config('services.alatpay.business_id'),
-            ]);
+            $response = $this->sendWithSessionRetry(
+                fn () => $this->client()->get('/alatpay-wallet/api/v1/staticaccount', [
+                    'PageNumber' => 1,
+                    'Limit' => 1,
+                    'Status' => 1,
+                    'BusinessId' => (string) config('services.alatpay.business_id'),
+                ]),
+            );
         } catch (ConnectionException|RequestException $e) {
             throw AlatpayException::requestFailed(
                 'pingStaticWallet',
@@ -229,14 +234,16 @@ class HttpAlatpayGateway implements AlatpayGateway
         $this->assertConfigured('provisionStaticAccount');
 
         try {
-            $response = $this->client()->post(
-                '/alatpay-wallet/api/v1/staticaccount',
-                array_filter([
-                    'businessId' => (string) config('services.alatpay.business_id'),
-                    'staticWalletType' => $request->walletType,
-                    'bvn' => $request->bvn,
-                    'email' => $request->email,
-                ], static fn (mixed $value): bool => $value !== null && $value !== ''),
+            $response = $this->sendWithSessionRetry(
+                fn () => $this->client()->post(
+                    '/alatpay-wallet/api/v1/staticaccount',
+                    array_filter([
+                        'businessId' => (string) config('services.alatpay.business_id'),
+                        'staticWalletType' => $request->walletType,
+                        'bvn' => $request->bvn,
+                        'email' => $request->email,
+                    ], static fn (mixed $value): bool => $value !== null && $value !== ''),
+                ),
             );
         } catch (ConnectionException|RequestException $e) {
             throw AlatpayException::requestFailed(
@@ -313,12 +320,14 @@ class HttpAlatpayGateway implements AlatpayGateway
         $this->assertConfigured('verifyStaticAccount');
 
         try {
-            $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount/validateAndCreate', [
-                'staticWalletId' => $request->staticWalletId,
-                'businessId' => (string) config('services.alatpay.business_id'),
-                'otp' => $request->otp,
-                'trackingId' => $request->trackingId,
-            ]);
+            $response = $this->sendWithSessionRetry(
+                fn () => $this->client()->post('/alatpay-wallet/api/v1/staticaccount/validateAndCreate', [
+                    'staticWalletId' => $request->staticWalletId,
+                    'businessId' => (string) config('services.alatpay.business_id'),
+                    'otp' => $request->otp,
+                    'trackingId' => $request->trackingId,
+                ]),
+            );
         } catch (ConnectionException|RequestException $e) {
             throw AlatpayException::requestFailed(
                 'verifyStaticAccount',
@@ -370,13 +379,15 @@ class HttpAlatpayGateway implements AlatpayGateway
      */
     public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
     {
-        $response = $this->client()->get('/alatpay-wallet/api/v1/staticaccount/collectionhistory', [
-            'PageNumber' => $page,
-            'Limit' => $limit,
-            'PageSize' => $limit,
-            'Status' => 1,
-            'BusinessId' => (string) config('services.alatpay.business_id'),
-        ]);
+        $response = $this->sendWithSessionRetry(
+            fn () => $this->client()->get('/alatpay-wallet/api/v1/staticaccount/collectionhistory', [
+                'PageNumber' => $page,
+                'Limit' => $limit,
+                'PageSize' => $limit,
+                'Status' => 1,
+                'BusinessId' => (string) config('services.alatpay.business_id'),
+            ]),
+        );
 
         if (! $response->successful()) {
             throw AlatpayException::requestFailed('fetchStaticAccountTransactions', $response->status());
@@ -400,24 +411,228 @@ class HttpAlatpayGateway implements AlatpayGateway
         ));
     }
 
+    private ?CookieJar $cookieJar = null;
+
+    private ?string $sessionSubscriptionKey = null;
+
     private function client(): PendingRequest
     {
+        $this->ensureMerchantSession();
+
         return Http::baseUrl($this->resolvedBaseUrl())
             ->timeout((int) config('services.alatpay.timeout', 12))
             ->connectTimeout(4)
+            ->withOptions(['cookies' => $this->cookieJar ?? new CookieJar])
             ->withHeaders([
-                // Docs: Content-Type + Ocp-Apim-Subscription-Key (Secret key, not Public).
                 'Content-Type' => 'application/json',
-                'Ocp-Apim-Subscription-Key' => trim((string) config('services.alatpay.api_key')),
+                'Ocp-Apim-Subscription-Key' => (string) $this->sessionSubscriptionKey,
             ])
             ->acceptJson()
             ->asJson();
     }
 
+    /**
+     * Wema requires merchant login before Static Wallet calls. Login starts a cookie
+     * session and returns subscriptionPrimaryKey for the business.
+     */
+    private function ensureMerchantSession(bool $forceRefresh = false): void
+    {
+        if (! $forceRefresh && $this->cookieJar !== null && filled($this->sessionSubscriptionKey)) {
+            return;
+        }
+
+        $cacheKey = $this->merchantSessionCacheKey();
+
+        if (! $forceRefresh) {
+            $cached = Cache::get($cacheKey);
+
+            if (is_array($cached)
+                && ! empty($cached['cookies'])
+                && is_array($cached['cookies'])
+                && filled($cached['subscription_key'] ?? null)
+            ) {
+                $this->cookieJar = $this->cookieJarFromArray($cached['cookies']);
+                $this->sessionSubscriptionKey = (string) $cached['subscription_key'];
+
+                return;
+            }
+        }
+
+        $this->loginMerchant($cacheKey);
+    }
+
+    private function loginMerchant(string $cacheKey): void
+    {
+        $email = strtolower(trim((string) config('services.alatpay.merchant_email')));
+        $password = (string) config('services.alatpay.merchant_password');
+        $businessId = trim((string) config('services.alatpay.business_id'));
+
+        if ($email === '' || $password === '' || $businessId === '') {
+            throw AlatpayException::requestFailed(
+                'login',
+                503,
+                'ALATPay merchant email, password, and Business ID are required in Admin → Integrations.',
+            );
+        }
+
+        $jar = new CookieJar;
+        $headers = ['Content-Type' => 'application/json'];
+        $bootstrapKey = trim((string) config('services.alatpay.api_key'));
+
+        if ($bootstrapKey !== '') {
+            $headers['Ocp-Apim-Subscription-Key'] = $bootstrapKey;
+        }
+
+        try {
+            $response = Http::baseUrl($this->resolvedBaseUrl())
+                ->timeout((int) config('services.alatpay.timeout', 12))
+                ->connectTimeout(4)
+                ->withOptions(['cookies' => $jar])
+                ->withHeaders($headers)
+                ->acceptJson()
+                ->asJson()
+                ->post('/merchant-onboarding/api/v1/auth/login', [
+                    'email' => $email,
+                    'password' => $password,
+                ]);
+        } catch (ConnectionException|RequestException $e) {
+            throw AlatpayException::requestFailed(
+                'login',
+                503,
+                'Could not reach ALATPay login. Check Base URL (https://apibox.alatpay.ng).',
+            );
+        }
+
+        $payload = $response->json();
+
+        if (! $response->successful() || (is_array($payload) && ($payload['status'] ?? true) === false)) {
+            Log::warning('ALATPay merchant login failed', [
+                'status' => $response->status(),
+                'body' => $payload ?? $response->body(),
+            ]);
+
+            throw AlatpayException::requestFailed(
+                'login',
+                $response->status(),
+                $this->extractErrorMessage($payload) ?? 'ALATPay merchant login failed. Check email/password.',
+            );
+        }
+
+        $data = is_array($payload) ? ($payload['data'] ?? []) : [];
+        $businesses = is_array($data) ? ($data['businesses'] ?? []) : [];
+        $subscriptionKey = '';
+
+        if (is_array($businesses)) {
+            foreach ($businesses as $business) {
+                if (! is_array($business)) {
+                    continue;
+                }
+
+                if ((string) ($business['id'] ?? '') === $businessId
+                    && filled($business['subscriptionPrimaryKey'] ?? null)
+                ) {
+                    $subscriptionKey = (string) $business['subscriptionPrimaryKey'];
+                    break;
+                }
+            }
+
+            if ($subscriptionKey === '') {
+                foreach ($businesses as $business) {
+                    if (is_array($business) && filled($business['subscriptionPrimaryKey'] ?? null)) {
+                        $subscriptionKey = (string) $business['subscriptionPrimaryKey'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ($subscriptionKey === '') {
+            $subscriptionKey = $bootstrapKey;
+        }
+
+        if ($subscriptionKey === '') {
+            throw AlatpayException::requestFailed(
+                'login',
+                503,
+                'ALATPay login succeeded but no subscriptionPrimaryKey was returned for this Business ID.',
+            );
+        }
+
+        $this->cookieJar = $jar;
+        $this->sessionSubscriptionKey = $subscriptionKey;
+
+        Cache::put($cacheKey, [
+            'cookies' => $this->cookieJarToArray($jar),
+            'subscription_key' => $subscriptionKey,
+        ], now()->addMinutes(40));
+    }
+
+    private function forgetMerchantSession(): void
+    {
+        $this->cookieJar = null;
+        $this->sessionSubscriptionKey = null;
+        Cache::forget($this->merchantSessionCacheKey());
+    }
+
+    /**
+     * @param  callable(): \Illuminate\Http\Client\Response  $request
+     */
+    private function sendWithSessionRetry(callable $request): \Illuminate\Http\Client\Response
+    {
+        $response = $request();
+
+        if ($response->status() !== 401) {
+            return $response;
+        }
+
+        $this->forgetMerchantSession();
+        $this->ensureMerchantSession(forceRefresh: true);
+
+        return $request();
+    }
+
+    private function merchantSessionCacheKey(): string
+    {
+        $email = strtolower(trim((string) config('services.alatpay.merchant_email')));
+        $businessId = trim((string) config('services.alatpay.business_id'));
+
+        return 'alatpay:merchant_session:'.hash('sha256', $email.'|'.$businessId);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $cookies
+     */
+    private function cookieJarFromArray(array $cookies): CookieJar
+    {
+        $jar = new CookieJar;
+
+        foreach ($cookies as $cookie) {
+            if (is_array($cookie)) {
+                $jar->setCookie(new SetCookie($cookie));
+            }
+        }
+
+        return $jar;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function cookieJarToArray(CookieJar $jar): array
+    {
+        $out = [];
+
+        foreach ($jar as $cookie) {
+            $out[] = $cookie->toArray();
+        }
+
+        return $out;
+    }
+
     private function authFailureHint(int $status): string
     {
         if (in_array($status, [401, 403], true)) {
-            return 'Use the ALATPay Secret / Subscription key (Ocp-Apim-Subscription-Key), not the Public key from the web plugin. Confirm Static Wallet is enabled for this Business ID.';
+            return 'ALATPay session rejected. Confirm merchant email/password and Business ID in Admin → Integrations, then Test connection.';
         }
 
         return 'ALATPay Static Wallet request failed.';
@@ -485,11 +700,19 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     private function assertConfigured(string $operation): void
     {
-        if (blank(config('services.alatpay.api_key')) || blank(config('services.alatpay.business_id'))) {
+        if (blank(config('services.alatpay.business_id'))) {
             throw AlatpayException::requestFailed(
                 $operation,
                 503,
-                'ALATPay API key or Business ID is missing. Add them in Admin → Integrations.',
+                'ALATPay Business ID is missing. Add it in Admin → Integrations.',
+            );
+        }
+
+        if (blank(config('services.alatpay.merchant_email')) || blank(config('services.alatpay.merchant_password'))) {
+            throw AlatpayException::requestFailed(
+                $operation,
+                503,
+                'ALATPay merchant email/password are required. Add them in Admin → Integrations.',
             );
         }
     }

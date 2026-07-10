@@ -87,6 +87,8 @@ class AdminIntegrationsController extends Controller
                 'driver' => ['required', 'in:fake,http'],
                 'base_url' => ['required', 'url', 'max:255'],
                 'api_key' => ['nullable', 'string', 'max:500'],
+                'merchant_email' => ['nullable', 'email', 'max:255'],
+                'merchant_password' => ['nullable', 'string', 'max:500'],
                 'business_id' => ['nullable', 'string', 'max:120'],
                 'business_bvn' => ['nullable', 'string', 'max:20'],
                 'webhook_secret' => ['nullable', 'string', 'max:500'],
@@ -163,7 +165,7 @@ class AdminIntegrationsController extends Controller
 
         if ($integration === 'alatpay') {
             if (! $this->settings->isIntegrationReady('alatpay')) {
-                return back()->with('error', 'Add API key, Business ID, and Business BVN before testing.');
+                return back()->with('error', 'Add merchant email, password, Business ID, and Business BVN before testing.');
             }
 
             if (config('services.alatpay.driver') === 'fake') {
@@ -174,7 +176,7 @@ class AdminIntegrationsController extends Controller
                 // Must hit Static Wallet — bank-transfer 404 was a false "credentials OK".
                 $this->alatpay->pingStaticWallet();
 
-                return back()->with('success', 'ALATPay Static Wallet API reachable (secret key + Business ID accepted).');
+                return back()->with('success', 'ALATPay merchant login + Static Wallet API reachable.');
             } catch (\Throwable $e) {
                 return back()->with('error', 'ALATPay Static Wallet test failed: '.$e->getMessage());
             }

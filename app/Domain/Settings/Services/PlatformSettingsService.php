@@ -36,7 +36,7 @@ class PlatformSettingsService
 
     /** @var array<string, list<string>> */
     private const SECRET_FIELDS = [
-        'alatpay' => ['api_key', 'business_bvn', 'webhook_secret'],
+        'alatpay' => ['api_key', 'merchant_password', 'business_bvn', 'webhook_secret'],
         'interswitch' => ['client_id', 'client_secret'],
         'bridgecard' => ['access_token', 'secret_key'],
         'giglogistics' => ['api_key', 'webhook_secret'],
@@ -53,6 +53,8 @@ class PlatformSettingsService
             'driver' => 'fake',
             'base_url' => 'https://apibox.alatpay.ng',
             'api_key' => '',
+            'merchant_email' => '',
+            'merchant_password' => '',
             'business_id' => '',
             'business_bvn' => '',
             'webhook_secret' => '',
@@ -319,7 +321,12 @@ class PlatformSettingsService
 
         return match ($group) {
             'alatpay' => ($values['driver'] ?? '') === 'fake'
-                || (! empty($values['api_key']) && ! empty($values['business_id']) && ! empty($values['business_bvn'])),
+                || (
+                    ! empty($values['merchant_email'])
+                    && ! empty($values['merchant_password'])
+                    && ! empty($values['business_id'])
+                    && ! empty($values['business_bvn'])
+                ),
             'termii' => ($values['driver'] ?? '') === 'fake'
                 || (! empty($values['api_key']) && ! empty($values['sender_id'])),
             'remita' => ($values['driver'] ?? '') === 'fake'
@@ -353,7 +360,11 @@ class PlatformSettingsService
         $values = $this->effectiveGroup('alatpay');
 
         return ($values['driver'] ?? '') === 'fake'
-            || (! empty($values['api_key']) && ! empty($values['business_id']));
+            || (
+                ! empty($values['merchant_email'])
+                && ! empty($values['merchant_password'])
+                && ! empty($values['business_id'])
+            );
     }
 
     public function bvnProviderLabel(): string
@@ -400,7 +411,7 @@ class PlatformSettingsService
             unset($input["{$field}_set"]);
         }
 
-        foreach (['api_key', 'business_id', 'business_bvn', 'webhook_secret', 'base_url'] as $trimField) {
+        foreach (['api_key', 'merchant_email', 'merchant_password', 'business_id', 'business_bvn', 'webhook_secret', 'base_url'] as $trimField) {
             if (isset($input[$trimField]) && is_string($input[$trimField])) {
                 $input[$trimField] = trim($input[$trimField]);
             }
@@ -422,11 +433,30 @@ class PlatformSettingsService
         $this->bustCache();
         $this->applyGroupToConfig($group, $payload);
 
+        if ($group === 'alatpay') {
+            $this->forgetAlatpayMerchantSession($payload);
+        }
+
         $this->audit($admin, 'settings.updated', $group, [
             'fields' => array_keys(array_intersect_key($input, self::DEFAULTS[$group])),
         ], $ip);
 
         return $this->maskedGroup($group);
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     */
+    private function forgetAlatpayMerchantSession(array $values): void
+    {
+        $email = strtolower(trim((string) ($values['merchant_email'] ?? '')));
+        $businessId = trim((string) ($values['business_id'] ?? ''));
+
+        if ($email === '' || $businessId === '') {
+            return;
+        }
+
+        Cache::forget('alatpay:merchant_session:'.hash('sha256', $email.'|'.$businessId));
     }
 
     public function bustCache(): void

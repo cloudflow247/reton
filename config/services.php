@@ -38,9 +38,12 @@ return [
     'alatpay' => [
         // 'http' for the live integration, 'fake' for local/testing.
         // Official API host: https://apibox.alatpay.ng (see https://docs.alatpay.ng/get-started).
+        // Live Static Wallet requires merchant login session + subscriptionPrimaryKey from login.
         'driver' => env('ALATPAY_DRIVER', 'http'),
         'base_url' => env('ALATPAY_BASE_URL', 'https://apibox.alatpay.ng'),
         'api_key' => env('ALATPAY_API_KEY'),
+        'merchant_email' => env('ALATPAY_MERCHANT_EMAIL'),
+        'merchant_password' => env('ALATPAY_MERCHANT_PASSWORD'),
         'business_id' => env('ALATPAY_BUSINESS_ID'),
         'business_bvn' => env('ALATPAY_BUSINESS_BVN'),
         'webhook_secret' => env('ALATPAY_WEBHOOK_SECRET', ''),

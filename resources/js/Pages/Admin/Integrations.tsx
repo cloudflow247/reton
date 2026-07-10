@@ -153,19 +153,34 @@ function IntegrationForm({
 
       {group === 'alatpay' && (
         <>
+          <Field
+            label="Merchant email"
+            type="email"
+            value={String(form.data.merchant_email ?? '')}
+            onChange={(e) => form.setData('merchant_email', e.target.value)}
+            hint="ALATPay merchant portal login email (required for Static Wallet API session)."
+          />
           <SecretField
-            label="Secret / Subscription key"
-            name="api_key"
-            value={String(form.data.api_key ?? '')}
-            isSet={!!form.data.api_key_set}
-            onChange={(v) => form.setData('api_key', v)}
-            hint="Ocp-Apim-Subscription-Key from ALATPay — the Secret key, not the Public key used by the web checkout plugin."
+            label="Merchant password"
+            name="merchant_password"
+            value={String(form.data.merchant_password ?? '')}
+            isSet={!!form.data.merchant_password_set}
+            onChange={(v) => form.setData('merchant_password', v)}
+            hint="ALATPay merchant portal password. Reton logs in to start an API session before Static Wallet calls."
           />
           <Field
             label="Business ID"
             value={String(form.data.business_id ?? '')}
             onChange={(e) => form.setData('business_id', e.target.value)}
             hint="UUID of your business in the ALATPay merchant portal."
+          />
+          <SecretField
+            label="Bootstrap subscription key (optional)"
+            name="api_key"
+            value={String(form.data.api_key ?? '')}
+            isSet={!!form.data.api_key_set}
+            onChange={(v) => form.setData('api_key', v)}
+            hint="Optional. Reton prefers subscriptionPrimaryKey returned by merchant login for your Business ID."
           />
           <SecretField
             label="Business BVN"
@@ -196,9 +211,9 @@ function IntegrationForm({
             </div>
           )}
           <p className="rounded-xl border border-mint/20 bg-mint/[0.04] px-4 py-3 text-xs leading-relaxed text-muted">
-            <span className="font-semibold text-text">BVN verification</span> uses ALATPay Static Wallet OTP with the
-            Secret key above (same credentials). Test connection now calls the Static Wallet API — not bank transfer —
-            so a green test means customer BVN OTP can authenticate.
+            <span className="font-semibold text-text">BVN verification</span> logs into ALATPay with your merchant
+            email/password, uses the session + subscriptionPrimaryKey, then creates an Individual Static Wallet OTP for
+            the customer BVN. Test connection exercises that same path.
           </p>
         </>
       )}

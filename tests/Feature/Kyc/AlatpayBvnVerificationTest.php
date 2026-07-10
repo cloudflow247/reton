@@ -26,6 +26,43 @@ function alatpayKycUser(string $name = 'Reton Test User'): User
     ]);
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function alatpayLiveConfig(array $overrides = []): array
+{
+    return array_merge([
+        'services.alatpay.driver' => 'http',
+        'services.alatpay.api_key' => 'bootstrap-key',
+        'services.alatpay.merchant_email' => 'merchant@example.com',
+        'services.alatpay.merchant_password' => 'secret-pass',
+        'services.alatpay.business_id' => 'test-business',
+        'services.alatpay.business_bvn' => '22109876543',
+        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
+    ], $overrides);
+}
+
+/**
+ * @param  array<string, mixed>  $walletFakes
+ */
+function fakeAlatpayMerchantSession(array $walletFakes = [], string $businessId = 'test-business'): void
+{
+    Http::fake(array_merge([
+        'apibox.alatpay.ng/merchant-onboarding/api/v1/auth/login' => Http::response([
+            'status' => true,
+            'message' => 'Success',
+            'data' => [
+                'token' => null,
+                'businesses' => [[
+                    'id' => $businessId,
+                    'subscriptionPrimaryKey' => 'primary-from-login',
+                ]],
+            ],
+        ], 200),
+    ], $walletFakes));
+}
+
 it('initiates alatpay bvn verification and requires otp confirmation', function () {
     $user = alatpayKycUser();
 
@@ -134,11 +171,7 @@ it('exposes pending otp props on profile for the verification gate', function ()
 });
 
 it('rejects known demo bvns when alatpay is live', function () {
-    config([
-        'services.alatpay.driver' => 'http',
-        'services.alatpay.api_key' => 'test-key',
-        'services.alatpay.business_id' => 'test-business',
-    ]);
+    config(alatpayLiveConfig());
 
     $user = alatpayKycUser();
 
@@ -155,6 +188,8 @@ it('returns validation errors when alatpay credentials are missing', function ()
     config([
         'services.alatpay.driver' => 'http',
         'services.alatpay.api_key' => '',
+        'services.alatpay.merchant_email' => '',
+        'services.alatpay.merchant_password' => '',
         'services.alatpay.business_id' => '',
     ]);
 
@@ -170,18 +205,14 @@ it('returns validation errors when alatpay credentials are missing', function ()
 });
 
 it('parses flat alatpay otp response and remaps legacy api host', function () {
-    config([
-        'services.alatpay.driver' => 'http',
-        'services.alatpay.api_key' => 'test-key',
-        'services.alatpay.business_id' => 'test-business',
-        // Legacy misconfig — gateway must call apibox instead.
+    config(alatpayLiveConfig([
         'services.alatpay.base_url' => 'https://api.alatpay.ng',
-    ]);
+    ]));
 
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
 
-    Http::fake([
+    fakeAlatpayMerchantSession([
         'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount' => Http::response([
             'id' => 'wallet-flat-1',
             'otpTrackingID' => 'track-flat-9',
@@ -202,24 +233,22 @@ it('parses flat alatpay otp response and remaps legacy api host', function () {
 
     expect(app(KycService::class)->hasPendingAlatpayBvn($user))->toBeTrue();
 
+    Http::assertSent(fn (\Illuminate\Http\Client\Request $request) => str_contains($request->url(), 'merchant-onboarding/api/v1/auth/login'));
+
     Http::assertSent(fn (\Illuminate\Http\Client\Request $request) => str_contains($request->url(), 'apibox.alatpay.ng')
         && str_contains($request->url(), 'staticaccount')
-        && ! str_contains($request->url(), 'api.alatpay.ng/'));
+        && ! str_contains($request->url(), 'api.alatpay.ng/')
+        && $request->hasHeader('Ocp-Apim-Subscription-Key', 'primary-from-login'));
 });
 
 it('parses nested data null by falling back to root payload', function () {
-    config([
-        'services.alatpay.driver' => 'http',
-        'services.alatpay.api_key' => 'test-key',
-        'services.alatpay.business_id' => 'test-business',
-        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
-    ]);
+    config(alatpayLiveConfig());
 
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
 
-    Http::fake([
-        'apibox.alatpay.ng/*' => Http::response([
+    fakeAlatpayMerchantSession([
+        'apibox.alatpay.ng/alatpay-wallet/*' => Http::response([
             'data' => null,
             'id' => 'wallet-root-2',
             'otpTrackingID' => 'track-root-2',
@@ -241,17 +270,14 @@ it('parses nested data null by falling back to root payload', function () {
 });
 
 it('surfaces secret-key guidance when static wallet returns 401', function () {
-    config([
-        'services.alatpay.driver' => 'http',
+    config(alatpayLiveConfig([
         'services.alatpay.api_key' => 'public-key-by-mistake',
-        'services.alatpay.business_id' => 'test-business',
-        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
-    ]);
+    ]));
 
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
 
-    Http::fake([
+    fakeAlatpayMerchantSession([
         'apibox.alatpay.ng/alatpay-wallet/*' => Http::response([
             'statusCode' => 401,
             'message' => 'Access denied due to invalid subscription key or wrong API endpoint.',
@@ -273,32 +299,29 @@ it('surfaces secret-key guidance when static wallet returns 401', function () {
 });
 
 it('admin alatpay test hits static wallet not bank-transfer', function () {
-    config([
-        'services.alatpay.driver' => 'http',
-        'services.alatpay.api_key' => 'secret-key',
+    config(alatpayLiveConfig([
         'services.alatpay.business_id' => 'biz-static',
-        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
-        'services.alatpay.business_bvn' => '22109876543',
-    ]);
+    ]));
 
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
 
-    Http::fake([
+    fakeAlatpayMerchantSession([
         'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount*' => Http::response([
             'hasStaticWallet' => false,
             'staticAccountResponses' => [],
         ], 200),
         'apibox.alatpay.ng/bank-transfer/*' => Http::response(['error' => 'should not be called'], 404),
-    ]);
+    ], 'biz-static');
 
     $admin = \App\Models\User::factory()->create(['is_admin' => true]);
 
-    // Ensure settings ready check passes
     app(\App\Domain\Settings\Services\PlatformSettingsService::class)->updateGroup('alatpay', [
         'driver' => 'http',
         'base_url' => 'https://apibox.alatpay.ng',
-        'api_key' => 'secret-key',
+        'api_key' => 'bootstrap-key',
+        'merchant_email' => 'merchant@example.com',
+        'merchant_password' => 'secret-pass',
         'business_id' => 'biz-static',
         'business_bvn' => '22109876543',
         'webhook_secret' => '',
@@ -321,24 +344,21 @@ it('admin alatpay test hits static wallet not bank-transfer', function () {
             && ($query['BusinessId'] ?? null) === 'biz-static'
             && (int) ($query['PageNumber'] ?? 0) === 1
             && (int) ($query['Status'] ?? 0) === 1
-            && $request->hasHeader('Ocp-Apim-Subscription-Key', 'secret-key');
+            && $request->hasHeader('Ocp-Apim-Subscription-Key', 'primary-from-login');
     });
 
     Http::assertNotSent(fn (\Illuminate\Http\Client\Request $request) => str_contains($request->url(), 'bank-transfer'));
 });
 
 it('matches official static-wallet create and validate payloads', function () {
-    config([
-        'services.alatpay.driver' => 'http',
-        'services.alatpay.api_key' => 'docs-secret-key',
+    config(alatpayLiveConfig([
         'services.alatpay.business_id' => '8909d16f-e6bd-409f-7dce-08ddbd774ihj',
-        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
-    ]);
+    ]));
 
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
 
-    Http::fake([
+    fakeAlatpayMerchantSession([
         'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/validateAndCreate' => Http::response([
             'accountNumber' => '0412345678',
             'accountName' => 'Your Business – David_Mark',
@@ -351,7 +371,7 @@ it('matches official static-wallet create and validate payloads', function () {
             'message' => 'An OTP has been sent to 08*******86 and for verification. Kindly enter the OTP below.',
             'otpTrackingID' => 'a5c9c68f-44cc-40ef-8647-1c14d9b438cd',
         ], 200),
-    ]);
+    ], '8909d16f-e6bd-409f-7dce-08ddbd774ihj');
 
     $gateway = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
 
@@ -370,7 +390,7 @@ it('matches official static-wallet create and validate payloads', function () {
         && $request['staticWalletType'] === 1
         && $request['bvn'] === '22109876543'
         && $request['email'] === 'testmail@gmail.com'
-        && $request->hasHeader('Ocp-Apim-Subscription-Key', 'docs-secret-key'));
+        && $request->hasHeader('Ocp-Apim-Subscription-Key', 'primary-from-login'));
 
     $verified = $gateway->verifyStaticAccount(new \App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest(
         staticWalletId: '499d78ab-33ab-4f18-b9e9-65afe19ffccb',
@@ -389,17 +409,14 @@ it('matches official static-wallet create and validate payloads', function () {
 });
 
 it('polls collectionhistory per official static-wallet docs', function () {
-    config([
-        'services.alatpay.driver' => 'http',
-        'services.alatpay.api_key' => 'docs-secret-key',
+    config(alatpayLiveConfig([
         'services.alatpay.business_id' => 'biz-001',
-        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
-    ]);
+    ]));
 
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
     app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
 
-    Http::fake([
+    fakeAlatpayMerchantSession([
         'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/collectionhistory*' => Http::response([
             'staticAccountTransactionResponses' => [
                 [
@@ -417,7 +434,7 @@ it('polls collectionhistory per official static-wallet docs', function () {
                 ],
             ],
         ], 200),
-    ]);
+    ], 'biz-001');
 
     $txns = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class)
         ->fetchStaticAccountTransactions('041234245');
