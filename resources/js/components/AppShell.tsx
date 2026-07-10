@@ -56,7 +56,7 @@ const dockRight: NavItem[] = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const page = usePage<SharedProps>()
-  const user = page.props.auth.user
+  const user = page.props.auth?.user
   const adminBase = useAdminBase()
   const pathname = page.url.split('?')[0]
   const needsPin = !user?.has_transaction_pin

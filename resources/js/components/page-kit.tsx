@@ -13,8 +13,8 @@ export const pageList = {
 }
 
 export const pageItem = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0, transition: PAGE_SPRING },
+  hidden: { y: 10 },
+  show: { y: 0, transition: PAGE_SPRING },
 }
 
 type IconCmp = ComponentType<{ size?: number; className?: string }>

@@ -100,7 +100,7 @@ export function BalanceHeroCard({
 export function ComplianceStrip() {
   const items = [
     'PIN on every payment',
-    'Encrypted KYC (Dojah)',
+    'Encrypted KYC',
     'Immutable ledger',
     'Audit logs',
   ] as const

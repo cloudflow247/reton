@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion'
 
-const labels = ['Welcome', 'PIN', 'Done']
+const onboardingLabels = ['Welcome', 'PIN', 'Done']
+const authLabels = ['Account', 'Contact', 'Security', 'Verify', 'Reset']
 
 export function AuthStepIndicator({ step, total }: { step: number; total: number }) {
   const progressPct =
     total <= 1 ? 100 : step >= total - 1 ? 100 : Math.round(((step + 1) / total) * 100)
+  const labels = total === 3 ? onboardingLabels : authLabels
 
   return (
     <div aria-label={`Step ${step + 1} of ${total}`}>

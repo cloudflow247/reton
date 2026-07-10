@@ -41,8 +41,10 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $user ? new UserResource($user) : null,
-                'wallets' => $user ? WalletResource::collection($user->wallets()->get()) : [],
+                'user' => $user ? (new UserResource($user))->resolve() : null,
+                'wallets' => $user
+                    ? WalletResource::collection($user->wallets()->get())->resolve()
+                    : [],
             ],
             // Demo helper for reviewers — only present when explicitly enabled
             // (RETON_DEMO_MODE), so production never exposes credentials.

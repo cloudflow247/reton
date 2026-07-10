@@ -1,6 +1,7 @@
 import { createInertiaApp } from '@inertiajs/react'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { createRoot } from 'react-dom/client'
+import { AppErrorBoundary } from '@/components/AppErrorBoundary'
 import { setupEcho } from '@/lib/broadcasting'
 import { AppProviders } from '@/providers/AppProviders'
 import '../css/app.css'
@@ -18,9 +19,11 @@ createInertiaApp({
     ),
   setup({ el, App, props }) {
     createRoot(el).render(
-      <AppProviders>
-        <App {...props} />
-      </AppProviders>,
+      <AppErrorBoundary>
+        <AppProviders>
+          <App {...props} />
+        </AppProviders>
+      </AppErrorBoundary>,
     )
   },
   progress: {

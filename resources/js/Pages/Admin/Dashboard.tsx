@@ -70,7 +70,12 @@ export default function AdminDashboard() {
 
   const integrationRows: IntegrationRow[] = [
     { key: 'ALATPay', ...integrations.alatpay },
-    { key: 'BVN verification', ready: integrations.bvn.ready, driver: integrations.bvn.provider, subtitle: `via ${integrations.bvn.provider}` },
+    {
+      key: 'BVN verification',
+      ready: integrations.bvn?.ready ?? false,
+      driver: integrations.bvn?.provider ?? 'ALATPay',
+      subtitle: `via ${integrations.bvn?.provider ?? 'ALATPay'}`,
+    },
     { key: 'Interswitch', ...integrations.interswitch },
     { key: 'Termii', ...integrations.termii },
     { key: 'Bridgecard', ...integrations.bridgecard },

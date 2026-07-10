@@ -86,7 +86,8 @@ export default function Dashboard() {
   const { auth, activity, summary, kycTier } = usePage<
     PageProps<{ activity: StatementEntry[]; summary: DashboardSummary; kycTier: number }>
   >().props
-  const wallet = auth.wallets[0]
+  const wallets = Array.isArray(auth?.wallets) ? auth.wallets : []
+  const wallet = wallets[0]
   const [copied, setCopied] = useState(false)
   const hidden = useUiStore((s) => s.balanceHidden)
   const toggleHidden = useUiStore((s) => s.toggleBalanceHidden)
@@ -95,8 +96,8 @@ export default function Dashboard() {
   const pendingBalance = wallet?.held_balance ?? 0
   const animatedAvailable = useCountUp(availableBalance)
   const recent = (Array.isArray(activity) ? activity : []).slice(0, 5)
-  const firstName = (auth.user?.name ?? 'there').split(' ')[0]
-  const needsPin = !auth.user?.has_transaction_pin
+  const firstName = (auth?.user?.name ?? 'there').split(' ')[0]
+  const needsPin = !auth?.user?.has_transaction_pin
   const isNewUser = recent.length === 0
 
   const trust = summary ?? {
@@ -108,9 +109,12 @@ export default function Dashboard() {
   }
 
   const attentionCount =
-    trust.pending_callbacks + trust.open_recoveries + trust.open_fraud_alerts + trust.protected_transfers_pending
+    (trust.pending_callbacks ?? 0) +
+    (trust.open_recoveries ?? 0) +
+    (trust.open_fraud_alerts ?? 0) +
+    (trust.protected_transfers_pending ?? 0)
 
-  const tone = trustTone(trust.trust_score)
+  const tone = trustTone(Number(trust.trust_score ?? 100))
 
   const flow = useMemo(() => {
     const entries = Array.isArray(activity) ? activity : []
@@ -122,7 +126,7 @@ export default function Dashboard() {
   return (
     <Page className="!pb-3">
       <Head title="Home" />
-      {auth.user?.id && <TrustProtectionListener userId={auth.user.id} only={['summary', 'activity']} />}
+      {auth?.user?.id && <TrustProtectionListener userId={auth.user.id} only={['summary', 'activity']} />}
 
       <div className="lg:grid lg:grid-cols-12 lg:gap-6">
         <div className="space-y-5 lg:col-span-8">
@@ -132,7 +136,7 @@ export default function Dashboard() {
           <h1 className="font-display text-2xl font-bold tracking-tight sm:text-[1.65rem]">{firstName}</h1>
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
             <span>Trust-first wallet</span>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="muted" className="text-[10px]">
               KYC Tier {kycTier ?? 1}
             </Badge>
           </p>
