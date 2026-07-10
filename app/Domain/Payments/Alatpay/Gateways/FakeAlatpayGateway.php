@@ -329,8 +329,12 @@ class FakeAlatpayGateway implements AlatpayGateway
         // Fake driver always accepts configured credentials.
     }
 
-    public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
-    {
+    public function fetchStaticAccountTransactions(
+        string $accountNumber,
+        int $page = 1,
+        int $limit = 50,
+        ?string $staticWalletId = null,
+    ): array {
         return $this->staticTransactions[$accountNumber] ?? [];
     }
 }

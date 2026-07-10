@@ -516,29 +516,53 @@ class HttpAlatpayGateway implements AlatpayGateway
      * through results and match account numbers loosely — JSON may emit the
      * number as an int and drop a leading zero (0450041659 → 450041659).
      *
+     * Status is omitted on purpose: portal "Settled" rows are sometimes excluded
+     * when Status=1 is forced. When StaticAccountId is known we pass it too.
+     *
      * @see https://docs.alatpay.ng/static-wallet — GET .../staticaccount/collectionhistory
      *
      * @return array<int, StaticAccountTransaction>
      */
-    public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
-    {
+    public function fetchStaticAccountTransactions(
+        string $accountNumber,
+        int $page = 1,
+        int $limit = 50,
+        ?string $staticWalletId = null,
+    ): array {
         $matched = [];
         $currentPage = max(1, $page);
         $maxPages = 20;
+        $totalRowsSeen = 0;
 
         do {
+            $query = [
+                'PageNumber' => $currentPage,
+                'Limit' => $limit,
+                'PageSize' => $limit,
+                'BusinessId' => (string) config('services.alatpay.business_id'),
+            ];
+
+            if (filled($staticWalletId)) {
+                $query['StaticAccountId'] = $staticWalletId;
+                $query['staticAccountId'] = $staticWalletId;
+            }
+
             $response = $this->sendWithSessionRetry(
-                fn () => $this->client()->get('/alatpay-wallet/api/v1/staticaccount/collectionhistory', [
-                    'PageNumber' => $currentPage,
-                    'Limit' => $limit,
-                    'PageSize' => $limit,
-                    'Status' => 1,
-                    'BusinessId' => (string) config('services.alatpay.business_id'),
-                ]),
+                fn () => $this->client()->get('/alatpay-wallet/api/v1/staticaccount/collectionhistory', $query),
             );
 
             if (! $response->successful()) {
-                throw AlatpayException::requestFailed('fetchStaticAccountTransactions', $response->status());
+                Log::warning('ALATPay collectionhistory failed', [
+                    'status' => $response->status(),
+                    'account_number' => $accountNumber,
+                    'body' => $response->json() ?? $response->body(),
+                ]);
+
+                throw AlatpayException::requestFailed(
+                    'fetchStaticAccountTransactions',
+                    $response->status(),
+                    'Could not load ALATPay collection history.',
+                );
             }
 
             /** @var array<int, array<string, mixed>> $rows */
@@ -547,43 +571,84 @@ class HttpAlatpayGateway implements AlatpayGateway
                 $response->json('data.staticAccountTransactionResponses', []),
             );
 
+            if ($rows === []) {
+                // Some payloads nest under data / items.
+                $alt = $response->json('data') ?? $response->json('items') ?? [];
+                if (is_array($alt) && array_is_list($alt)) {
+                    $rows = $alt;
+                }
+            }
+
+            $totalRowsSeen += count($rows);
+
             foreach ($rows as $row) {
                 if (! is_array($row)) {
                     continue;
                 }
 
-                $rowAccount = (string) ($row['accountNumber'] ?? '');
+                $rowAccount = (string) ($row['accountNumber'] ?? $row['AccountNumber'] ?? '');
 
-                if (! self::staticAccountNumbersMatch($accountNumber, $rowAccount)) {
+                if ($rowAccount !== '' && ! self::staticAccountNumbersMatch($accountNumber, $rowAccount)) {
                     continue;
                 }
 
-                $transactionId = (string) ($row['staticAccountTransactionId'] ?? '');
+                // When StaticAccountId scoped the query, rows without accountNumber still count.
+                if ($rowAccount === '' && blank($staticWalletId)) {
+                    continue;
+                }
+
+                $transactionId = (string) (
+                    $row['staticAccountTransactionId']
+                    ?? $row['StaticAccountTransactionId']
+                    ?? $row['id']
+                    ?? ''
+                );
 
                 if ($transactionId === '') {
                     $transactionId = 'sat-'.hash('sha256', implode('|', [
                         self::normalizeStaticAccountNumber($accountNumber),
-                        (string) ($row['amount'] ?? ''),
-                        (string) ($row['transactionDate'] ?? ''),
-                        (string) ($row['narration'] ?? ''),
+                        (string) ($row['amount'] ?? $row['Amount'] ?? ''),
+                        (string) ($row['transactionDate'] ?? $row['TransactionDate'] ?? ''),
+                        (string) ($row['narration'] ?? $row['Narration'] ?? ''),
                     ]));
                 }
 
+                $amountMajor = (float) ($row['amount'] ?? $row['Amount'] ?? 0);
+
                 $matched[] = new StaticAccountTransaction(
                     transactionId: $transactionId,
-                    status: (int) ($row['status'] ?? 0),
+                    status: StaticAccountTransaction::statusFromRow($row),
                     accountNumber: $accountNumber,
-                    amountMajor: (float) ($row['amount'] ?? 0),
-                    narration: isset($row['narration']) ? (string) $row['narration'] : null,
-                    notificationEmail: isset($row['notificationEmail']) ? (string) $row['notificationEmail'] : null,
+                    amountMajor: $amountMajor,
+                    narration: isset($row['narration'])
+                        ? (string) $row['narration']
+                        : (isset($row['Narration']) ? (string) $row['Narration'] : null),
+                    notificationEmail: isset($row['notificationEmail'])
+                        ? (string) $row['notificationEmail']
+                        : null,
                 );
             }
 
             /** @var array<string, mixed> $paging */
             $paging = (array) ($response->json('pagingData') ?? $response->json('data.pagingData') ?? []);
-            $hasNext = (bool) ($paging['hasNext'] ?? false);
+            $hasNext = (bool) ($paging['hasNext'] ?? $paging['HasNext'] ?? false);
             $currentPage++;
         } while ($hasNext && $currentPage <= $maxPages);
+
+        if ($matched === [] && $totalRowsSeen > 0) {
+            Log::warning('ALATPay collectionhistory returned rows but none matched account', [
+                'account_number' => $accountNumber,
+                'static_wallet_id' => $staticWalletId,
+                'rows_seen' => $totalRowsSeen,
+            ]);
+        }
+
+        if ($matched === [] && $totalRowsSeen === 0) {
+            Log::info('ALATPay collectionhistory empty', [
+                'account_number' => $accountNumber,
+                'static_wallet_id' => $staticWalletId,
+            ]);
+        }
 
         return $matched;
     }

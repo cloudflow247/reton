@@ -120,6 +120,6 @@ it('skips on-demand poll when the account was polled recently', function () {
     $account->update(['last_polled_at' => now()]);
     $this->gateway->markStaticFunded($account->account_number, 150.00, 'txn-stale-skip');
 
-    expect(app(StaticAccountService::class)->pollActiveForUser($account->user))->toBe(0)
+    expect(app(StaticAccountService::class)->pollActiveForUser($account->user, staleAfterSeconds: 20))->toBe(0)
         ->and($wallet->fresh()->balance)->toBe(0);
 });

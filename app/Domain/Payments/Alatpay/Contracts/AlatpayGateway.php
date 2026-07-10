@@ -52,5 +52,10 @@ interface AlatpayGateway
     public function listStaticAccounts(int $page = 1, int $limit = 50, int $status = 1): array;
 
     /** @return array<int, StaticAccountTransaction> */
-    public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array;
+    public function fetchStaticAccountTransactions(
+        string $accountNumber,
+        int $page = 1,
+        int $limit = 50,
+        ?string $staticWalletId = null,
+    ): array;
 }

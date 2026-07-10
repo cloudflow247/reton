@@ -267,7 +267,10 @@ class StaticAccountService
 
         $credited = 0;
 
-        foreach ($this->gateway->fetchStaticAccountTransactions($account->account_number) as $txn) {
+        foreach ($this->gateway->fetchStaticAccountTransactions(
+            $account->account_number,
+            staticWalletId: $account->provider_reference,
+        ) as $txn) {
             if (! $txn->isSuccessful() || $txn->amountMinor() <= 0) {
                 continue;
             }
@@ -318,8 +321,10 @@ class StaticAccountService
     /**
      * On-demand poll when a user opens Add Money / Dashboard so VA deposits
      * credit even if the minute scheduler is delayed or disabled.
+     *
+     * @throws \Throwable when the ALATPay fetch fails (callers may flash a message)
      */
-    public function pollActiveForUser(User $user, int $staleAfterSeconds = 20): int
+    public function pollActiveForUser(User $user, int $staleAfterSeconds = 0): int
     {
         $account = StaticAccount::query()
             ->where('user_id', $user->getKey())
@@ -333,24 +338,14 @@ class StaticAccountService
         }
 
         if (
-            $account->last_polled_at !== null
+            $staleAfterSeconds > 0
+            && $account->last_polled_at !== null
             && $account->last_polled_at->gt(now()->subSeconds($staleAfterSeconds))
         ) {
             return 0;
         }
 
-        try {
-            return $this->poll($account);
-        } catch (\Throwable $e) {
-            report($e);
-            Log::warning('Static account on-demand poll failed', [
-                'static_account_id' => $account->id,
-                'user_id' => $user->getKey(),
-                'message' => $e->getMessage(),
-            ]);
-
-            return 0;
-        }
+        return $this->poll($account);
     }
 
     private function credit(StaticAccount $account, StaticAccountTransaction $txn): void

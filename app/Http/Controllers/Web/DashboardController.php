@@ -32,7 +32,18 @@ class DashboardController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        $credited = $this->staticAccounts->pollActiveForUser($user);
+        $credited = 0;
+
+        try {
+            $credited = $this->staticAccounts->pollActiveForUser($user);
+        } catch (\Throwable $e) {
+            report($e);
+            $request->session()->flash(
+                'error',
+                'Could not check ALATPay for new deposits. Open Add Money and try again in a moment.',
+            );
+        }
+
         $wallet = $user->wallets()->first();
 
         $staticAccount = $wallet

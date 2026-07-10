@@ -452,7 +452,52 @@ it('polls collectionhistory per official static-wallet docs', function () {
 
         return str_contains($request->url(), 'collectionhistory')
             && ($query['BusinessId'] ?? null) === 'biz-001'
-            && (int) ($query['Status'] ?? 0) === 1;
+            && ! array_key_exists('Status', $query);
+    });
+});
+
+it('credits collection history rows marked Settled without numeric status 1', function () {
+    config(alatpayLiveConfig([
+        'services.alatpay.business_id' => 'biz-001',
+    ]));
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    fakeAlatpayMerchantSession([
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/collectionhistory*' => Http::response([
+            'staticAccountTransactionResponses' => [
+                [
+                    'staticAccountTransactionId' => 'txn-settled-string',
+                    'settlementStatus' => 'Settled',
+                    'accountNumber' => '0450041659',
+                    'amount' => 100.00,
+                    'narration' => 'IP:MOGAJI GABRIEL ROTIMI-NIP Transfer to CLOUDFLO',
+                ],
+                [
+                    'staticAccountTransactionId' => 'txn-status-2',
+                    'status' => 2,
+                    'accountNumber' => '0450041659',
+                    'amount' => 150.00,
+                ],
+            ],
+        ], 200),
+    ], 'biz-001');
+
+    $txns = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class)
+        ->fetchStaticAccountTransactions('0450041659', staticWalletId: 'wallet-uuid');
+
+    expect($txns)->toHaveCount(2)
+        ->and($txns[0]->isSuccessful())->toBeTrue()
+        ->and($txns[1]->isSuccessful())->toBeTrue()
+        ->and($txns[0]->amountMinor())->toBe(10000)
+        ->and($txns[1]->amountMinor())->toBe(15000);
+
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+        return str_contains($request->url(), 'collectionhistory')
+            && ($query['StaticAccountId'] ?? null) === 'wallet-uuid';
     });
 });
 

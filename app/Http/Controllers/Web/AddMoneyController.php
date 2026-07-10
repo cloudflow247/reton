@@ -81,15 +81,23 @@ class AddMoneyController extends Controller
         // VA deposits settle on ALATPay first; credit Reton on visit so users are
         // not stuck waiting on the minute scheduler (or a missed cron tick).
         if ($staticAccount !== null && $staticAccount->isActive()) {
-            $credited = $this->staticAccounts->pollActiveForUser($user);
-            $staticAccount->refresh();
+            try {
+                $credited = $this->staticAccounts->pollActiveForUser($user);
+                $staticAccount->refresh();
 
-            if ($credited > 0) {
+                if ($credited > 0) {
+                    $request->session()->flash(
+                        'success',
+                        $credited === 1
+                            ? 'Deposit received — your balance is updated.'
+                            : "{$credited} deposits received — your balance is updated.",
+                    );
+                }
+            } catch (\Throwable $e) {
+                report($e);
                 $request->session()->flash(
-                    'success',
-                    $credited === 1
-                        ? 'Deposit received — your balance is updated.'
-                        : "{$credited} deposits received — your balance is updated.",
+                    'error',
+                    'Could not check ALATPay for new deposits. Please refresh in a moment.',
                 );
             }
         }
