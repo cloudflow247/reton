@@ -22,6 +22,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Live AlatPay integration over HTTP. Endpoint shapes follow AlatPay's
@@ -195,6 +196,11 @@ class HttpAlatpayGateway implements AlatpayGateway
         }
 
         if (! $response->successful()) {
+            Log::warning('ALATPay provisionStaticAccount failed', [
+                'status' => $response->status(),
+                'body' => $response->json() ?? $response->body(),
+            ]);
+
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
                 $response->status(),

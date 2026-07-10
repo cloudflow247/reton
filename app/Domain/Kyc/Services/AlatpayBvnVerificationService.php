@@ -79,6 +79,7 @@ class AlatpayBvnVerificationService
         }
 
         $this->assertBvnAvailable($user, $bvn);
+        $this->assertNotSandboxBvnOnLive($bvn);
 
         try {
             $response = $this->gateway->provisionStaticAccount(new StaticAccountRequest(
@@ -90,7 +91,7 @@ class AlatpayBvnVerificationService
         } catch (AlatpayException $e) {
             $this->audit->record($user, 'bvn', $this->providerName(), 'failed', $e->getMessage(), $ipAddress);
             throw ValidationException::withMessages([
-                'bvn' => [$e->userFacingMessage('We could not verify that BVN with ALATPay. Check the number and try again.')],
+                'bvn' => [$e->userFacingMessage($this->defaultProvisionFailureMessage())],
             ]);
         }
 
@@ -208,6 +209,34 @@ class AlatpayBvnVerificationService
         if ($taken) {
             throw ValidationException::withMessages(['bvn' => ['This BVN is already linked to another Reton account.']]);
         }
+    }
+
+    /**
+     * Sandbox/demo BVNs used in tests and placeholders must never hit live ALATPay.
+     */
+    private function assertNotSandboxBvnOnLive(string $bvn): void
+    {
+        if ($this->providerName() === 'alatpay_fake') {
+            return;
+        }
+
+        $sandboxBvns = [
+            '22334455667',
+            '11111111111',
+            '00000000000',
+            '12345678901',
+        ];
+
+        if (in_array($bvn, $sandboxBvns, true)) {
+            throw ValidationException::withMessages([
+                'bvn' => ['That looks like a demo/test BVN. Enter your real 11-digit BVN — ALATPay will SMS the phone registered to it.'],
+            ]);
+        }
+    }
+
+    private function defaultProvisionFailureMessage(): string
+    {
+        return 'ALATPay could not verify that BVN. Confirm the number is correct and matches the phone on your BVN record, then try again.';
     }
 
     private function providerName(): string

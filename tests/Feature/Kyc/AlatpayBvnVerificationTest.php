@@ -132,6 +132,24 @@ it('exposes pending otp props on profile for the verification gate', function ()
         );
 });
 
+it('rejects known demo bvns when alatpay is live', function () {
+    config([
+        'services.alatpay.driver' => 'http',
+        'services.alatpay.api_key' => 'test-key',
+        'services.alatpay.business_id' => 'test-business',
+    ]);
+
+    $user = alatpayKycUser();
+
+    $this->actingAs($user)->from('/add-money')->post('/profile/kyc/tier-2', [
+        'bvn' => '22334455667',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHasErrors('bvn');
+});
+
 it('returns validation errors when alatpay credentials are missing', function () {
     config([
         'services.alatpay.driver' => 'http',
@@ -142,7 +160,7 @@ it('returns validation errors when alatpay credentials are missing', function ()
     $user = alatpayKycUser();
 
     $this->actingAs($user)->from('/add-money')->post('/profile/kyc/tier-2', [
-        'bvn' => '22334455667',
+        'bvn' => '22109876543',
         'date_of_birth' => '1990-05-15',
         'identity_consent' => true,
         'return_to' => '/add-money',

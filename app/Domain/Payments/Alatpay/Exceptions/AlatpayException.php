@@ -18,13 +18,22 @@ final class AlatpayException extends RuntimeException
     /** Short message safe to show in validation errors. */
     public function userFacingMessage(string $fallback): string
     {
-        $detail = trim((string) preg_replace('/^AlatPay request \[[^\]]+\] failed with HTTP \d+\.?\s*/', '', $this->getMessage()));
-
-        if ($detail === '' || str_starts_with($detail, 'AlatPay request')) {
-            return $fallback;
+        $status = null;
+        if (preg_match('/failed with HTTP (\d+)/', $this->getMessage(), $matches) === 1) {
+            $status = (int) $matches[1];
         }
 
-        // Cap length — provider messages can be verbose.
-        return mb_strlen($detail) > 180 ? mb_substr($detail, 0, 177).'…' : $detail;
+        $detail = trim((string) preg_replace('/^AlatPay request \[[^\]]+\] failed with HTTP \d+\.?\s*/', '', $this->getMessage()));
+
+        if ($detail !== '' && ! str_starts_with($detail, 'AlatPay request')) {
+            return mb_strlen($detail) > 180 ? mb_substr($detail, 0, 177).'…' : $detail;
+        }
+
+        return match ($status) {
+            400, 404, 422 => 'ALATPay rejected that BVN. Double-check the number — it must be your real BVN, not a demo value.',
+            401, 403 => 'ALATPay credentials were rejected. Ask an admin to check API key and Business ID in Integrations.',
+            408, 503, 504 => 'ALATPay timed out or is unreachable. Please try again in a moment.',
+            default => $fallback,
+        };
     }
 }

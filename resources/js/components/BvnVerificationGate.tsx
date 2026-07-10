@@ -50,10 +50,6 @@ export function BvnVerificationGate({
     bvnForm.post('/profile/kyc/tier-2', {
       preserveScroll: true,
       onSuccess: () => setStep('otp'),
-      onError: (errors) => {
-        const message = errors.bvn ?? errors.date_of_birth ?? errors.identity_consent ?? 'Could not start BVN verification'
-        toast.error(String(message))
-      },
     })
   }
 
@@ -63,9 +59,6 @@ export function BvnVerificationGate({
     toast.info('Confirming code…', 2000)
     otpForm.post('/profile/kyc/tier-2/confirm', {
       preserveScroll: true,
-      onError: (errors) => {
-        toast.error(String(errors.otp ?? 'Invalid or expired code'))
-      },
     })
   }
 
@@ -133,14 +126,19 @@ export function BvnVerificationGate({
 
             <Field
               label="11-digit BVN"
-              placeholder="22334455667"
+              placeholder="Your real BVN"
               inputMode="numeric"
               autoComplete="off"
               maxLength={11}
               value={bvnForm.data.bvn}
               onChange={(e) => bvnForm.setData('bvn', e.target.value.replace(/\D/g, '').slice(0, 11))}
-              error={bvnForm.errors.bvn && !flash.error ? bvnForm.errors.bvn : undefined}
-              hint={bvnDigits > 0 && bvnDigits < 11 ? `${bvnDigits}/11 digits` : undefined}
+              hint={
+                bvnDigits > 0 && bvnDigits < 11
+                  ? `${bvnDigits}/11 digits`
+                  : demoMode
+                    ? 'Demo: any valid-looking 11 digits works with code 123456'
+                    : 'Must be your real BVN — ALATPay texts the phone on that record'
+              }
             />
 
             <Field
