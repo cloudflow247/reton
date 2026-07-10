@@ -450,3 +450,65 @@ it('polls collectionhistory per official static-wallet docs', function () {
             && (int) ($query['Status'] ?? 0) === 1;
     });
 });
+
+it('recovers existing individual VA when alatpay says bvn already used', function () {
+    config(alatpayLiveConfig());
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    $user = alatpayKycUser();
+
+    fakeAlatpayMerchantSession([
+        // Trailing * so GET ?PageNumber=… matches the same sequence as POST create.
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount*' => Http::sequence()
+            ->push([
+                'status' => false,
+                'message' => 'BVN has been used to create an individual static account for this business before',
+            ], 400)
+            ->push([
+                'hasStaticWallet' => true,
+                'staticAccountResponses' => [[
+                    'id' => 'existing-wallet-1',
+                    'walletType' => 1,
+                    'status' => 1,
+                    'accountNumber' => '0444652607',
+                    'accountName' => 'CLOUDFLOW - USER',
+                    'email' => $user->email,
+                ]],
+            ], 200),
+    ]);
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2', [
+        'bvn' => '22109876543',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHas('success');
+
+    $kyc = app(KycService::class)->forUser($user->fresh());
+    expect($kyc->tier->value)->toBe(2)
+        ->and($kyc->bvn_verified_at)->not->toBeNull();
+});
+
+it('still blocks bvn already linked to another reton user', function () {
+    config(['services.alatpay.driver' => 'fake']);
+
+    $owner = alatpayKycUser('Owner');
+    $this->actingAs($owner)->post('/profile/kyc/tier-2', [
+        'bvn' => '22109876543',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+    ]);
+    $this->actingAs($owner)->post('/profile/kyc/tier-2/confirm', ['otp' => '123456']);
+
+    $other = alatpayKycUser('Other');
+    $this->actingAs($other)->from('/add-money')->post('/profile/kyc/tier-2', [
+        'bvn' => '22109876543',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHasErrors('bvn');
+});

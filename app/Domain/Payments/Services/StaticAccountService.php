@@ -97,12 +97,28 @@ class StaticAccountService
             reference: 'SA-'.Str::upper((string) Str::ulid()),
         ));
 
+        if ($response->accountNumber !== null) {
+            $ownedByOther = StaticAccount::query()
+                ->where('account_number', $response->accountNumber)
+                ->where('user_id', '!=', $user->getKey())
+                ->exists();
+
+            if ($ownedByOther) {
+                $account->delete();
+
+                throw ValidationException::withMessages([
+                    'bvn' => ['This deposit account is already linked to another Reton user.'],
+                ]);
+            }
+        }
+
         $attributes = [
             'provider_reference' => $response->staticWalletId,
             'otp_tracking_id' => $response->otpTrackingId,
         ];
 
-        // No OTP required: the provider already returned a live account number.
+        // No OTP required: the provider already returned a live account number
+        // (including recovered duplicate-BVN accounts).
         if ($response->otpTrackingId === null && $response->accountNumber !== null) {
             $attributes['account_number'] = $response->accountNumber;
             $attributes['account_name'] = $response->accountName;

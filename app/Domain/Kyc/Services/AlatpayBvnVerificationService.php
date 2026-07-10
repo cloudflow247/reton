@@ -89,7 +89,12 @@ class AlatpayBvnVerificationService
                 reference: 'BVN-'.Str::upper((string) Str::ulid()),
             ));
         } catch (AlatpayException $e) {
-            $this->audit->record($user, 'bvn', $this->providerName(), 'failed', $e->getMessage(), $ipAddress);
+            if ($e->isDuplicateIndividualBvn()) {
+                $this->audit->record($user, 'bvn', $this->providerName(), 'failed', 'duplicate_bvn_unmatched', $ipAddress);
+            } else {
+                $this->audit->record($user, 'bvn', $this->providerName(), 'failed', $e->getMessage(), $ipAddress);
+            }
+
             throw ValidationException::withMessages([
                 'bvn' => [$e->userFacingMessage($this->defaultProvisionFailureMessage())],
             ]);

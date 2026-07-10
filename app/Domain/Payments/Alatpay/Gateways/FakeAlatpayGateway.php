@@ -154,6 +154,34 @@ class FakeAlatpayGateway implements AlatpayGateway
 
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
     {
+        $bvn = (string) preg_replace('/\D/', '', (string) $request->bvn);
+        $email = strtolower(trim((string) $request->email));
+
+        if ($bvn !== '' && $request->walletType === 1) {
+            $existingId = $this->bvnIndex()[$bvn] ?? null;
+            if (is_string($existingId) && $existingId !== '') {
+                $existing = $this->staticWallets[$existingId]
+                    ?? $this->cachedStaticWallets()[$existingId]
+                    ?? null;
+
+                if (is_array($existing) && ($existing['email'] ?? null) === $email) {
+                    return new StaticAccountProvisionResponse(
+                        staticWalletId: $existingId,
+                        otpTrackingId: null,
+                        accountNumber: $existing['accountNumber'],
+                        accountName: 'RETON STATIC',
+                        otpHint: 'Existing ALATPay deposit account linked for this BVN.',
+                    );
+                }
+
+                throw AlatpayException::requestFailed(
+                    'provisionStaticAccount',
+                    400,
+                    'BVN has been used to create an individual static account for this business before',
+                );
+            }
+        }
+
         $staticWalletId = 'SW-'.$request->reference;
         $accountNumber = '04'.substr(preg_replace('/\D/', '', $request->reference).'00000000', 0, 8);
 
@@ -161,6 +189,9 @@ class FakeAlatpayGateway implements AlatpayGateway
             $this->rememberStaticWallet($staticWalletId, [
                 'accountNumber' => $accountNumber,
                 'otpTrackingId' => null,
+                'email' => $email,
+                'walletType' => $request->walletType,
+                'bvn' => $bvn,
             ]);
 
             return new StaticAccountProvisionResponse($staticWalletId, null, $accountNumber, 'RETON STATIC');
@@ -169,6 +200,9 @@ class FakeAlatpayGateway implements AlatpayGateway
         $this->rememberStaticWallet($staticWalletId, [
             'accountNumber' => $accountNumber,
             'otpTrackingId' => 'OTP-'.$request->reference,
+            'email' => $email,
+            'walletType' => $request->walletType,
+            'bvn' => $bvn,
         ]);
 
         return new StaticAccountProvisionResponse(
@@ -178,6 +212,33 @@ class FakeAlatpayGateway implements AlatpayGateway
             null,
             'Demo mode: use verification code 123456 (no SMS is sent when ALATPay driver is fake).',
         );
+    }
+
+    /**
+     * @return list<\App\Domain\Payments\Alatpay\Data\StaticAccountSummary>
+     */
+    public function listStaticAccounts(int $page = 1, int $limit = 50, int $status = 1): array
+    {
+        unset($page, $limit, $status);
+
+        $summaries = [];
+
+        foreach ($this->cachedStaticWallets() + $this->staticWallets as $id => $wallet) {
+            if (! is_array($wallet)) {
+                continue;
+            }
+
+            $summaries[] = new \App\Domain\Payments\Alatpay\Data\StaticAccountSummary(
+                id: (string) $id,
+                walletType: (int) ($wallet['walletType'] ?? 1),
+                status: 1,
+                accountNumber: $wallet['accountNumber'] ?? null,
+                accountName: 'RETON STATIC',
+                email: $wallet['email'] ?? null,
+            );
+        }
+
+        return $summaries;
     }
 
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
@@ -202,7 +263,7 @@ class FakeAlatpayGateway implements AlatpayGateway
     }
 
     /**
-     * @param  array{accountNumber: ?string, otpTrackingId: ?string}  $wallet
+     * @param  array{accountNumber: ?string, otpTrackingId: ?string, email?: ?string, walletType?: int, bvn?: string}  $wallet
      */
     private function rememberStaticWallet(string $staticWalletId, array $wallet): void
     {
@@ -211,10 +272,27 @@ class FakeAlatpayGateway implements AlatpayGateway
         $cached = $this->cachedStaticWallets();
         $cached[$staticWalletId] = $wallet;
         Cache::put(self::STATIC_WALLETS_CACHE_KEY, $cached, self::STATIC_WALLETS_TTL_SECONDS);
+
+        $bvn = (string) ($wallet['bvn'] ?? '');
+        if ($bvn !== '' && (int) ($wallet['walletType'] ?? 0) === 1) {
+            $index = $this->bvnIndex();
+            $index[$bvn] = $staticWalletId;
+            Cache::put(self::STATIC_WALLETS_CACHE_KEY.':bvn', $index, self::STATIC_WALLETS_TTL_SECONDS);
+        }
     }
 
     /**
-     * @return array<string, array{accountNumber: ?string, otpTrackingId: ?string}>
+     * @return array<string, string>
+     */
+    private function bvnIndex(): array
+    {
+        $cached = Cache::get(self::STATIC_WALLETS_CACHE_KEY.':bvn', []);
+
+        return is_array($cached) ? $cached : [];
+    }
+
+    /**
+     * @return array<string, array{accountNumber: ?string, otpTrackingId: ?string, email?: ?string, walletType?: int, bvn?: string}>
      */
     private function cachedStaticWallets(): array
     {

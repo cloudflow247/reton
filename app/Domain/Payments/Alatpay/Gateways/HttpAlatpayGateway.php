@@ -13,6 +13,7 @@ use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
 use App\Domain\Payments\Alatpay\Data\StaticAccountProvisionResponse;
 use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
 use App\Domain\Payments\Alatpay\Data\StaticAccountResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountSummary;
 use App\Domain\Payments\Alatpay\Data\StaticAccountTransaction;
 use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
@@ -262,10 +263,20 @@ class HttpAlatpayGateway implements AlatpayGateway
                 'body' => $payload ?? $response->body(),
             ]);
 
+            $message = $this->extractErrorMessage($payload);
+
+            if ($this->isDuplicateIndividualBvnMessage($message)) {
+                $recovered = $this->recoverExistingIndividualAccount($request->email);
+
+                if ($recovered !== null) {
+                    return $recovered;
+                }
+            }
+
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
                 $response->status(),
-                $this->extractErrorMessage($payload) ?? $this->authFailureHint($response->status()),
+                $message ?? $this->authFailureHint($response->status()),
             );
         }
 
@@ -273,10 +284,20 @@ class HttpAlatpayGateway implements AlatpayGateway
         $root = is_array($payload) ? $payload : [];
 
         if ($this->looksLikeSoftFailure($root, $data)) {
+            $message = $this->extractErrorMessage($payload) ?? 'ALATPay rejected the BVN request.';
+
+            if ($this->isDuplicateIndividualBvnMessage($message)) {
+                $recovered = $this->recoverExistingIndividualAccount($request->email);
+
+                if ($recovered !== null) {
+                    return $recovered;
+                }
+            }
+
             throw AlatpayException::requestFailed(
                 'provisionStaticAccount',
                 400,
-                $this->extractErrorMessage($payload) ?? 'ALATPay rejected the BVN request.',
+                $message,
             );
         }
 
@@ -367,6 +388,124 @@ class HttpAlatpayGateway implements AlatpayGateway
             providerReference: (string) ($data['id'] ?? $request->staticWalletId),
             accountNumber: $accountNumber,
             accountName: isset($data['accountName']) ? (string) $data['accountName'] : null,
+        );
+    }
+
+    /**
+     * @return list<StaticAccountSummary>
+     */
+    public function listStaticAccounts(int $page = 1, int $limit = 50, int $status = 1): array
+    {
+        $this->assertConfigured('listStaticAccounts');
+
+        $response = $this->sendWithSessionRetry(
+            fn () => $this->client()->get('/alatpay-wallet/api/v1/staticaccount', [
+                'PageNumber' => $page,
+                'Limit' => $limit,
+                'Status' => $status,
+                'BusinessId' => (string) config('services.alatpay.business_id'),
+            ]),
+        );
+
+        if (! $response->successful()) {
+            throw AlatpayException::requestFailed(
+                'listStaticAccounts',
+                $response->status(),
+                $this->extractErrorMessage($response->json()),
+            );
+        }
+
+        $payload = $response->json();
+        $rows = (array) (is_array($payload)
+            ? ($payload['staticAccountResponses'] ?? $payload['data']['staticAccountResponses'] ?? [])
+            : []);
+
+        $summaries = [];
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $summaries[] = new StaticAccountSummary(
+                id: (string) ($row['id'] ?? ''),
+                walletType: (int) ($row['walletType'] ?? 0),
+                status: (int) ($row['status'] ?? 0),
+                accountNumber: isset($row['accountNumber']) ? (string) $row['accountNumber'] : null,
+                accountName: isset($row['accountName']) ? (string) $row['accountName'] : null,
+                email: isset($row['email']) ? (string) $row['email'] : null,
+            );
+        }
+
+        return $summaries;
+    }
+
+    /**
+     * When ALATPay says the BVN already has an Individual wallet, reuse the
+     * existing active account that matches the caller's email.
+     */
+    private function recoverExistingIndividualAccount(?string $email): ?StaticAccountProvisionResponse
+    {
+        $email = strtolower(trim((string) $email));
+
+        if ($email === '') {
+            return null;
+        }
+
+        try {
+            for ($page = 1; $page <= 10; $page++) {
+                $accounts = $this->listStaticAccounts($page, 50, 1);
+
+                if ($accounts === []) {
+                    break;
+                }
+
+                foreach ($accounts as $account) {
+                    if (! $account->isIndividual() || ! $account->isActive()) {
+                        continue;
+                    }
+
+                    if (strtolower(trim((string) $account->email)) !== $email) {
+                        continue;
+                    }
+
+                    Log::info('ALATPay recovered existing Individual static account for duplicate BVN', [
+                        'static_wallet_id' => $account->id,
+                        'account_number' => $account->accountNumber,
+                    ]);
+
+                    return new StaticAccountProvisionResponse(
+                        staticWalletId: $account->id,
+                        otpTrackingId: null,
+                        accountNumber: $account->accountNumber,
+                        accountName: $account->accountName,
+                        otpHint: 'Existing ALATPay deposit account linked for this BVN.',
+                    );
+                }
+
+                if (count($accounts) < 50) {
+                    break;
+                }
+            }
+        } catch (AlatpayException|ConnectionException|RequestException $e) {
+            Log::warning('ALATPay could not recover existing Individual static account', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return null;
+    }
+
+    private function isDuplicateIndividualBvnMessage(?string $message): bool
+    {
+        if ($message === null || $message === '') {
+            return false;
+        }
+
+        return str_contains(
+            strtolower($message),
+            'bvn has been used to create an individual static account',
         );
     }
 

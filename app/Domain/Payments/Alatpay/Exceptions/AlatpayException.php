@@ -15,9 +15,21 @@ final class AlatpayException extends RuntimeException
         return new self($detail !== null && $detail !== '' ? "{$base} {$detail}" : $base);
     }
 
+    public function isDuplicateIndividualBvn(): bool
+    {
+        return str_contains(
+            strtolower($this->getMessage()),
+            'bvn has been used to create an individual static account',
+        );
+    }
+
     /** Short message safe to show in validation errors. */
     public function userFacingMessage(string $fallback): string
     {
+        if ($this->isDuplicateIndividualBvn()) {
+            return 'This BVN already has an ALATPay deposit account for this business, but we could not match it to your email. Use the same email as on ALATPay or contact support.';
+        }
+
         $status = null;
         if (preg_match('/failed with HTTP (\d+)/', $this->getMessage(), $matches) === 1) {
             $status = (int) $matches[1];
