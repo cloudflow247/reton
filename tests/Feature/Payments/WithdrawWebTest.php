@@ -43,6 +43,7 @@ it('renders the withdraw page with banks', function () {
             ->component('Withdraw')
             ->has('banks')
             ->where('accountNameHint', 'ADA LOVELACE')
+            ->where('build', 'withdraw-2026-07-10c')
             ->has('recentPayouts', 0));
 });
 

@@ -52,13 +52,27 @@ return Application::configure(basePath: dirname(__DIR__))
         // Render every exception thrown on the API surface as Reton's standard
         // error envelope, so clients never receive an HTML error page.
         $exceptions->render(function (Throwable $e, Request $request) {
-            if (! $request->is('api/*') && ! $request->expectsJson()) {
-                // Web/Inertia surface: turn expected domain outcomes (fraud
-                // block, PIN lock, insufficient funds…) into a friendly flash
-                // redirect instead of a 500/HTML error page. ValidationException
-                // and auth redirects keep Laravel's default web handling.
+            // Inertia XHR must never receive the API JSON envelope — that body has
+            // no X-Inertia header, so the client shows a generic "500 | SERVER ERROR".
+            if ($request->header('X-Inertia') || (! $request->is('api/*') && ! $request->expectsJson())) {
                 if ($e instanceof RenderableApiException) {
                     return back()->with('error', $e->getMessage());
+                }
+
+                // Temporarily surface unexpected withdraw failures so production can
+                // be diagnosed without Cloud log access. Remove once fixed.
+                if (
+                    $request->routeIs('withdraw', 'withdraw.store')
+                    && ! $e instanceof ValidationException
+                    && ! $e instanceof AuthenticationException
+                    && ! $e instanceof AuthorizationException
+                    && ! $e instanceof HttpExceptionInterface
+                ) {
+                    report($e);
+
+                    return redirect()
+                        ->route('dashboard')
+                        ->with('error', 'Withdraw failed: '.$e->getMessage());
                 }
 
                 return null;

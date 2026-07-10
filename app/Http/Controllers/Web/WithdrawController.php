@@ -21,7 +21,6 @@ use App\Support\Banking\NigerianBanks;
 use App\Support\Money\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,8 +37,10 @@ class WithdrawController extends Controller
 
         return Inertia::render('Withdraw', [
             'banks' => NigerianBanks::all(),
-            'accountNameHint' => mb_strtoupper((string) $user->name, 'UTF-8'),
+            'accountNameHint' => strtoupper((string) $user->name),
             'recentPayouts' => $this->recentPayoutsFor($user),
+            // Deploy probe — confirm Cloud picked up this build (remove after fix).
+            'build' => 'withdraw-2026-07-10c',
         ]);
     }
 
@@ -66,7 +67,7 @@ class WithdrawController extends Controller
         $this->authorize('operate', $wallet);
         $this->verifyPin($pins, $user, $validated['pin']);
 
-        $accountName = mb_strtoupper(trim($validated['account_name']), 'UTF-8');
+        $accountName = strtoupper(trim($validated['account_name']));
 
         if (! AccountNameMatcher::matches($accountName, (string) $user->name)) {
             throw ValidationException::withMessages([
@@ -107,10 +108,6 @@ class WithdrawController extends Controller
      */
     private function recentPayoutsFor(User $user): array
     {
-        if (! Schema::hasTable('payouts')) {
-            return [];
-        }
-
         try {
             $recent = Payout::query()
                 ->where('user_id', $user->getKey())
