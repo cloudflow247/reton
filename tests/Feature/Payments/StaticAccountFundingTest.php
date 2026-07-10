@@ -24,7 +24,7 @@ beforeEach(function () {
 /** @return array{0: StaticAccount, 1: Wallet} */
 function activeStaticAccount(): array
 {
-    $user = User::factory()->create();
+    $user = readyUser();
     ensureVerifiedBvn($user);
     $wallet = app(WalletService::class)->open($user, 'NGN');
     $svc = app(StaticAccountService::class);
@@ -92,7 +92,25 @@ it('credits on demand when the user opens add money', function () {
 
     $this->actingAs($account->user)
         ->get('/add-money')
-        ->assertOk();
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.wallets.0.balance', 15000)
+            ->where('auth.wallets.0.available_balance', 15000));
+
+    expect($wallet->fresh()->balance)->toBe(15000);
+});
+
+it('shows the credited balance on the dashboard after polling', function () {
+    [$account, $wallet] = activeStaticAccount();
+    $this->gateway->markStaticFunded($account->account_number, 150.00, 'txn-dash');
+
+    $this->actingAs($account->user)
+        ->get('/dashboard')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.wallets.0.balance', 15000)
+            ->where('staticAccount.account_number', $account->account_number)
+            ->where('flash.success', 'Deposit received — your balance is updated.'));
 
     expect($wallet->fresh()->balance)->toBe(15000);
 });

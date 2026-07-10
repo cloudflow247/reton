@@ -24,7 +24,7 @@ import { ngn, shortDate } from '@/lib/format'
 import { useCountUp } from '@/lib/useCountUp'
 import { useUiStore } from '@/stores/ui-store'
 import type { StatementEntry } from '@/lib/types'
-import type { DashboardSummary, PageProps } from '@/types'
+import type { DashboardSummary, PageProps, StaticAccount } from '@/types'
 
 const item = pageItem
 
@@ -62,8 +62,13 @@ function nextTodo(needsPin: boolean, isNewUser: boolean) {
 }
 
 export default function Dashboard() {
-  const { auth, activity, summary, kycTier } = usePage<
-    PageProps<{ activity: StatementEntry[]; summary: DashboardSummary; kycTier: number }>
+  const { auth, activity, summary, kycTier, staticAccount } = usePage<
+    PageProps<{
+      activity: StatementEntry[]
+      summary: DashboardSummary
+      kycTier: number
+      staticAccount: StaticAccount | null
+    }>
   >().props
   const wallets = Array.isArray(auth?.wallets) ? auth.wallets : []
   const wallet = wallets[0]
@@ -79,6 +84,7 @@ export default function Dashboard() {
   const needsPin = !auth?.user?.has_transaction_pin
   const isNewUser = recent.length === 0
   const todo = nextTodo(needsPin, isNewUser)
+  const copyAccount = staticAccount?.account_number ?? wallet?.account_number ?? ''
 
   const trust = summary ?? {
     pending_callbacks: 0,
@@ -156,6 +162,7 @@ export default function Dashboard() {
           <motion.div variants={item}>
             <BalanceHeroCard
               wallet={wallet}
+              depositAccount={staticAccount}
               availableBalance={availableBalance}
               animatedAvailable={animatedAvailable}
               totalBalance={totalBalance}
@@ -164,7 +171,7 @@ export default function Dashboard() {
               copied={copied}
               onToggleHidden={toggleHidden}
               onCopyAccount={() => {
-                navigator.clipboard.writeText(wallet?.account_number ?? '')
+                navigator.clipboard.writeText(copyAccount)
                 setCopied(true)
                 setTimeout(() => setCopied(false), 1500)
               }}

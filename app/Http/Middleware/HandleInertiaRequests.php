@@ -40,10 +40,14 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
-            'auth' => [
-                'user' => $user ? (new UserResource($user))->resolve() : null,
-                'wallets' => $user
-                    ? WalletResource::collection($user->wallets()->get())->resolve()
+            // Lazy: controllers may credit wallets (static VA poll) before the
+            // Inertia response is built — eager share() would freeze balance at ₦0.
+            'auth' => fn (): array => [
+                'user' => $request->user()
+                    ? (new UserResource($request->user()))->resolve()
+                    : null,
+                'wallets' => $request->user()
+                    ? WalletResource::collection($request->user()->wallets()->get())->resolve()
                     : [],
             ],
             // Demo helper for reviewers — only present when explicitly enabled
