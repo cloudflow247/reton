@@ -40,9 +40,22 @@ type ProtectionProps = PageProps<{
 }>
 
 export default function Protection() {
-  const { auth, walletId, transfers, callbacks, recoveries, digitalOrders, flash } = usePage<ProtectionProps>().props
+  const {
+    auth,
+    walletId,
+    transfers: transfersProp,
+    callbacks: callbacksProp,
+    recoveries: recoveriesProp,
+    digitalOrders: digitalOrdersProp,
+    flash,
+  } = usePage<ProtectionProps>().props
   const [action, setAction] = useState<ActionDef | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
+
+  const transfers = Array.isArray(transfersProp) ? transfersProp : []
+  const callbacks = Array.isArray(callbacksProp) ? callbacksProp : []
+  const recoveries = Array.isArray(recoveriesProp) ? recoveriesProp : []
+  const digitalOrders = Array.isArray(digitalOrdersProp) ? digitalOrdersProp : []
 
   const transferMap = useMemo(
     () => Object.fromEntries(transfers.map((t) => [t.id, t])) as Record<string, Transfer>,
@@ -616,7 +629,7 @@ function Timeline({ events, defaultOpen = false }: { events: ProtectionEvent[]; 
           {events.map((e) => (
             <li key={e.id} className="relative text-xs">
               <span className="absolute -left-[1.3rem] top-1.5 h-2 w-2 rounded-full bg-mint" />
-              <span className="font-medium capitalize text-text">{e.action.replace(/_/g, ' ')}</span>
+              <span className="font-medium capitalize text-text">{(e.action ?? '').replace(/_/g, ' ')}</span>
               {e.notes ? <span className="text-muted"> — {e.notes}</span> : null}
               <span className="block text-muted">{shortDate(e.created_at)}</span>
             </li>

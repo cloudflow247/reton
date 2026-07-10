@@ -25,7 +25,7 @@ type Tab = 'open' | 'orders' | 'listings'
 const list = { hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } } }
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 320, damping: 28 } },
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 320, damping: 28 } },
 }
 const tabSpring = { type: 'spring', stiffness: 400, damping: 34 } as const
 
@@ -37,7 +37,9 @@ const flowSteps = [
 ]
 
 export default function Marketplace() {
-  const { myListings, orders, flash } = usePage<MarketplaceProps>().props
+  const { myListings: myListingsProp, orders: ordersProp, flash } = usePage<MarketplaceProps>().props
+  const myListings = Array.isArray(myListingsProp) ? myListingsProp : []
+  const orders = Array.isArray(ordersProp) ? ordersProp : []
   const [showCreate, setShowCreate] = useState(false)
   const [tab, setTab] = useState<Tab>('open')
   const [itemRef, setItemRef] = useState('')

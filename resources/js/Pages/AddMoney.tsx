@@ -64,8 +64,9 @@ const methodLabel: Record<DepositMethod, string> = {
 }
 
 export default function AddMoney() {
-  const { auth, flash, pendingDeposit, openDeposits, kyc, staticAccount, bvnPendingOtp, bvnOtpHint, bvnProvider, bvnDemoMode } =
+  const { auth, flash, pendingDeposit, openDeposits: openDepositsProp, kyc, staticAccount, bvnPendingOtp, bvnOtpHint, bvnProvider, bvnDemoMode } =
     usePage<AddMoneyProps>().props
+  const openDeposits = Array.isArray(openDepositsProp) ? openDepositsProp : []
   const wallet = auth.wallets[0]
 
   const [amount, setAmount] = useState('')
@@ -141,9 +142,9 @@ export default function AddMoney() {
           tone="mint"
         />
 
-        {kyc.bvn_verified && <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />}
+        {kyc?.bvn_verified && <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />}
 
-        {!kyc.bvn_verified ? (
+        {!kyc?.bvn_verified ? (
           <BvnVerificationGate
             pendingOtp={bvnPendingOtp}
             otpHint={bvnOtpHint}

@@ -37,10 +37,12 @@ function stepFor(bankCode: string, accountNumber: string, accountName: string, a
   return 4
 }
 
-export default function Withdraw({ banks, accountNameHint, recentPayouts }: Props) {
+export default function Withdraw({ banks: banksProp, accountNameHint, recentPayouts: recentPayoutsProp }: Props) {
   const { auth, flash } = usePage<Props>().props
   const wallet = auth.wallets[0]
   const done = flash.payout
+  const banks = Array.isArray(banksProp) ? banksProp : []
+  const recentPayouts = Array.isArray(recentPayoutsProp) ? recentPayoutsProp : []
 
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
@@ -48,7 +50,13 @@ export default function Withdraw({ banks, accountNameHint, recentPayouts }: Prop
   const [amount, setAmount] = useState('')
   const [pin, setPin] = useState('')
 
-  const form = useForm({})
+  const form = useForm({
+    bank_code: '',
+    account_number: '',
+    account_name: '',
+    amount: 0,
+    pin: '',
+  })
   const bank = useMemo(() => banks.find((b) => b.code === bankCode), [banks, bankCode])
   const minor = toMinor(amount)
   const overBalance = wallet ? minor > wallet.available_balance : false

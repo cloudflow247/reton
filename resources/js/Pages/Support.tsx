@@ -36,8 +36,8 @@ type SupportProps = PageProps<{
   quickPrompts: QuickPrompt[]
 }>
 
-function renderBody(body: string) {
-  const parts = body.split(/(\*\*[^*]+\*\*)/g)
+function renderBody(body: string | null | undefined) {
+  const parts = (body ?? '').split(/(\*\*[^*]+\*\*)/g)
 
   return parts.map((part, index) => {
     if (part.startsWith('**') && part.endsWith('**')) {
@@ -74,9 +74,9 @@ function MessageBubble({ message }: { message: SupportMessage }) {
         }`}
       >
         <div className={isUser ? 'text-white' : 'text-text'}>{renderBody(message.body)}</div>
-        {!isUser && message.actions.length > 0 && (
+        {!isUser && (message.actions ?? []).length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {message.actions.map((action) => (
+            {(message.actions ?? []).map((action) => (
               <Link
                 key={action.href + action.label}
                 href={action.href}
@@ -98,7 +98,13 @@ function MessageBubble({ message }: { message: SupportMessage }) {
 }
 
 export default function Support() {
-  const { messages, openTickets, welcome, quickPrompts, flash } = usePage<SupportProps>().props
+  const {
+    messages: messagesProp,
+    openTickets: openTicketsProp,
+    welcome,
+    quickPrompts: quickPromptsProp,
+    flash,
+  } = usePage<SupportProps>().props
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [escalateOpen, setEscalateOpen] = useState(false)
@@ -106,6 +112,10 @@ export default function Support() {
   const [ticketNote, setTicketNote] = useState('')
   const [ticketRef, setTicketRef] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  const messages = Array.isArray(messagesProp) ? messagesProp : []
+  const openTickets = Array.isArray(openTicketsProp) ? openTicketsProp : []
+  const quickPrompts = Array.isArray(quickPromptsProp) ? quickPromptsProp : []
 
   const thread = useMemo(() => messages, [messages])
 
@@ -267,49 +277,51 @@ export default function Support() {
         </div>
       </Card>
 
-      <Modal open={escalateOpen} onClose={() => setEscalateOpen(false)} title="Talk to a human">
-        <form onSubmit={escalate} className="space-y-4">
-          <p className="text-sm text-muted">
-            Open a support ticket and our team will respond at your registered email.
-          </p>
-          <label className="block space-y-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Subject</span>
-            <input
-              value={ticketSubject}
-              onChange={(event) => setTicketSubject(event.target.value)}
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
-              required
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Details</span>
-            <textarea
-              value={ticketNote}
-              onChange={(event) => setTicketNote(event.target.value)}
-              rows={4}
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
-              placeholder="Describe what happened…"
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-              Transaction reference (optional)
-            </span>
-            <input
-              value={ticketRef}
-              onChange={(event) => setTicketRef(event.target.value)}
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
-              placeholder="TRF-…"
-            />
-          </label>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setEscalateOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Open ticket</Button>
-          </div>
-        </form>
-      </Modal>
+      {escalateOpen ? (
+        <Modal onClose={() => setEscalateOpen(false)} title="Talk to a human">
+          <form onSubmit={escalate} className="space-y-4">
+            <p className="text-sm text-muted">
+              Open a support ticket and our team will respond at your registered email.
+            </p>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted">Subject</span>
+              <input
+                value={ticketSubject}
+                onChange={(event) => setTicketSubject(event.target.value)}
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+                required
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted">Details</span>
+              <textarea
+                value={ticketNote}
+                onChange={(event) => setTicketNote(event.target.value)}
+                rows={4}
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+                placeholder="Describe what happened…"
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+                Transaction reference (optional)
+              </span>
+              <input
+                value={ticketRef}
+                onChange={(event) => setTicketRef(event.target.value)}
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+                placeholder="TRF-…"
+              />
+            </label>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setEscalateOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Open ticket</Button>
+            </div>
+          </form>
+        </Modal>
+      ) : null}
     </Page>
   )
 }

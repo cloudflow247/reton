@@ -273,7 +273,7 @@ export default function AppSettings() {
           <h2 className="font-display text-lg font-semibold">KYC & business rules</h2>
           <p className="mt-1 text-sm text-muted">
             Tier limits, fraud scoring, callback windows, and marketplace timing are managed under{' '}
-            <Link href={`${adminUrl()}/platform`} className="text-mint hover:underline">
+            <Link href={`${adminBase}/platform`} className="text-mint hover:underline">
               Platform settings
             </Link>
             .

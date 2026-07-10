@@ -43,7 +43,7 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">{title}</p>
           <p className="text-xs text-muted">
-            {isBuyer ? 'You bought' : 'You sold'} · {escrow?.step_label ?? order.status.replace(/_/g, ' ')} ·{' '}
+            {isBuyer ? 'You bought' : 'You sold'} · {escrow?.step_label ?? (order.status ?? '').replace(/_/g, ' ')} ·{' '}
             {shortDate(order.created_at)}
           </p>
           {escrow?.seller_trust_score !== undefined && isBuyer && order.status === 'paid_held' && (
@@ -276,7 +276,7 @@ function ShipmentPanel({
       <ol className="space-y-1.5 border-l-2 border-mint/20 pl-3">
         {(shipment.events ?? []).map((event) => (
           <li key={`${event.at}-${event.status}`} className="text-[11px] text-muted">
-            <span className="font-medium text-text">{event.status.replace(/_/g, ' ')}</span>
+            <span className="font-medium text-text">{(event.status ?? '').replace(/_/g, ' ')}</span>
             <span className="mx-1">·</span>
             {shortDate(event.at)}
             <span className="mt-0.5 block">{event.note}</span>

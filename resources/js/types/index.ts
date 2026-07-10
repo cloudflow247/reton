@@ -1,6 +1,6 @@
 import type { Bill, Deposit, Payout, User, Wallet } from '@/lib/types'
 
-export type { KycProfile, StaticAccount } from '@/lib/types'
+export type { KycProfile, StaticAccount, DigitalListing, DigitalOrder } from '@/lib/types'
 
 export type TransferReceipt = {
   reference: string
@@ -39,6 +39,7 @@ export type SharedProps = {
     transfer: TransferReceipt | null
     bill: Bill | null
     payout: Payout | null
+    support_ticket?: string | null
   }
 }
 

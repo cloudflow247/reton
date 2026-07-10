@@ -59,8 +59,10 @@ function stepFor(
   return 3
 }
 
-export default function Bills({ categories, bills }: Props) {
+export default function Bills({ categories: categoriesProp, bills: billsProp }: Props) {
   const { auth, flash } = usePage<Props>().props
+  const categories = Array.isArray(categoriesProp) ? categoriesProp : []
+  const bills = Array.isArray(billsProp) ? billsProp : []
   const wallet = auth.wallets[0]
   const done = flash.bill
 
