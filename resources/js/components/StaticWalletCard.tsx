@@ -64,8 +64,8 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
           </div>
 
           <div className="divide-y divide-line/80 px-5">
-            <CopyRow label="Bank" value={staticAccount.bank_name ?? 'ALAT by Wema'} />
-            <CopyRow label="Account name" value={staticAccount.account_name ?? '—'} />
+            <CopyRow label="Bank" value={staticAccount.bank_name ?? 'Wema Bank'} />
+            <CopyRow label="Account name" value={staticAccount.account_name ?? '—'} wrap />
             <div className="py-4">
               <p className="text-xs text-muted">Account number</p>
               <div className="mt-1 flex items-center justify-between gap-3">

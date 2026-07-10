@@ -97,13 +97,29 @@ export function AmountField({
 }
 
 /** A labelled value with a one-tap copy button (account details, references). */
-export function CopyRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+export function CopyRow({
+  label,
+  value,
+  mono,
+  wrap = false,
+}: {
+  label: string
+  value: string
+  mono?: boolean
+  wrap?: boolean
+}) {
   const [copied, setCopied] = useState(false)
   return (
-    <div className="flex items-center justify-between gap-3 py-3.5">
-      <div className="min-w-0">
+    <div className="flex items-start justify-between gap-3 py-3.5">
+      <div className="min-w-0 flex-1">
         <div className="text-xs text-muted">{label}</div>
-        <div className={`truncate text-sm font-semibold ${mono ? 'font-num tracking-wider' : ''}`}>{value}</div>
+        <div
+          className={`text-sm font-semibold ${mono ? 'font-num tracking-wider' : ''} ${
+            wrap ? 'break-words whitespace-normal' : 'truncate'
+          }`}
+        >
+          {value}
+        </div>
       </div>
       <button
         type="button"
@@ -112,7 +128,7 @@ export function CopyRow({ label, value, mono }: { label: string; value: string; 
           setCopied(true)
           setTimeout(() => setCopied(false), 1400)
         }}
-        className="flex shrink-0 items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs text-muted transition hover:border-mint/40 hover:text-mint"
+        className="mt-0.5 flex shrink-0 items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs text-muted transition hover:border-mint/40 hover:text-mint"
       >
         {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
         {copied ? 'Copied' : 'Copy'}
