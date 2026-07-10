@@ -16,6 +16,7 @@ import {
   GiftIcon,
   HomeIcon,
   LockIcon,
+  PlusIcon,
   SendIcon,
   ShieldIcon,
   UserIcon,
@@ -50,8 +51,8 @@ const dockLeft: NavItem[] = [
   { to: '/bills', label: 'Bills', Icon: BillIcon },
 ]
 const dockRight: NavItem[] = [
-  { to: '/withdraw', label: 'Withdraw', Icon: BankIcon },
-  { to: '/profile', label: 'Profile', Icon: UserIcon },
+  { to: '/add-money', label: 'Add', Icon: PlusIcon },
+  { to: '/profile', label: 'Me', Icon: UserIcon },
 ]
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -218,17 +219,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:hidden"
         aria-label="Main"
       >
-        <div className="dock relative mx-auto flex max-w-sm items-center justify-between rounded-[22px] px-2 py-2">
+        <div className="dock relative mx-auto flex max-w-[22rem] items-end justify-between rounded-[1.35rem] px-1.5 py-1.5 shadow-[0_12px_40px_-18px_rgba(16,40,33,0.55)]">
           {dockLeft.map((n) => (
             <DockItem key={n.to} {...n} on={active(n.to, n.end)} />
           ))}
 
-          <Link href="/send" className="fab -mt-9 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white" aria-label="Send money">
-            <motion.span whileTap={{ scale: 0.88 }} transition={PAGE_SPRING}>
-              <SendIcon size={24} />
+          <Link
+            href="/send"
+            className="fab relative -mt-7 flex h-[3.35rem] w-[3.35rem] shrink-0 items-center justify-center rounded-full text-white shadow-[0_14px_32px_-12px_rgba(9,79,57,0.65)]"
+            aria-label="Send money"
+          >
+            <motion.span whileTap={{ scale: 0.9 }} transition={PAGE_SPRING} className="flex items-center justify-center">
+              <SendIcon size={22} />
             </motion.span>
           </Link>
 
@@ -277,20 +282,30 @@ function DockItem({
   to: string
   label: string
   end?: boolean
-  Icon: (p: { size?: number }) => JSX.Element
+  Icon: (p: { size?: number; className?: string }) => JSX.Element
   on: boolean
 }) {
   return (
     <Link
       href={to}
-      className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-semibold transition-colors ${
+      className={`relative flex min-w-[3.5rem] flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[10px] font-semibold transition-colors ${
         on ? 'text-mint' : 'text-muted'
       }`}
     >
-      <Icon size={21} />
+      <span
+        className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
+          on ? 'bg-mint/15 text-mint' : 'text-muted'
+        }`}
+      >
+        <Icon size={20} />
+      </span>
       {label}
       {on && (
-        <motion.span layoutId="dock-dot" className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-mint" transition={PAGE_SPRING} />
+        <motion.span
+          layoutId="dock-dot"
+          className="absolute bottom-1 h-1 w-1 rounded-full bg-mint"
+          transition={PAGE_SPRING}
+        />
       )}
     </Link>
   )

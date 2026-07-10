@@ -23,11 +23,11 @@ enum BillCategory: string
     {
         return match ($this) {
             self::Airtime => 'Airtime',
-            self::Data => 'Mobile Data',
-            self::Electricity => 'Electricity',
-            self::CableTv => 'Cable TV',
+            self::Data => 'Data',
+            self::Electricity => 'Power',
+            self::CableTv => 'TV',
             self::Betting => 'Betting',
-            self::Rrr => 'Remita (RRR)',
+            self::Rrr => 'Remita',
         };
     }
 

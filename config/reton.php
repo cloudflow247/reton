@@ -233,14 +233,14 @@ return [
     'kyc' => [
         'tiers' => [
             1 => [
-                'single_transaction_max' => (int) env('RETON_KYC_T1_SINGLE_MAX', 50_000_00),
-                'daily_inflow_max' => (int) env('RETON_KYC_T1_DAILY_IN_MAX', 200_000_00),
-                'wallet_balance_max' => (int) env('RETON_KYC_T1_BALANCE_MAX', 300_000_00),
+                'single_transaction_max' => (int) env('RETON_KYC_T1_SINGLE_MAX', 20_000_00),
+                'daily_inflow_max' => (int) env('RETON_KYC_T1_DAILY_IN_MAX', 50_000_00),
+                'wallet_balance_max' => (int) env('RETON_KYC_T1_BALANCE_MAX', 50_000_00),
             ],
             2 => [
-                'single_transaction_max' => (int) env('RETON_KYC_T2_SINGLE_MAX', 500_000_00),
-                'daily_inflow_max' => (int) env('RETON_KYC_T2_DAILY_IN_MAX', 2_000_000_00),
-                'wallet_balance_max' => (int) env('RETON_KYC_T2_BALANCE_MAX', 5_000_000_00),
+                'single_transaction_max' => (int) env('RETON_KYC_T2_SINGLE_MAX', 100_000_00),
+                'daily_inflow_max' => (int) env('RETON_KYC_T2_DAILY_IN_MAX', 100_000_00),
+                'wallet_balance_max' => (int) env('RETON_KYC_T2_BALANCE_MAX', 100_000_00),
             ],
             3 => [
                 'single_transaction_max' => (int) env('RETON_KYC_T3_SINGLE_MAX', 5_000_000_00),
