@@ -15,13 +15,20 @@ class OnboardingController extends Controller
     public function index(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
+        $requestedStep = (int) $request->integer('step', 0);
 
         if ($user->hasTransactionPin()) {
+            if ($requestedStep >= 2) {
+                return Inertia::render('Onboarding', [
+                    'initialStep' => 2,
+                ]);
+            }
+
             return redirect()->route('dashboard');
         }
 
         return Inertia::render('Onboarding', [
-            'initialStep' => $user->hasTransactionPin() ? 2 : 0,
+            'initialStep' => max(0, min($requestedStep, 1)),
         ]);
     }
 }

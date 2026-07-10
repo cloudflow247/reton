@@ -1,7 +1,7 @@
 import type { FormEvent, ReactNode } from 'react'
 import { Head, useForm, usePage } from '@inertiajs/react'
 import { AppShell } from '@/components/AppShell'
-import { CheckIcon, LockIcon, ShieldIcon } from '@/components/icons'
+import { CheckIcon, LockIcon } from '@/components/icons'
 import { FormPanel, InfoStrip, Page, PageHero } from '@/components/page-kit'
 import { Button, Field, Pill } from '@/components/ui'
 import type { SharedProps } from '@/types'
@@ -39,9 +39,9 @@ export default function SetPin() {
                 placeholder="••••"
                 value={form.data.current_pin}
                 onChange={(e) => form.setData('current_pin', e.target.value.replace(/\D/g, '').slice(0, 6))}
+                error={form.errors.current_pin}
                 required
               />
-              {form.errors.current_pin && <p className="-mt-2 text-sm text-danger">{form.errors.current_pin}</p>}
             </>
           )}
 
@@ -54,6 +54,7 @@ export default function SetPin() {
             placeholder="4–6 digits"
             value={form.data.pin}
             onChange={(e) => form.setData('pin', e.target.value.replace(/\D/g, '').slice(0, 6))}
+            error={form.errors.pin}
             required
           />
 
@@ -66,9 +67,13 @@ export default function SetPin() {
             placeholder="Re-enter PIN"
             value={form.data.pin_confirmation}
             onChange={(e) => form.setData('pin_confirmation', e.target.value.replace(/\D/g, '').slice(0, 6))}
+            error={form.errors.pin_confirmation}
             required
           />
-          {form.errors.pin && <p className="-mt-2 text-sm text-danger">{form.errors.pin}</p>}
+
+          {flash.error && (
+            <p className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
+          )}
 
           {flash.success && (
             <Pill tone="mint">

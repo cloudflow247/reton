@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AuthStepIndicator } from '@/components/AuthStepIndicator'
@@ -32,10 +32,19 @@ export default function Onboarding() {
   const [step, setStep] = useState(initialStep ?? 0)
   const pinForm = useForm({ pin: '', pin_confirmation: '' })
 
+  useEffect(() => {
+    setStep(initialStep ?? 0)
+  }, [initialStep])
+
   function submitPin(e: FormEvent) {
     e.preventDefault()
-    pinForm.transform((data) => ({ ...data, from_onboarding: true })).post('/pin', {
+    pinForm.clearErrors()
+    pinForm.transform((data) => ({ ...data, from_onboarding: true }))
+    pinForm.post('/pin', {
       preserveScroll: true,
+      onError: () => {
+        /* errors render inline via pinForm.errors */
+      },
     })
   }
 
@@ -54,6 +63,10 @@ export default function Onboarding() {
 
           {flash.success && (
             <p className="mb-4 rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
+          )}
+
+          {flash.error && (
+            <p className="mb-4 rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
           )}
 
           <AnimatePresence mode="wait">
@@ -107,9 +120,9 @@ export default function Onboarding() {
                     placeholder="4–6 digits"
                     value={pinForm.data.pin}
                     onChange={(e) => pinForm.setData('pin', e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    error={pinForm.errors.pin}
                     required
                   />
-                  {pinForm.errors.pin && <p className="-mt-2 text-sm text-danger">{pinForm.errors.pin}</p>}
                   <Field
                     label="Confirm PIN"
                     type="password"
@@ -121,11 +134,9 @@ export default function Onboarding() {
                     onChange={(e) =>
                       pinForm.setData('pin_confirmation', e.target.value.replace(/\D/g, '').slice(0, 6))
                     }
+                    error={pinForm.errors.pin_confirmation}
                     required
                   />
-                  {pinForm.errors.pin_confirmation && (
-                    <p className="-mt-2 text-sm text-danger">{pinForm.errors.pin_confirmation}</p>
-                  )}
                   <Button type="submit" loading={pinForm.processing} className="w-full">
                     Save PIN
                   </Button>

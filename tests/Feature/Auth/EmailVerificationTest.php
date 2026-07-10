@@ -99,6 +99,27 @@ it('renders the onboarding wizard for verified users without a pin', function ()
         ->assertInertia(fn ($page) => $page->component('Onboarding')->where('initialStep', 0));
 });
 
+it('saves a pin during onboarding and advances to the completion step', function () {
+    $user = User::factory()->create([
+        'transaction_pin' => null,
+        'email_verified_at' => now(),
+    ]);
+
+    $this->actingAs($user)->post('/pin', [
+        'pin' => '4321',
+        'pin_confirmation' => '4321',
+        'from_onboarding' => true,
+    ])->assertRedirect(route('onboarding', ['step' => 2]));
+
+    expect($user->fresh()->hasTransactionPin())->toBeTrue();
+
+    $this->actingAs($user)->get(route('onboarding', ['step' => 2]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Onboarding')
+            ->where('initialStep', 2));
+});
+
 it('allows a fully set up user to reach the dashboard', function () {
     $user = verifiedWebUser();
 
