@@ -176,15 +176,21 @@ class HttpAlatpayGateway implements AlatpayGateway
         );
     }
 
+    /**
+     * Health-check against Get Static Wallets.
+     *
+     * @see https://docs.alatpay.ng/static-wallet — GET /alatpay-wallet/api/v1/staticaccount
+     */
     public function pingStaticWallet(): void
     {
         $this->assertConfigured('pingStaticWallet');
 
         try {
             $response = $this->client()->get('/alatpay-wallet/api/v1/staticaccount', [
-                'pageNumber' => 1,
-                'limit' => 1,
-                'businessId' => (string) config('services.alatpay.business_id'),
+                'PageNumber' => 1,
+                'Limit' => 1,
+                'Status' => 1,
+                'BusinessId' => (string) config('services.alatpay.business_id'),
             ]);
         } catch (ConnectionException|RequestException $e) {
             throw AlatpayException::requestFailed(
@@ -213,6 +219,11 @@ class HttpAlatpayGateway implements AlatpayGateway
         );
     }
 
+    /**
+     * Create Individual (1) or Collection (2) static wallet — Step 1.
+     *
+     * @see https://docs.alatpay.ng/static-wallet — POST /alatpay-wallet/api/v1/staticaccount
+     */
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
     {
         $this->assertConfigured('provisionStaticAccount');
@@ -221,7 +232,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             $response = $this->client()->post(
                 '/alatpay-wallet/api/v1/staticaccount',
                 array_filter([
-                    'businessId' => config('services.alatpay.business_id'),
+                    'businessId' => (string) config('services.alatpay.business_id'),
                     'staticWalletType' => $request->walletType,
                     'bvn' => $request->bvn,
                     'email' => $request->email,
@@ -292,6 +303,11 @@ class HttpAlatpayGateway implements AlatpayGateway
         );
     }
 
+    /**
+     * Validate OTP and finalise wallet — Step 2.
+     *
+     * @see https://docs.alatpay.ng/static-wallet — POST .../validateAndCreate
+     */
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
     {
         $this->assertConfigured('verifyStaticAccount');
@@ -299,7 +315,7 @@ class HttpAlatpayGateway implements AlatpayGateway
         try {
             $response = $this->client()->post('/alatpay-wallet/api/v1/staticaccount/validateAndCreate', [
                 'staticWalletId' => $request->staticWalletId,
-                'businessId' => config('services.alatpay.business_id'),
+                'businessId' => (string) config('services.alatpay.business_id'),
                 'otp' => $request->otp,
                 'trackingId' => $request->trackingId,
             ]);
@@ -345,13 +361,21 @@ class HttpAlatpayGateway implements AlatpayGateway
         );
     }
 
+    /**
+     * Wallet collection history.
+     *
+     * @see https://docs.alatpay.ng/static-wallet — GET .../staticaccount/collectionhistory
+     *
+     * @return array<int, StaticAccountTransaction>
+     */
     public function fetchStaticAccountTransactions(string $accountNumber, int $page = 1, int $limit = 50): array
     {
-        $response = $this->client()->get('/alatpay-wallet/api/v1/staticaccount/transactions', [
-            'businessId' => config('services.alatpay.business_id'),
-            'accountNumber' => $accountNumber,
-            'pageNumber' => $page,
-            'limit' => $limit,
+        $response = $this->client()->get('/alatpay-wallet/api/v1/staticaccount/collectionhistory', [
+            'PageNumber' => $page,
+            'Limit' => $limit,
+            'PageSize' => $limit,
+            'Status' => 1,
+            'BusinessId' => (string) config('services.alatpay.business_id'),
         ]);
 
         if (! $response->successful()) {
@@ -360,7 +384,7 @@ class HttpAlatpayGateway implements AlatpayGateway
 
         $rows = (array) $response->json('staticAccountTransactionResponses', $response->json('data.staticAccountTransactionResponses', []));
 
-        return array_map(static fn (array $row): StaticAccountTransaction => new StaticAccountTransaction(
+        $mapped = array_map(static fn (array $row): StaticAccountTransaction => new StaticAccountTransaction(
             transactionId: (string) ($row['staticAccountTransactionId'] ?? ''),
             status: (int) ($row['status'] ?? 0),
             accountNumber: (string) ($row['accountNumber'] ?? $accountNumber),
@@ -368,6 +392,12 @@ class HttpAlatpayGateway implements AlatpayGateway
             narration: isset($row['narration']) ? (string) $row['narration'] : null,
             notificationEmail: isset($row['notificationEmail']) ? (string) $row['notificationEmail'] : null,
         ), $rows);
+
+        // Docs list history per business; keep only rows for the polled account.
+        return array_values(array_filter(
+            $mapped,
+            static fn (StaticAccountTransaction $txn): bool => $txn->accountNumber === $accountNumber,
+        ));
     }
 
     private function client(): PendingRequest
@@ -376,6 +406,8 @@ class HttpAlatpayGateway implements AlatpayGateway
             ->timeout((int) config('services.alatpay.timeout', 12))
             ->connectTimeout(4)
             ->withHeaders([
+                // Docs: Content-Type + Ocp-Apim-Subscription-Key (Secret key, not Public).
+                'Content-Type' => 'application/json',
                 'Ocp-Apim-Subscription-Key' => trim((string) config('services.alatpay.api_key')),
             ])
             ->acceptJson()

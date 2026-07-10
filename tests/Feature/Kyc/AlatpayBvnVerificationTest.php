@@ -312,8 +312,124 @@ it('admin alatpay test hits static wallet not bank-transfer', function () {
         ->assertSessionHas('success')
         ->assertSessionMissing('error');
 
-    Http::assertSent(fn (\Illuminate\Http\Client\Request $request) => str_contains($request->url(), 'alatpay-wallet/api/v1/staticaccount')
-        && $request->method() === 'GET');
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+        return $request->method() === 'GET'
+            && str_contains($request->url(), 'alatpay-wallet/api/v1/staticaccount')
+            && ! str_contains($request->url(), 'collectionhistory')
+            && ($query['BusinessId'] ?? null) === 'biz-static'
+            && (int) ($query['PageNumber'] ?? 0) === 1
+            && (int) ($query['Status'] ?? 0) === 1
+            && $request->hasHeader('Ocp-Apim-Subscription-Key', 'secret-key');
+    });
 
     Http::assertNotSent(fn (\Illuminate\Http\Client\Request $request) => str_contains($request->url(), 'bank-transfer'));
+});
+
+it('matches official static-wallet create and validate payloads', function () {
+    config([
+        'services.alatpay.driver' => 'http',
+        'services.alatpay.api_key' => 'docs-secret-key',
+        'services.alatpay.business_id' => '8909d16f-e6bd-409f-7dce-08ddbd774ihj',
+        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
+    ]);
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    Http::fake([
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/validateAndCreate' => Http::response([
+            'accountNumber' => '0412345678',
+            'accountName' => 'Your Business – David_Mark',
+            'id' => 'staticWalletid',
+        ], 200),
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount' => Http::response([
+            'accountNumber' => null,
+            'accountName' => null,
+            'id' => '499d78ab-33ab-4f18-b9e9-65afe19ffccb',
+            'message' => 'An OTP has been sent to 08*******86 and for verification. Kindly enter the OTP below.',
+            'otpTrackingID' => 'a5c9c68f-44cc-40ef-8647-1c14d9b438cd',
+        ], 200),
+    ]);
+
+    $gateway = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+
+    $provision = $gateway->provisionStaticAccount(new \App\Domain\Payments\Alatpay\Data\StaticAccountRequest(
+        walletType: 1,
+        bvn: '22109876543',
+        email: 'testmail@gmail.com',
+    ));
+
+    expect($provision->staticWalletId)->toBe('499d78ab-33ab-4f18-b9e9-65afe19ffccb')
+        ->and($provision->otpTrackingId)->toBe('a5c9c68f-44cc-40ef-8647-1c14d9b438cd');
+
+    Http::assertSent(fn (\Illuminate\Http\Client\Request $request) => $request->method() === 'POST'
+        && str_ends_with(parse_url($request->url(), PHP_URL_PATH) ?: '', '/alatpay-wallet/api/v1/staticaccount')
+        && $request['businessId'] === '8909d16f-e6bd-409f-7dce-08ddbd774ihj'
+        && $request['staticWalletType'] === 1
+        && $request['bvn'] === '22109876543'
+        && $request['email'] === 'testmail@gmail.com'
+        && $request->hasHeader('Ocp-Apim-Subscription-Key', 'docs-secret-key'));
+
+    $verified = $gateway->verifyStaticAccount(new \App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest(
+        staticWalletId: '499d78ab-33ab-4f18-b9e9-65afe19ffccb',
+        otp: '332610',
+        trackingId: 'a5c9c68f-44cc-40ef-8647-1c14d9b438cd',
+    ));
+
+    expect($verified->accountNumber)->toBe('0412345678');
+
+    Http::assertSent(fn (\Illuminate\Http\Client\Request $request) => $request->method() === 'POST'
+        && str_contains($request->url(), 'validateAndCreate')
+        && $request['staticWalletId'] === '499d78ab-33ab-4f18-b9e9-65afe19ffccb'
+        && $request['businessId'] === '8909d16f-e6bd-409f-7dce-08ddbd774ihj'
+        && $request['otp'] === '332610'
+        && $request['trackingId'] === 'a5c9c68f-44cc-40ef-8647-1c14d9b438cd');
+});
+
+it('polls collectionhistory per official static-wallet docs', function () {
+    config([
+        'services.alatpay.driver' => 'http',
+        'services.alatpay.api_key' => 'docs-secret-key',
+        'services.alatpay.business_id' => 'biz-001',
+        'services.alatpay.base_url' => 'https://apibox.alatpay.ng',
+    ]);
+
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    app()->forgetInstance(\App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway::class);
+
+    Http::fake([
+        'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/collectionhistory*' => Http::response([
+            'staticAccountTransactionResponses' => [
+                [
+                    'staticAccountTransactionId' => 'txn-keep',
+                    'status' => 1,
+                    'accountNumber' => '041234245',
+                    'amount' => 100.00,
+                    'narration' => 'ALAT TRANSFER',
+                ],
+                [
+                    'staticAccountTransactionId' => 'txn-skip',
+                    'status' => 1,
+                    'accountNumber' => '9999999999',
+                    'amount' => 50.00,
+                ],
+            ],
+        ], 200),
+    ]);
+
+    $txns = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class)
+        ->fetchStaticAccountTransactions('041234245');
+
+    expect($txns)->toHaveCount(1)
+        ->and($txns[0]->transactionId)->toBe('txn-keep');
+
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+        return str_contains($request->url(), 'collectionhistory')
+            && ($query['BusinessId'] ?? null) === 'biz-001'
+            && (int) ($query['Status'] ?? 0) === 1;
+    });
 });
