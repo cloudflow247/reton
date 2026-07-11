@@ -264,13 +264,28 @@ function ReceivePanel({
   )
 }
 
-export function ComplianceStrip() {
+export function ComplianceStrip({ compact = false }: { compact?: boolean }) {
   const items = [
     'PIN on every payment',
     'Encrypted KYC',
     'Immutable ledger',
     'Audit logs',
   ] as const
+
+  if (compact) {
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((label) => (
+          <span
+            key={label}
+            className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-[10px] font-semibold text-muted"
+          >
+            <CheckIcon size={10} className="text-mint" /> {label}
+          </span>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-2xl border border-line/80 bg-surface/80 px-4 py-3 backdrop-blur-sm">

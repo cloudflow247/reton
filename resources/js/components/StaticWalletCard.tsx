@@ -47,7 +47,6 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false, 
         staticAccount={staticAccount}
         profileName={resolvedName}
         walletTypeLabel={walletTypeLabel}
-        kyc={kyc}
         compact={compact}
       />
     )
