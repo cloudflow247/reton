@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form'
 import { AuthAlert } from '@/components/AuthAlert'
 import { AuthLayout } from '@/components/AuthLayout'
 import { PasswordStrength } from '@/components/PasswordStrength'
-import { RhfField } from '@/components/forms/RhfField'
+import { HoneypotFields } from '@/components/forms/HoneypotFields'
+import { RhfPasswordField } from '@/components/forms/RhfPasswordField'
 import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
 import { Button } from '@/components/ui'
 import { ArrowRightIcon } from '@/components/icons'
@@ -30,7 +31,7 @@ export default function ResetPassword() {
     formState: { errors },
   } = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
-    defaultValues: { email, token, password: '', password_confirmation: '' },
+    defaultValues: { email, token, password: '', password_confirmation: '', website: '' },
     mode: 'onBlur',
   })
 
@@ -63,14 +64,14 @@ export default function ResetPassword() {
 
       <AuthAlert message={formError} />
 
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <form onSubmit={onSubmit} className="relative space-y-4" noValidate>
+        <HoneypotFields websiteProps={register('website')} />
         <input type="hidden" {...register('token')} />
         <input type="hidden" {...register('email')} />
 
-        <RhfField
+        <RhfPasswordField
           label="New password"
           name="password"
-          type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           autoFocus
@@ -79,10 +80,9 @@ export default function ResetPassword() {
           {...register('password')}
         />
         <PasswordStrength password={password ?? ''} />
-        <RhfField
+        <RhfPasswordField
           label="Confirm new password"
           name="password_confirmation"
-          type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           error={fieldErrorMessage(errors.password_confirmation, serverErrors.password_confirmation)}

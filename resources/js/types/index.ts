@@ -30,6 +30,12 @@ export type FeatureFlags = {
   cards: boolean
 }
 
+export type CountryDialCode = {
+  iso: string
+  name: string
+  dial: string
+}
+
 /** Props shared with every page via HandleInertiaRequests::share(). */
 export type SharedProps = {
   auth: {

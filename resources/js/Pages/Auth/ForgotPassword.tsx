@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { AuthAlert } from '@/components/AuthAlert'
 import { AuthLayout } from '@/components/AuthLayout'
+import { HoneypotFields } from '@/components/forms/HoneypotFields'
 import { RhfField } from '@/components/forms/RhfField'
 import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
 import { Button } from '@/components/ui'
@@ -28,7 +29,7 @@ export default function ForgotPassword() {
     formState: { errors },
   } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { email: '' },
+    defaultValues: { email: '', website: '' },
     mode: 'onBlur',
   })
 
@@ -74,7 +75,8 @@ export default function ForgotPassword() {
           </Link>
         </div>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        <form onSubmit={onSubmit} className="relative space-y-4" noValidate>
+          <HoneypotFields websiteProps={register('website')} />
           <RhfField
             label="Email"
             name="email"

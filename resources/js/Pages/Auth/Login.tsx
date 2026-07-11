@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react'
 import { useForm, type FieldErrors } from 'react-hook-form'
 import { AuthAlert } from '@/components/AuthAlert'
 import { AuthLayout } from '@/components/AuthLayout'
+import { HoneypotFields } from '@/components/forms/HoneypotFields'
 import { RhfField } from '@/components/forms/RhfField'
+import { RhfPasswordField } from '@/components/forms/RhfPasswordField'
 import { fieldErrorMessage, useServerErrors } from '@/hooks/useServerErrors'
 import { Button } from '@/components/ui'
 import { ArrowRightIcon, SparkleIcon } from '@/components/icons'
@@ -57,7 +59,7 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: prefilledEmail ?? '', password: '', remember: false },
+    defaultValues: { email: prefilledEmail ?? '', password: '', remember: false, website: '' },
     mode: 'onBlur',
     shouldUnregister: false,
   })
@@ -103,6 +105,7 @@ export default function Login() {
       email: resolvedEmail,
       password: values.password,
       remember: Boolean(values.remember),
+      website: values.website || '',
     }
 
     setProcessing(true)
@@ -133,7 +136,7 @@ export default function Login() {
     if (!demo) return
     setValue('email', demoEmail)
     setConfirmedEmail(demoEmail)
-    postLogin({ email: demoEmail, password: demo.password })
+    postLogin({ email: demoEmail, password: demo.password, remember: false, website: '' })
   }
 
   async function nextStep() {
@@ -197,7 +200,8 @@ export default function Login() {
         </motion.div>
       )}
 
-      <form id="login-form" onSubmit={handleSubmit(postLogin, onInvalid)} className="space-y-4" noValidate>
+      <form id="login-form" onSubmit={handleSubmit(postLogin, onInvalid)} className="relative space-y-4" noValidate>
+        <HoneypotFields websiteProps={register('website')} />
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -229,10 +233,9 @@ export default function Login() {
 
             <div className={cn(step !== 1 && 'hidden')} aria-hidden={step !== 1}>
               <div className="space-y-4">
-                <RhfField
+                <RhfPasswordField
                   label="Password"
                   name="password"
-                  type="password"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   autoFocus={step === 1}

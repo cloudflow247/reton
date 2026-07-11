@@ -26,11 +26,15 @@ it('redirects new registrations to verify email', function () {
     Mail::fake();
 
     $this->post('/register', [
-        'name' => 'Ada Lovelace',
+        'first_name' => 'Ada',
+        'last_name' => 'Lovelace',
         'email' => 'ada@retonpay.com',
-        'phone' => '+2348012345678',
+        'country_iso' => 'NG',
+        'country_code' => '234',
+        'phone_national' => '8012345678',
         'password' => 'Sup3r-Secret!',
         'password_confirmation' => 'Sup3r-Secret!',
+        'website' => '',
     ])->assertRedirect(route('verification.notice'));
 
     $this->assertAuthenticated();
