@@ -114,6 +114,7 @@ class DashboardController extends Controller
         return LedgerEntry::where('ledger_account_id', $wallet->ledger_account_id)
             ->with('transaction')
             ->latest('created_at')
+            ->latest('id')
             ->limit(self::RECENT_LIMIT)
             ->get();
     }

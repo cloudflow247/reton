@@ -190,11 +190,11 @@ export default function ActivityShow() {
 
 ActivityShow.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
 
-function Detail({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function Detail({ label, value, mono = false }: { label: string; value: string | number | null | undefined; mono?: boolean }) {
   return (
     <div>
       <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted">{label}</dt>
-      <dd className={`mt-0.5 break-all font-medium text-text ${mono ? 'font-num' : ''}`}>{value}</dd>
+      <dd className={`mt-0.5 break-all font-medium text-text ${mono ? 'font-num' : ''}`}>{value ?? '—'}</dd>
     </div>
   )
 }

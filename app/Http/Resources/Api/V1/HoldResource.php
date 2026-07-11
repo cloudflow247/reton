@@ -18,11 +18,19 @@ class HoldResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        if ($this->resource === null) {
+            return [];
+        }
+
+        $status = $this->status;
+
         return [
             'id' => $this->id,
             'amount' => $this->amount,
             'currency' => $this->currency,
-            'status' => $this->status->value,
+            'status' => is_object($status) && isset($status->value)
+                ? $status->value
+                : (string) ($this->resource->getRawOriginal('status') ?? ''),
             'reason' => $this->reason,
             'expires_at' => $this->expires_at,
             'resolved_at' => $this->resolved_at,

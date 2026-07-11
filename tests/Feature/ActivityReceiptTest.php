@@ -25,6 +25,37 @@ it('shows a statement receipt the wallet owner can open', function () {
             ->has('wallet.account_number'));
 });
 
+it('renders a transfer receipt even when the hold row is missing', function () {
+    [$sender, $senderWallet] = readyUserWithWallet([], 500_00);
+    [, $receiverWallet] = readyUserWithWallet();
+
+    $transfer = app(\App\Domain\Transfers\Services\TransferService::class)->sendNormal(
+        $sender,
+        $senderWallet,
+        $receiverWallet,
+        Money::of(100_00, 'NGN'),
+        'Receipt test',
+        null,
+    );
+
+    // Instant transfers may have no hold — resource must not 500 on null hold.
+    $transfer->hold()?->delete();
+
+    $entryId = \App\Domain\Ledger\Models\LedgerEntry::query()
+        ->where('transaction_id', $transfer->transaction_id)
+        ->where('ledger_account_id', $senderWallet->ledger_account_id)
+        ->value('id');
+
+    expect($entryId)->not->toBeNull();
+
+    $this->actingAs($sender)->get('/activity/'.$entryId)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Activity/Show')
+            ->where('transfer.reference', $transfer->reference)
+            ->missing('transfer.hold'));
+});
+
 it('forbids viewing another users ledger entry', function () {
     [, $wallet] = readyUserWithWallet([], 100_00);
     [$intruder] = readyUserWithWallet();
@@ -38,7 +69,8 @@ it('forbids viewing another users ledger entry', function () {
 it('aligns dashboard activity rows with money-flow totals', function () {
     [$user, $wallet] = readyUserWithWallet();
 
-    foreach ([100_00, 200_00, 93_00, 100_00, 150_00, 100_00] as $amount) {
+    foreach ([100_00, 200_00, 93_00, 100_00, 150_00, 100_00] as $i => $amount) {
+        $this->travel($i + 1)->seconds();
         app(WalletService::class)->fund($wallet->fresh(), Money::of($amount, 'NGN'));
     }
 

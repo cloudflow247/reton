@@ -18,11 +18,22 @@ class TransferResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        if ($this->resource === null) {
+            return [];
+        }
+
+        $type = $this->type;
+        $status = $this->status;
+
         return [
             'id' => $this->id,
             'reference' => $this->reference,
-            'type' => $this->type->value,
-            'status' => $this->status->value,
+            'type' => is_object($type) && isset($type->value)
+                ? $type->value
+                : (string) ($this->resource->getRawOriginal('type') ?? ''),
+            'status' => is_object($status) && isset($status->value)
+                ? $status->value
+                : (string) ($this->resource->getRawOriginal('status') ?? ''),
             'currency' => $this->currency,
             'amount' => $this->amount,
             'note' => $this->note,
@@ -31,7 +42,10 @@ class TransferResource extends JsonResource
             'completed_at' => $this->completed_at,
             'created_at' => $this->created_at,
             'metadata' => $this->metadata,
-            'hold' => new HoldResource($this->whenLoaded('hold')),
+            'hold' => $this->when(
+                $this->relationLoaded('hold') && $this->hold !== null,
+                fn () => (new HoldResource($this->hold))->resolve(),
+            ),
         ];
     }
 }

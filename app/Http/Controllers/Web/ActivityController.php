@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Domain\Ledger\Models\LedgerEntry;
-use App\Domain\Payments\Enums\StaticAccountStatus;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Support\StatementMoneyFlow;
@@ -61,41 +60,79 @@ class ActivityController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        $walletIds = $user->wallets()->pluck('ledger_account_id')->filter()->all();
+        $walletIds = $user->wallets()->pluck('ledger_account_id')->filter()->values()->all();
 
         $ledgerEntry = LedgerEntry::query()
             ->with('transaction')
             ->whereKey($entry)
             ->first();
 
-        if (! $ledgerEntry instanceof LedgerEntry || ! in_array($ledgerEntry->ledger_account_id, $walletIds, true)) {
+        if (! $ledgerEntry instanceof LedgerEntry || ! in_array((string) $ledgerEntry->ledger_account_id, array_map('strval', $walletIds), true)) {
             throw new NotFoundHttpException('Transaction not found.');
         }
 
         $wallet = Wallet::query()
             ->where('ledger_account_id', $ledgerEntry->ledger_account_id)
-            ->with(['staticAccount' => fn ($q) => $q->where('status', StaticAccountStatus::Active)])
             ->first();
 
-        $transfer = null;
-        $reference = $ledgerEntry->transaction?->reference;
+        $transferPayload = null;
+        $transactionId = $ledgerEntry->transaction_id;
 
-        if (is_string($reference) && $reference !== '' && $wallet instanceof Wallet) {
+        if (is_string($transactionId) && $transactionId !== '' && $wallet instanceof Wallet) {
             $transfer = Transfer::query()
-                ->where('reference', $reference)
+                ->where('transaction_id', $transactionId)
                 ->where(function ($query) use ($wallet): void {
                     $query->where('sender_wallet_id', $wallet->id)
                         ->orWhere('receiver_wallet_id', $wallet->id);
                 })
                 ->with('hold')
                 ->first();
+
+            if ($transfer instanceof Transfer) {
+                try {
+                    $transferPayload = (new TransferResource($transfer))->resolve();
+                } catch (\Throwable $e) {
+                    report($e);
+                    $transferPayload = [
+                        'id' => $transfer->id,
+                        'reference' => $transfer->reference,
+                        'type' => $transfer->getRawOriginal('type'),
+                        'status' => $transfer->getRawOriginal('status'),
+                        'currency' => $transfer->currency,
+                        'amount' => $transfer->amount,
+                        'note' => $transfer->note,
+                        'hold' => null,
+                    ];
+                }
+            }
+        }
+
+        try {
+            $entryPayload = (new StatementEntryResource($ledgerEntry))->resolve();
+        } catch (\Throwable $e) {
+            report($e);
+            $entryPayload = [
+                'id' => $ledgerEntry->id,
+                'direction' => $ledgerEntry->getRawOriginal('direction'),
+                'amount' => (int) $ledgerEntry->amount,
+                'currency' => $ledgerEntry->currency,
+                'created_at' => $ledgerEntry->created_at,
+                'transaction' => $ledgerEntry->transaction !== null
+                    ? [
+                        'id' => $ledgerEntry->transaction->id,
+                        'reference' => $ledgerEntry->transaction->reference,
+                        'type' => $ledgerEntry->transaction->getRawOriginal('type'),
+                        'status' => $ledgerEntry->transaction->getRawOriginal('status'),
+                        'description' => $ledgerEntry->transaction->description,
+                        'amount' => $ledgerEntry->transaction->amount,
+                    ]
+                    : null,
+            ];
         }
 
         return Inertia::render('Activity/Show', [
-            'entry' => (new StatementEntryResource($ledgerEntry))->resolve(),
-            'transfer' => $transfer instanceof Transfer
-                ? (new TransferResource($transfer))->resolve()
-                : null,
+            'entry' => $entryPayload,
+            'transfer' => $transferPayload,
             'wallet' => $wallet instanceof Wallet
                 ? [
                     'id' => $wallet->id,
@@ -108,9 +145,9 @@ class ActivityController extends Controller
                 : null,
             'receipt' => [
                 'issued_at' => now()->toIso8601String(),
-                'app' => config('app.name', 'Reton'),
-                'user_name' => $user->name,
-                'user_email' => $user->email,
+                'app' => (string) config('app.name', 'Reton'),
+                'user_name' => (string) $user->name,
+                'user_email' => (string) $user->email,
             ],
         ]);
     }

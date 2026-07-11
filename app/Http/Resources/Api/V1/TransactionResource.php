@@ -28,8 +28,12 @@ class TransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'reference' => $this->reference,
-            'type' => is_object($type) && property_exists($type, 'value') ? $type->value : (string) $type,
-            'status' => is_object($status) && property_exists($status, 'value') ? $status->value : (string) $status,
+            'type' => is_object($type) && isset($type->value)
+                ? $type->value
+                : (string) ($this->resource->getRawOriginal('type') ?? ''),
+            'status' => is_object($status) && isset($status->value)
+                ? $status->value
+                : (string) ($this->resource->getRawOriginal('status') ?? ''),
             'currency' => $this->currency,
             'amount' => $this->amount,
             'description' => $this->description,
