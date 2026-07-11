@@ -95,7 +95,7 @@ class ProviderContactRebindService
         } catch (AlatpayException $e) {
             $this->rememberLocal($account, $desired, $current, synced: false);
 
-            $this->audit->record($user, 'deposit_account', 'alatpay', 'failed', 'provider_email_rebind', $actorIp, [
+            $this->safeAudit($user, 'failed', 'provider_email_rebind', $actorIp, [
                 'account_number' => $account->account_number,
                 'desired_email' => $desired,
                 'previous_email' => $current,
@@ -123,7 +123,7 @@ class ProviderContactRebindService
 
         $this->rememberLocal($account, $desired, $current, synced: true);
 
-        $this->audit->record($user, 'deposit_account', 'alatpay', 'success', null, $actorIp, [
+        $this->safeAudit($user, 'success', null, $actorIp, [
             'action' => 'provider_email_rebind',
             'account_number' => $account->account_number,
             'desired_email' => $desired,
@@ -222,5 +222,26 @@ class ProviderContactRebindService
         $meta['provider_email_synced_at'] = now()->toIso8601String();
 
         $account->forceFill(['metadata' => $meta])->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     */
+    private function safeAudit(
+        User $user,
+        string $status,
+        ?string $failureReason,
+        ?string $actorIp,
+        array $meta,
+    ): void {
+        try {
+            $this->audit->record($user, 'va_email', 'alatpay', $status, $failureReason, $actorIp, $meta);
+        } catch (\Throwable $e) {
+            Log::warning('provider_contact_rebind.audit_failed', [
+                'user_id' => $user->getKey(),
+                'status' => $status,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

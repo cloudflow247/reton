@@ -80,9 +80,14 @@ class RebindProviderContactEmailCommand extends Command
         $needsSupport = collect($results)->where('status', ProviderContactRebindResult::STATUS_NEEDS_SUPPORT)->count();
         $rebound = collect($results)->where('status', ProviderContactRebindResult::STATUS_REBOUND)->count();
         $ok = collect($results)->where('status', ProviderContactRebindResult::STATUS_ALREADY_OK)->count();
+        $missing = collect($results)->where('status', ProviderContactRebindResult::STATUS_MISSING_ACCOUNT)->count();
 
-        $this->info("Done. rebound={$rebound} already_ok={$ok} needs_support={$needsSupport} total=".count($results));
+        $this->info("Done. rebound={$rebound} already_ok={$ok} needs_support={$needsSupport} missing={$missing} total=".count($results));
 
-        return $needsSupport > 0 && $rebound === 0 && $ok === 0 ? self::FAILURE : self::SUCCESS;
+        if ($needsSupport > 0) {
+            $this->warn('ALATPay rejected API email updates for some accounts (often HTTP 404). Forward those account numbers + desired emails to ALATPay support — Reton still recorded the target CEO alias locally.');
+        }
+
+        return self::SUCCESS;
     }
 }
