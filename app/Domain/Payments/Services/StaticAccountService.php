@@ -319,6 +319,39 @@ class StaticAccountService
     }
 
     /**
+     * Resolve the user's active permanent funding account for dashboard / receive UI.
+     *
+     * Prefers the wallet-linked Active VA, then falls back to any Active VA on the user
+     * (production rows sometimes attach by user_id first). Never uses latestOfMany +
+     * constrained eager-load — that combination can hide a valid Active account.
+     */
+    public function activeFundingAccountFor(User $user, ?Wallet $wallet = null): ?StaticAccount
+    {
+        $base = StaticAccount::query()
+            ->where('status', StaticAccountStatus::Active)
+            ->whereNotNull('account_number')
+            ->where('account_number', '!=', '');
+
+        if ($wallet instanceof Wallet) {
+            $onWallet = (clone $base)
+                ->where('wallet_id', $wallet->getKey())
+                ->latest()
+                ->first();
+
+            if ($onWallet instanceof StaticAccount) {
+                return $onWallet;
+            }
+        }
+
+        $onUser = (clone $base)
+            ->where('user_id', $user->getKey())
+            ->latest()
+            ->first();
+
+        return $onUser instanceof StaticAccount ? $onUser : null;
+    }
+
+    /**
      * On-demand poll when a user opens Add Money / Dashboard so VA deposits
      * credit even if the minute scheduler is delayed or disabled.
      *
@@ -326,12 +359,7 @@ class StaticAccountService
      */
     public function pollActiveForUser(User $user, int $staleAfterSeconds = 0): int
     {
-        $account = StaticAccount::query()
-            ->where('user_id', $user->getKey())
-            ->where('status', StaticAccountStatus::Active)
-            ->whereNotNull('account_number')
-            ->latest()
-            ->first();
+        $account = $this->activeFundingAccountFor($user);
 
         if ($account === null) {
             return 0;

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { BankIcon, CheckIcon, CopyIcon, EyeIcon, EyeOffIcon, ShieldIcon } from '@/components/icons'
@@ -48,34 +48,34 @@ export function BalanceHeroCard({
   const retonId = wallet?.account_number ?? null
   const settledCheck = availableBalance + pendingBalance
   const hasBank = Boolean(depositAccount?.account_number)
-
-  // Prefer bank tab when a funding account exists — that's the usual confusion point.
   const [receiveTab, setReceiveTab] = useState<ReceiveTab>(hasBank ? 'bank' : 'reton')
+
+  useEffect(() => {
+    setReceiveTab(hasBank ? 'bank' : 'reton')
+  }, [hasBank])
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-[#0a6a4d] via-[#0e7e5c] to-[#094f39] p-3.5 text-white shadow-[0_24px_48px_-24px_rgba(9,79,57,0.7)] sm:rounded-[28px] sm:p-6"
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0a6a4d] via-[#0e7e5c] to-[#094f39] p-3.5 text-white shadow-[0_20px_40px_-22px_rgba(9,79,57,0.75)] sm:rounded-[28px] sm:p-6"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute -bottom-20 left-0 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
+        <div className="absolute -right-14 -top-16 h-44 w-44 rounded-full bg-white/12 blur-3xl" />
+        <div className="absolute -bottom-16 left-0 h-40 w-40 rounded-full bg-emerald-200/25 blur-3xl" />
       </div>
 
       <div className="relative flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
-            Available to spend
-          </p>
-          <p className="mt-0.5 hidden text-xs text-white/50 sm:block">Settled · not in escrow</p>
-        </div>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white sm:text-xs">
+          Available to spend
+        </p>
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={onToggleHidden}
-          className="h-8 w-8 shrink-0 rounded-full text-white/80 hover:bg-white/15 hover:text-white sm:h-10 sm:w-10"
+          className="h-8 w-8 shrink-0 rounded-full bg-white/10 text-white hover:bg-white/20 hover:text-white sm:h-9 sm:w-9"
           aria-label={hidden ? 'Show balance' : 'Hide balance'}
         >
           {hidden ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
@@ -84,10 +84,10 @@ export function BalanceHeroCard({
 
       <motion.p
         key={hidden ? 'hidden' : 'shown'}
-        initial={{ opacity: 0.7, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0.75, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
         className={cn(
-          'relative mt-1.5 font-num text-[1.85rem] font-bold leading-none tracking-tight sm:mt-3 sm:text-[3rem]',
+          'relative mt-1 font-num text-[1.9rem] font-bold leading-none tracking-tight text-white sm:mt-2 sm:text-[2.75rem]',
           hidden && 'blur-md select-none',
         )}
       >
@@ -95,95 +95,71 @@ export function BalanceHeroCard({
       </motion.p>
 
       {!hidden && (
-        <div className="relative mt-2.5 flex items-stretch gap-1.5 sm:mt-5 sm:grid sm:grid-cols-2 sm:gap-2">
-          <div className="min-w-0 flex-1 rounded-xl border border-white/15 bg-white/10 px-2.5 py-1.5 backdrop-blur-sm sm:rounded-2xl sm:px-3 sm:py-2.5">
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-white/55 sm:text-[10px]">
-              Ledger
-            </p>
-            <p className="mt-0.5 font-num text-xs font-bold sm:mt-1 sm:text-sm">{ngn(totalBalance)}</p>
-            <p className="hidden text-[10px] text-white/45 sm:mt-0.5 sm:block">Available + escrow</p>
-          </div>
-          <div
-            className={cn(
-              'min-w-0 flex-1 rounded-xl border px-2.5 py-1.5 backdrop-blur-sm sm:rounded-2xl sm:px-3 sm:py-2.5',
-              hasPending ? 'border-amber-200/30 bg-amber-400/15' : 'border-white/15 bg-white/10',
-            )}
-          >
-            <p
-              className={cn(
-                'text-[9px] font-semibold uppercase tracking-wide sm:text-[10px]',
-                hasPending ? 'text-amber-100/80' : 'text-white/55',
-              )}
-            >
-              Escrow
-            </p>
-            <p className="mt-0.5 inline-flex items-center gap-1 font-num text-xs font-bold sm:mt-1 sm:gap-1.5 sm:text-sm">
-              {hasPending && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-200" />}
-              {ngn(pendingBalance)}
-            </p>
-            <p className={cn('hidden text-[10px] sm:mt-0.5 sm:block', hasPending ? 'text-amber-50/60' : 'text-white/45')}>
-              Protected / recovery holds
-            </p>
-          </div>
+        <div className="relative mt-2.5 grid grid-cols-2 gap-2 sm:mt-4">
+          <MetricChip label="Ledger" value={ngn(totalBalance)} hint="Total balance" />
+          <MetricChip
+            label="Escrow"
+            value={ngn(pendingBalance)}
+            hint="Held funds"
+            warn={hasPending}
+          />
         </div>
       )}
 
       {!hidden && hasPending && settledCheck !== totalBalance && (
-        <p className="relative mt-1.5 text-[10px] text-amber-100/70 sm:mt-2">
-          Balance check pending reconciliation — contact support if this persists.
+        <p className="relative mt-2 rounded-lg bg-amber-400/20 px-2.5 py-1.5 text-[11px] font-medium text-white">
+          Balance check pending — contact support if this persists.
         </p>
       )}
 
-      <div className="relative mt-2.5 sm:mt-4">
+      <div className="relative mt-3 sm:mt-4">
         <div
-          className="flex rounded-full border border-white/15 bg-black/20 p-0.5"
+          className="grid grid-cols-2 gap-1 rounded-xl bg-black/25 p-1"
           role="tablist"
           aria-label="How to receive money"
         >
           <ReceiveTabButton
             active={receiveTab === 'reton'}
             onClick={() => setReceiveTab('reton')}
-            icon={<ShieldIcon size={12} />}
+            icon={<ShieldIcon size={13} />}
             label="Reton ID"
           />
           <ReceiveTabButton
             active={receiveTab === 'bank'}
             onClick={() => setReceiveTab('bank')}
-            icon={<BankIcon size={12} />}
+            icon={<BankIcon size={13} />}
             label="Bank fund"
           />
         </div>
 
-        <div className="mt-1.5 sm:mt-2">
+        <div className="mt-2">
           {receiveTab === 'reton' ? (
             <ReceivePanel
-              eyebrow="Pay you on Reton"
-              hint="Friends send here — not a bank account"
+              eyebrow="Receive on Reton"
+              hint="For Reton users only — not a bank account"
               value={retonId}
               copied={copied}
               onCopy={onCopyAccount}
-              empty={
-                <p className="text-[11px] text-white/60">Your Reton ID will appear after wallet setup.</p>
-              }
+              empty={<p className="text-xs font-medium text-white">Your Reton ID appears after wallet setup.</p>}
             />
           ) : hasBank && depositAccount ? (
             <ReceivePanel
-              eyebrow="Fund from any bank"
-              hint={[depositAccount.bank_name, depositAccount.account_name].filter(Boolean).join(' · ') || 'Transfer from your bank app'}
+              eyebrow="Fund from your bank"
+              hint={[depositAccount.bank_name, depositAccount.account_name].filter(Boolean).join(' · ') || 'Transfer from any Nigerian bank'}
               value={depositAccount.account_number}
               copied={depositCopied}
               onCopy={onCopyDeposit}
             />
           ) : (
-            <div className="rounded-xl border border-dashed border-white/25 bg-black/15 px-3 py-2.5 sm:rounded-2xl">
-              <p className="text-[11px] font-semibold text-white/90">No bank funding account yet</p>
-              <p className="mt-0.5 text-[10px] leading-snug text-white/55">
-                Reton ID is for Reton-to-Reton only. Open a bank account to receive transfers from GTBank, Access, Zenith, and others.
+            <div className="rounded-xl border border-white/30 bg-black/20 px-3 py-2.5">
+              <p className="text-xs font-bold text-white">No bank funding account yet</p>
+              <p className="mt-1 text-[11px] leading-snug text-white/90">
+                Reton ID is for Reton-to-Reton only. Set up bank funding to receive transfers from other banks.
               </p>
               <Link
                 href="/add-money"
                 prefetch
-                className="mt-2 inline-flex text-[11px] font-semibold text-emerald-200 underline-offset-2 hover:underline"
+                className="mt-2 inline-flex text-xs font-bold text-white underline decoration-white/50 underline-offset-2 hover:decoration-white"
               >
                 Set up bank funding →
               </Link>
@@ -192,6 +168,34 @@ export function BalanceHeroCard({
         </div>
       </div>
     </motion.div>
+  )
+}
+
+function MetricChip({
+  label,
+  value,
+  hint,
+  warn = false,
+}: {
+  label: string
+  value: string
+  hint: string
+  warn?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl border px-2.5 py-2 sm:px-3 sm:py-2.5',
+        warn ? 'border-amber-200/40 bg-amber-400/20' : 'border-white/25 bg-white/15',
+      )}
+    >
+      <p className="text-[10px] font-bold uppercase tracking-wide text-white/90">{label}</p>
+      <p className="mt-0.5 inline-flex items-center gap-1.5 font-num text-sm font-bold text-white sm:text-[15px]">
+        {warn && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-100" />}
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10px] font-medium text-white/80">{hint}</p>
+    </div>
   )
 }
 
@@ -213,8 +217,8 @@ function ReceiveTabButton({
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        'flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[10px] font-semibold transition sm:gap-1.5 sm:px-3 sm:py-2 sm:text-xs',
-        active ? 'bg-white text-[#0a6a4d] shadow-sm' : 'text-white/70 hover:text-white',
+        'inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition',
+        active ? 'bg-white text-[#0a6a4d] shadow-sm' : 'text-white/85 hover:bg-white/10 hover:text-white',
       )}
     >
       {icon}
@@ -246,17 +250,15 @@ function ReceivePanel({
     <button
       type="button"
       onClick={onCopy}
-      className="flex w-full items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-left backdrop-blur transition hover:bg-white/15 sm:rounded-2xl sm:px-3.5 sm:py-2.5"
+      className="flex w-full items-center gap-2.5 rounded-xl border border-white/30 bg-white/15 px-3 py-2.5 text-left transition hover:bg-white/20 active:scale-[0.99]"
     >
       <span className="min-w-0 flex-1">
-        <span className="block text-[9px] font-semibold uppercase tracking-wide text-white/55 sm:text-[10px]">
-          {eyebrow}
-        </span>
-        <span className="mt-0.5 block font-num text-sm tracking-wider sm:text-[15px]">{value}</span>
-        <span className="mt-0.5 block truncate text-[10px] text-white/50">{hint}</span>
+        <span className="block text-[10px] font-bold uppercase tracking-wide text-white/90">{eyebrow}</span>
+        <span className="mt-0.5 block font-num text-[15px] font-bold tracking-wider text-white">{value}</span>
+        <span className="mt-0.5 block truncate text-[11px] font-medium text-white/85">{hint}</span>
       </span>
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
-        {copied ? <CheckIcon size={14} className="text-emerald-200" /> : <CopyIcon size={14} />}
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+        {copied ? <CheckIcon size={15} className="text-emerald-100" /> : <CopyIcon size={15} />}
       </span>
     </button>
   )

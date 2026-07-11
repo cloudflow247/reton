@@ -8,7 +8,6 @@ use App\Domain\Dashboard\Data\DashboardSummary;
 use App\Domain\Dashboard\Services\DashboardSummaryService;
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Ledger\Models\LedgerEntry;
-use App\Domain\Payments\Enums\StaticAccountStatus;
 use App\Domain\Payments\Services\StaticAccountService;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Support\StatementMoneyFlow;
@@ -47,12 +46,10 @@ class DashboardController extends Controller
         }
 
         try {
-            $wallet = $user->wallets()->with([
-                'staticAccount' => fn ($q) => $q->where('status', StaticAccountStatus::Active->value),
-            ])->first();
+            $wallet = $user->wallets()->first();
         } catch (\Throwable $e) {
             report($e);
-            $wallet = $user->wallets()->first();
+            $wallet = null;
         }
 
         if ($credited > 0) {
@@ -89,7 +86,12 @@ class DashboardController extends Controller
                 : new Collection;
             $activity = StatementEntryResource::collection($entries)->resolve();
             $activityFlow = StatementMoneyFlow::fromEntries($entries);
-            $depositAccount = $this->depositAccountPayload($wallet);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            $depositAccount = $this->depositAccountPayload($user, $wallet instanceof Wallet ? $wallet : null);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -122,22 +124,18 @@ class DashboardController extends Controller
     /**
      * @return array{account_number: string, account_name: string|null, bank_name: string|null}|null
      */
-    private function depositAccountPayload(?Wallet $wallet): ?array
+    private function depositAccountPayload(User $user, ?Wallet $wallet): ?array
     {
-        if (! $wallet instanceof Wallet) {
-            return null;
-        }
+        $static = $this->staticAccounts->activeFundingAccountFor($user, $wallet);
 
-        $static = $wallet->staticAccount;
-
-        if ($static === null || ! $static->isActive() || blank($static->account_number)) {
+        if ($static === null || blank($static->account_number)) {
             return null;
         }
 
         return [
             'account_number' => (string) $static->account_number,
             'account_name' => $static->account_name,
-            'bank_name' => $static->bank_name,
+            'bank_name' => $static->bank_name ?: 'Wema Bank',
         ];
     }
 }

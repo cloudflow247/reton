@@ -110,10 +110,20 @@ it('shows the credited balance on the dashboard after polling', function () {
         ->assertInertia(fn ($page) => $page
             ->where('auth.wallets.0.balance', 15000)
             ->where('auth.wallets.0.account_number', $wallet->fresh()->account_number)
-            ->missing('staticAccount')
+            ->where('depositAccount.account_number', $account->fresh()->account_number)
             ->where('flash.success', 'Deposit received — your balance is updated.'));
 
     expect($wallet->fresh()->balance)->toBe(15000);
+});
+
+it('resolves the active funding account by user when the viewed wallet has no VA', function () {
+    [$account] = activeStaticAccount();
+    $otherWallet = app(WalletService::class)->open($account->user, 'USD');
+
+    $resolved = app(StaticAccountService::class)->activeFundingAccountFor($account->user, $otherWallet);
+
+    expect($resolved)->not->toBeNull()
+        ->and($resolved->account_number)->toBe($account->fresh()->account_number);
 });
 
 it('checks deposits from add money and credits the wallet', function () {

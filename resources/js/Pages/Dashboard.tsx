@@ -129,10 +129,10 @@ export default function Dashboard() {
         <div className="space-y-4 lg:col-span-8">
           <motion.header variants={item} className="flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm text-muted">{greeting()}</p>
-              <h1 className="font-display text-2xl font-bold tracking-tight sm:text-[1.65rem]">{firstName}</h1>
+              <p className="text-sm font-medium text-text/70">{greeting()}</p>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-text sm:text-[1.65rem]">{firstName}</h1>
               <p className="mt-1">
-                <Badge variant="muted" className="text-[10px]">
+                <Badge variant="muted" className="text-[10px] font-semibold text-text/80">
                   KYC Tier {kycTier ?? 1}
                 </Badge>
               </p>
@@ -219,8 +219,8 @@ export default function Dashboard() {
           <motion.section variants={item} aria-label="Services" className="space-y-2">
             <div className="flex items-end justify-between px-0.5">
               <div>
-                <h2 className="text-sm font-semibold">Services</h2>
-                <p className="text-[11px] text-muted">Security first · tap to move money</p>
+                <h2 className="text-sm font-bold text-text">Services</h2>
+                <p className="text-[11px] font-medium text-text/65">Security first · tap to move money</p>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-2">
