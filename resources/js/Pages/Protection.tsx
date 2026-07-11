@@ -626,7 +626,7 @@ function FairnessStrip({ fairness }: { fairness: CallbackFairness }) {
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-mint">Fair usage</p>
         <Pill tone="mint">{category}</Pill>
         <span className="text-[11px] text-muted">
-          Sender {fairness.sender_score} · Receiver {fairness.receiver_score}
+          Trust {fairness.sender_score}/100 · {fairness.receiver_score}/100
         </span>
       </div>
       {reasons[0] && <p className="mt-1.5 text-xs leading-relaxed text-muted">{reasons[0]}</p>}

@@ -139,7 +139,7 @@ class CallbackService
 
             match ($resolution) {
                 CallbackResolution::Refund => $this->transfers->refund($transfer, 'callback:'.$callback->reference),
-                CallbackResolution::Release => $this->transfers->release($transfer),
+                CallbackResolution::Release => $this->transfers->release($transfer, fromCallbackResolution: true),
             };
 
             $callback->update([

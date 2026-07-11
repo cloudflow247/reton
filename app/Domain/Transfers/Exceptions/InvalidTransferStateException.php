@@ -19,6 +19,11 @@ final class InvalidTransferStateException extends DomainException implements Ren
         return new self("Transfer [{$transferId}] is not in a state that can be refunded.");
     }
 
+    public static function callbackOpen(string $transferId): self
+    {
+        return new self("Transfer [{$transferId}] has an open callback and cannot be released until the dispute is resolved.");
+    }
+
     public function apiStatus(): int
     {
         return 422;

@@ -18,6 +18,7 @@ use App\Http\Requests\Api\V1\Transfer\ReleaseTransferRequest;
 use App\Http\Resources\Api\V1\TransferResource;
 use App\Models\User;
 use App\Support\Http\ApiResponse;
+use App\Support\Http\IdempotencyKey;
 use App\Support\Money\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -86,7 +87,7 @@ class TransferController extends Controller
         }
 
         $note = $request->filled('note') ? $request->string('note')->toString() : null;
-        $key = $this->idempotencyKey($request);
+        $key = IdempotencyKey::from($request);
 
         $transfer = TransferType::from($request->string('type')->toString()) === TransferType::Protected
             ? $this->transfers->sendProtected($user, $from, $to, $amount, $note, $key)
@@ -113,12 +114,5 @@ class TransferController extends Controller
         $released = $this->transfers->release($transfer);
 
         return ApiResponse::success(new TransferResource($released), 'Transfer released.');
-    }
-
-    private function idempotencyKey(Request $request): ?string
-    {
-        $key = $request->header('Idempotency-Key');
-
-        return is_string($key) && $key !== '' ? $key : null;
     }
 }

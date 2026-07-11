@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Head, Link, router, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
@@ -84,6 +84,7 @@ function SendForm() {
   const [resolving, setResolving] = useState(false)
   const [lookupError, setLookupError] = useState('')
   const [recents, setRecents] = useState<Recent[]>([])
+  const idempotencyKeyRef = useRef(crypto.randomUUID())
 
   const {
     control,
@@ -175,12 +176,17 @@ function SendForm() {
         amount: toMinor(values.amount),
         type: values.type,
         pin: values.pin,
+        idempotency_key: idempotencyKeyRef.current,
       },
       {
-        headers: deviceHeaders(),
+        headers: {
+          ...deviceHeaders(),
+          'Idempotency-Key': idempotencyKeyRef.current,
+        },
         preserveScroll: true,
         onError: (errs) => setServerErrors(errs as Record<string, string>),
         onSuccess: () => {
+          idempotencyKeyRef.current = crypto.randomUUID()
           setRecents(pushRecent(values.account, recipient.name))
           reset({
             from_wallet_id: wallet.id,

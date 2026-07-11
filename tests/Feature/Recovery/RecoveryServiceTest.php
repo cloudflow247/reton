@@ -9,7 +9,6 @@ use App\Domain\Recovery\Enums\RecoveryResolution;
 use App\Domain\Recovery\Enums\RecoveryStatus;
 use App\Domain\Recovery\Exceptions\CannotReportRecoveryException;
 use App\Domain\Recovery\Exceptions\RecoveryAlreadyOpenException;
-use App\Domain\Recovery\Exceptions\RecoveryNotOpenException;
 use App\Domain\Recovery\Services\RecoveryService;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Transfers\Services\TransferService;
@@ -171,10 +170,16 @@ it('escalates an unanswered recovery on expiry', function () {
         ->and($transfer->receiverWallet->fresh()->held_balance)->toBe(40000);
 });
 
-it('cannot return an already-resolved recovery', function () {
+it('is idempotent when returning an already-resolved recovery', function () {
     [$sender, , $transfer] = wrongTransfer(400_00);
     $recovery = recoveries()->report($transfer, $sender, 'wrong person');
-    recoveries()->returnToSender($recovery);
+    $first = recoveries()->returnToSender($recovery);
 
-    recoveries()->returnToSender($recovery->fresh());
-})->throws(RecoveryNotOpenException::class);
+    $second = recoveries()->returnToSender($recovery->fresh());
+
+    expect($second->id)->toBe($first->id)
+        ->and($second->status)->toBe(RecoveryStatus::Returned)
+        ->and($transfer->senderWallet->fresh()->balance)->toBe(100000)
+        ->and($transfer->receiverWallet->fresh()->balance)->toBe(0)
+        ->and($transfer->receiverWallet->fresh()->held_balance)->toBe(0);
+});

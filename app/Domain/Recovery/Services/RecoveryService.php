@@ -20,7 +20,9 @@ use App\Domain\Recovery\Models\RecoveryEvent;
 use App\Domain\Transfers\Enums\TransferStatus;
 use App\Domain\Transfers\Enums\TransferType;
 use App\Domain\Transfers\Models\Transfer;
+use App\Domain\Wallet\Exceptions\InsufficientFundsException;
 use App\Domain\Wallet\Models\Wallet;
+use App\Domain\Wallet\Services\HeldBalanceReconciler;
 use App\Models\User;
 use App\Support\Money\Money;
 use Illuminate\Database\Eloquent\Model;
@@ -42,6 +44,7 @@ class RecoveryService
         private readonly LedgerService $ledger,
         private readonly SystemAccountResolver $system,
         private readonly RecoveryEligibilityEngine $eligibility,
+        private readonly HeldBalanceReconciler $heldBalances,
     ) {}
 
     public function report(Transfer $transfer, User $reporter, string $reason): Recovery
@@ -83,33 +86,55 @@ class RecoveryService
                 $this->log($recovery, null, RecoveryAction::Declined, $verdict->reason);
             }
 
+            $this->heldBalances->sync(Wallet::findOrFail($transfer->receiver_wallet_id));
+
             return $recovery->refresh();
         });
     }
 
     public function returnToSender(Recovery $recovery, ?User $resolver = null): Recovery
     {
-        $this->assertOpen($recovery);
-
         return DB::transaction(function () use ($recovery, $resolver): Recovery {
-            $amount = Money::of($recovery->amount, $recovery->currency);
-            $fee = $this->fee($recovery->amount);
+            $locked = Recovery::query()->whereKey($recovery->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->status === RecoveryStatus::Returned) {
+                return $locked;
+            }
+
+            $this->assertOpen($locked);
+
+            $amount = Money::of($locked->amount, $locked->currency);
+            $fee = $this->fee($locked->amount);
+            $idempotencyKey = 'recovery-return:'.$locked->id;
+
+            if ($this->ledger->findByIdempotencyKey($idempotencyKey) !== null) {
+                $locked->update([
+                    'status' => RecoveryStatus::Returned,
+                    'resolution' => RecoveryResolution::Return,
+                    'fee' => $fee,
+                    'resolved_by' => $resolver?->getKey() ?? $locked->resolved_by,
+                    'resolved_at' => $locked->resolved_at ?? now(),
+                ]);
+
+                return $locked->refresh();
+            }
 
             $draft = PostingDraft::for(TransactionType::RecoveryReturn)
                 ->describedAs('Wrong-transfer recovery returned to sender')
-                ->debit($this->walletAccountId($recovery->receiver_wallet_id), $amount);
+                ->idempotentBy($idempotencyKey)
+                ->debit($this->walletAccountId($locked->receiver_wallet_id), $amount);
 
             if ($fee > 0) {
-                $draft->credit($this->walletAccountId($recovery->sender_wallet_id), Money::of($amount->amount - $fee, $recovery->currency))
-                    ->credit($this->system->resolve(SystemAccount::FeesRevenue, $recovery->currency), Money::of($fee, $recovery->currency));
+                $draft->credit($this->walletAccountId($locked->sender_wallet_id), Money::of($amount->amount - $fee, $locked->currency))
+                    ->credit($this->system->resolve(SystemAccount::FeesRevenue, $locked->currency), Money::of($fee, $locked->currency));
             } else {
-                $draft->credit($this->walletAccountId($recovery->sender_wallet_id), $amount);
+                $draft->credit($this->walletAccountId($locked->sender_wallet_id), $amount);
             }
 
             $this->ledger->post($draft);
-            $this->unfreeze($recovery->receiver_wallet_id, $amount->amount);
+            $this->unfreeze($locked->receiver_wallet_id, $amount->amount);
 
-            $recovery->update([
+            $locked->update([
                 'status' => RecoveryStatus::Returned,
                 'resolution' => RecoveryResolution::Return,
                 'fee' => $fee,
@@ -117,29 +142,37 @@ class RecoveryService
                 'resolved_at' => now(),
             ]);
 
-            $this->log($recovery, $resolver, RecoveryAction::Returned, null, ['fee' => $fee]);
+            $this->heldBalances->sync(Wallet::findOrFail($locked->receiver_wallet_id));
+            $this->log($locked, $resolver, RecoveryAction::Returned, null, ['fee' => $fee]);
 
-            return $recovery->refresh();
+            return $locked->refresh();
         });
     }
 
     public function releaseToReceiver(Recovery $recovery, ?User $resolver = null): Recovery
     {
-        $this->assertOpen($recovery);
-
         return DB::transaction(function () use ($recovery, $resolver): Recovery {
-            $this->unfreeze($recovery->receiver_wallet_id, $recovery->amount);
+            $locked = Recovery::query()->whereKey($recovery->id)->lockForUpdate()->firstOrFail();
 
-            $recovery->update([
+            if ($locked->status === RecoveryStatus::Declined && $locked->resolution === RecoveryResolution::Release) {
+                return $locked;
+            }
+
+            $this->assertOpen($locked);
+
+            $this->unfreeze($locked->receiver_wallet_id, $locked->amount);
+
+            $locked->update([
                 'status' => RecoveryStatus::Declined,
                 'resolution' => RecoveryResolution::Release,
                 'resolved_by' => $resolver?->getKey(),
                 'resolved_at' => now(),
             ]);
 
-            $this->log($recovery, $resolver, RecoveryAction::Released);
+            $this->heldBalances->sync(Wallet::findOrFail($locked->receiver_wallet_id));
+            $this->log($locked, $resolver, RecoveryAction::Released);
 
-            return $recovery->refresh();
+            return $locked->refresh();
         });
     }
 
@@ -205,14 +238,34 @@ class RecoveryService
 
     private function freeze(string $walletId, int $amount): void
     {
+        $wallet = Wallet::query()->whereKey($walletId)->lockForUpdate()->firstOrFail();
+
+        if ($amount > $wallet->availableMinor()) {
+            throw InsufficientFundsException::for(
+                (string) $walletId,
+                $wallet->available(),
+                Money::of($amount, $wallet->currency),
+            );
+        }
+
         Wallet::whereKey($walletId)->increment('held_balance', $amount);
     }
 
     private function unfreeze(string $walletId, int $amount): void
     {
-        Wallet::whereKey($walletId)
+        $updated = Wallet::whereKey($walletId)
             ->where('held_balance', '>=', $amount)
             ->decrement('held_balance', $amount);
+
+        if ($updated === 0) {
+            $wallet = Wallet::query()->whereKey($walletId)->firstOrFail();
+
+            throw InsufficientFundsException::heldFor(
+                (string) $walletId,
+                $wallet->available(),
+                Money::of($amount, $wallet->currency),
+            );
+        }
     }
 
     private function hasOpenRecovery(Transfer $transfer): bool

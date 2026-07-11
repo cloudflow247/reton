@@ -16,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Web\Concerns\VerifiesPin;
 use App\Http\Requests\Api\V1\Transfer\CreateTransferRequest;
 use App\Models\User;
+use App\Support\Http\IdempotencyKey;
 use App\Support\Money\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
@@ -68,10 +69,11 @@ class SendController extends Controller
         }
 
         $note = $request->filled('note') ? $request->string('note')->toString() : null;
+        $key = IdempotencyKey::from($request);
 
         $transfer = TransferType::from($request->string('type')->toString()) === TransferType::Protected
-            ? $this->transfers->sendProtected($user, $from, $to, $amount, $note, null)
-            : $this->transfers->sendNormal($user, $from, $to, $amount, $note, null);
+            ? $this->transfers->sendProtected($user, $from, $to, $amount, $note, $key)
+            : $this->transfers->sendNormal($user, $from, $to, $amount, $note, $key);
 
         // Flash a small receipt the Send page shows as its success screen.
         return back()->with('transfer', [

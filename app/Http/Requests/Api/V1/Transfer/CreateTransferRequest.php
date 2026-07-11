@@ -28,6 +28,7 @@ class CreateTransferRequest extends FormRequest
             'type' => ['required', new Enum(TransferType::class)],
             'pin' => ['required', 'string'],
             'note' => ['nullable', 'string', 'max:140'],
+            'idempotency_key' => ['nullable', 'string', 'max:128'],
         ];
     }
 

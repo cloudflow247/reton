@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Transfers\Services;
 
+use App\Domain\Callback\Enums\CallbackStatus;
+use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Services\ProtectionFairnessService;
 use App\Domain\Ledger\Data\PostingDraft;
 use App\Domain\Ledger\Enums\TransactionType;
@@ -16,6 +18,7 @@ use App\Domain\Transfers\Exceptions\InvalidTransferStateException;
 use App\Domain\Transfers\Models\Hold;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Wallet\Models\Wallet;
+use App\Domain\Wallet\Services\HeldBalanceReconciler;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use App\Support\Money\Money;
@@ -35,6 +38,7 @@ class TransferService
         private readonly LedgerService $ledger,
         private readonly WalletService $wallets,
         private readonly ProtectionFairnessService $fairness,
+        private readonly HeldBalanceReconciler $heldBalances,
     ) {}
 
     /**
@@ -133,16 +137,25 @@ class TransferService
                 'expires_at' => now()->addHours($holdHours),
             ]);
 
+            $this->heldBalances->sync($to->fresh());
+
             return $transfer->load('hold');
         });
     }
 
     /**
      * Release pending funds to the receiver's available balance.
+     *
+     * @param  bool  $fromCallbackResolution  When true, an open callback is expected —
+     *                                        used only by CallbackService after a dispute decision.
      */
-    public function release(Transfer $transfer): Transfer
+    public function release(Transfer $transfer, bool $fromCallbackResolution = false): Transfer
     {
-        return DB::transaction(function () use ($transfer): Transfer {
+        return DB::transaction(function () use ($transfer, $fromCallbackResolution): Transfer {
+            if (! $fromCallbackResolution) {
+                $this->assertNoOpenCallback($transfer);
+            }
+
             $hold = $this->lockActiveHold($transfer)
                 ?? throw InvalidTransferStateException::notReleasable((string) $transfer->id);
 
@@ -151,6 +164,8 @@ class TransferService
 
             $hold->update(['status' => HoldStatus::Released, 'resolved_at' => now()]);
             $transfer->update(['status' => TransferStatus::Completed, 'completed_at' => now()]);
+
+            $this->heldBalances->sync($receiver);
 
             return $transfer->refresh()->load('hold');
         });
@@ -179,6 +194,8 @@ class TransferService
             $hold->update(['status' => HoldStatus::Refunded, 'reason' => $reason, 'resolved_at' => now()]);
             $transfer->update(['status' => TransferStatus::Refunded, 'completed_at' => now()]);
 
+            $this->heldBalances->sync($receiver);
+
             return $transfer->refresh()->load('hold');
         });
     }
@@ -195,6 +212,19 @@ class TransferService
             ->first();
 
         return $hold instanceof Hold ? $hold : null;
+    }
+
+    private function assertNoOpenCallback(Transfer $transfer): void
+    {
+        $open = Callback::query()
+            ->where('transfer_id', $transfer->id)
+            ->whereIn('status', [CallbackStatus::Pending, CallbackStatus::Escalated])
+            ->lockForUpdate()
+            ->exists();
+
+        if ($open) {
+            throw InvalidTransferStateException::callbackOpen((string) $transfer->id);
+        }
     }
 
     private function holdMoney(Transfer $transfer): Money
