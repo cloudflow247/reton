@@ -50,7 +50,7 @@ export default function ListingShow() {
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-mint">
             <ShieldIcon size={14} /> {isPhysical ? 'Protected physical sale' : 'Protected digital sale'}
           </p>
-          {isPhysical && <Pill tone="mint">Giglogistics verified</Pill>}
+          {isPhysical && <Pill tone="mint">Hub verified</Pill>}
         </div>
         <h1 className="mt-2 font-display text-2xl font-bold tracking-tight">{listing.title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">{listing.description}</p>
@@ -90,7 +90,7 @@ export default function ListingShow() {
 
         {isPhysical && listing.status === 'active' && (
           <p className="mt-3 rounded-lg border border-mint/25 bg-mint/5 px-3 py-2 text-xs text-muted">
-            After you pay, the seller takes the item to a Giglogistics hub. Reton locks this description — the partner
+            After you pay, the seller takes the item to a verification hub. Reton locks this description — the partner
             verifies the physical item matches before it ships to you.
           </p>
         )}
@@ -109,7 +109,7 @@ export default function ListingShow() {
           <p className="text-sm font-semibold">Buy with protection</p>
           <p className="mt-1 text-xs text-muted">
             {isPhysical
-              ? 'Payment is held until Giglogistics verifies the item at their hub, delivers to you, and you confirm — or you are auto-refunded if verification fails or delivery is missed.'
+              ? 'Payment is held until the hub verifies the item, delivers to you, and you confirm — or you are auto-refunded if verification fails or delivery is missed.'
               : 'Payment is held until the seller delivers and you confirm — or you are auto-refunded if they miss the deadline.'}
           </p>
           <PurchaseForm listing={listing} className="mt-4" />

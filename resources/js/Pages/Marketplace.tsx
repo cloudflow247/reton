@@ -32,7 +32,7 @@ const tabSpring = { type: 'spring', stiffness: 400, damping: 34 } as const
 const flowSteps = [
   { n: '1', title: 'Share', desc: 'Send your buyer the link or item code' },
   { n: '2', title: 'Pay', desc: 'Buyer locks terms — escrow holds funds' },
-  { n: '3', title: 'Verify', desc: 'Giglogistics hub checks physical items' },
+  { n: '3', title: 'Verify', desc: 'Hub checks physical items' },
   { n: '4', title: 'Deliver', desc: 'Confirm or dispute with fair rules' },
 ]
 
@@ -420,7 +420,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
         </p>
         <p className="mt-2 text-xs leading-relaxed text-muted">
           {itemType === 'physical'
-            ? 'Buyers lock the description before paying. You drop off at Giglogistics for verification, then delivery.'
+            ? 'Buyers lock the description before paying. You drop off at a verification hub, then delivery.'
             : 'Escrow holds payment until you deliver and the buyer confirms.'}
         </p>
       </div>

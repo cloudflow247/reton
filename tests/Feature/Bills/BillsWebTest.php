@@ -145,7 +145,8 @@ it('shows coming soon when bills are disabled', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('ComingSoon')
-            ->where('feature', 'bills'));
+            ->where('feature', 'bills')
+            ->where('description', fn (string $text) => ! str_contains(strtolower($text), 'interswitch')));
 });
 
 it('rejects bill posts when the feature is disabled', function () {

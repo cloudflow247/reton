@@ -152,8 +152,7 @@ export default function Withdraw({
 
       {!payoutsAvailable && (
         <InfoStrip tone="amber" title="Withdrawals paused">
-          Bank payouts need Wema Debit Wallet access (separate from ALATPay deposits). Your balance is safe — try
-          again once payouts are enabled, or contact support.
+          Bank withdrawals are temporarily unavailable. Your balance is safe — try again shortly, or contact support.
         </InfoStrip>
       )}
 

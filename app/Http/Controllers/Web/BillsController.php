@@ -42,7 +42,7 @@ class BillsController extends Controller
     {
         if ($soon = $this->comingSoonIfDisabled('bills', [
             'title' => 'Bill payments',
-            'description' => 'Airtime, data, electricity, and cable TV are next. We’re locking in live Interswitch settlement before opening this to everyone.',
+            'description' => 'Airtime, data, electricity, and cable TV are next. We’re finishing secure settlement before opening this to everyone.',
         ])) {
             return $soon;
         }

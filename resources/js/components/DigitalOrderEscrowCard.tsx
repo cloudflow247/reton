@@ -66,7 +66,7 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
 
       {isPhysical && escrow?.shipment && isSeller && order.status === 'paid_held' && !escrow.shipment.dropoff_code && (
         <p className="mt-2 rounded-xl border border-amber/30 bg-amber/5 px-3 py-2 text-xs text-amber">
-          Schedule hub drop-off, then bring the item to Giglogistics for verification before it ships to the buyer.
+          Schedule hub drop-off, then bring the item to a verification hub before it ships to the buyer.
         </p>
       )}
 
@@ -88,13 +88,13 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
 
       {order.status === 'awaiting_verification' && isSeller && (
         <p className="mt-2 text-xs text-muted">
-          Take the package to the Giglogistics hub with your drop-off code. They will verify it matches your listing before shipping.
+          Take the package to the verification hub with your drop-off code. They will verify it matches your listing before shipping.
         </p>
       )}
 
       {order.status === 'awaiting_verification' && isBuyer && (
         <p className="mt-2 text-xs text-muted">
-          Giglogistics is verifying the item against the description you accepted. You are only charged for delivery after it passes.
+          The hub is verifying the item against the description you accepted. You are only charged for delivery after it passes.
         </p>
       )}
 
@@ -216,7 +216,7 @@ function HubDropoffPanel({
 
   return (
     <div className="mt-3 space-y-3 rounded-xl border border-mint/30 bg-mint/[0.06] p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-mint">Take item to Giglogistics hub</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-mint">Take item to verification hub</p>
       <div className="rounded-lg border border-line bg-surface p-3">
         <p className="font-display text-lg font-bold tracking-widest text-text">{shipment.dropoff_code ?? '—'}</p>
         <p className="mt-1 text-[11px] text-muted">Show this drop-off code at the hub</p>
@@ -335,9 +335,9 @@ function ShipModal({ order, onClose }: { order: DigitalOrder; onClose: () => voi
   })
 
   return (
-    <Modal title="Schedule Giglogistics hub drop-off" onClose={onClose} wide>
+    <Modal title="Schedule verification hub drop-off" onClose={onClose} wide>
       <p className="text-sm text-muted">
-        After scheduling, take the physical item to our Giglogistics partner hub. They verify it matches the locked
+        After scheduling, take the physical item to a verification hub. They verify it matches the locked
         order description before it ships to the buyer. Funds stay in escrow until verification passes.
       </p>
       <form

@@ -105,7 +105,7 @@ export default function Profile() {
                 Tier {kyc.tier} · {kyc.tier_label}
               </p>
               <p className="mt-1 text-xs text-muted">
-                ALATPay static wallet:{' '}
+                Deposit account:{' '}
                 <span className="font-medium text-text">
                   {kyc.limits.static_wallet_type === 'individual' ? 'Personal account' : 'Collection account'}
                 </span>
@@ -200,8 +200,8 @@ export default function Profile() {
                   checked={tier3.data.identity_consent}
                   onChange={(e) => tier3.setData('identity_consent', e.target.checked)}
                 />
-                I consent to NIN verification with Dojah. Reton logs verification outcomes for audit — never your
-                full NIN in application logs.
+                I consent to NIN verification. Reton logs verification outcomes for audit — never your full NIN in
+                application logs.
               </label>
               {tier3.errors.identity_consent && <p className="text-xs text-danger">{tier3.errors.identity_consent}</p>}
               <Button type="submit" loading={tier3.processing} className="w-full">
@@ -229,7 +229,7 @@ export default function Profile() {
             href="/add-money"
             icon={<ShieldIcon size={18} />}
             label="Deposit account"
-            sub="Permanent ALATPay / Wema bank number"
+            sub="Permanent bank deposit number"
             action="Manage"
           />
       </FormPanel>

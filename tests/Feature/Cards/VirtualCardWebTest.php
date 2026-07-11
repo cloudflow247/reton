@@ -159,7 +159,8 @@ it('shows coming soon when cards are disabled', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('ComingSoon')
-            ->where('feature', 'cards'));
+            ->where('feature', 'cards')
+            ->where('description', fn (string $text) => ! str_contains(strtolower($text), 'bridgecard')));
 });
 
 it('rejects card issue when the feature is disabled', function () {

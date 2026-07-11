@@ -84,7 +84,7 @@ export default function Onboarding() {
                   {[
                     { Icon: ShieldIcon, t: 'Callback Protection', d: 'Hold funds until you confirm delivery.' },
                     { Icon: LockIcon, t: 'Transaction PIN', d: 'Separate from your password — required for every payment.' },
-                    { Icon: PlusIcon, t: 'Fund your wallet', d: 'Add money via bank transfer or ALATPay.' },
+                    { Icon: PlusIcon, t: 'Fund your wallet', d: 'Add money via bank transfer or checkout.' },
                   ].map(({ Icon, t, d }) => (
                     <li key={t} className="flex gap-3 rounded-xl border border-line p-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mint/10 text-mint">

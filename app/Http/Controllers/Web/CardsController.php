@@ -40,7 +40,7 @@ class CardsController extends Controller
     {
         if ($soon = $this->comingSoonIfDisabled('cards', [
             'title' => 'Virtual cards',
-            'description' => 'NGN and USD cards for online spend are on the way. We’re finishing live Bridgecard issuing before this goes live.',
+            'description' => 'NGN and USD cards for online spend are on the way. We’re finishing secure card issuing before this goes live.',
         ])) {
             return $soon;
         }
