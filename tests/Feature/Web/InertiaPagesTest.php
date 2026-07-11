@@ -254,6 +254,19 @@ it('redirects to the pay route for alatpay checkout', function () {
     ])->assertRedirect(route('deposits.pay', Deposit::latest()->first()));
 });
 
+it('redirects to the pay route for alatpay card', function () {
+    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    [$user, $wallet] = webUser();
+
+    $this->actingAs($user)->post('/deposits', [
+        'wallet_id' => $wallet->id,
+        'amount' => 500_00,
+        'method' => 'alatpay_card',
+    ])->assertRedirect(route('deposits.pay', Deposit::latest()->first()));
+
+    expect(Deposit::latest()->first()?->metadata['method'] ?? null)->toBe('alatpay_card');
+});
+
 it('shows the local demo checkout when alatpay driver is fake', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     [$user, $wallet] = webUser();

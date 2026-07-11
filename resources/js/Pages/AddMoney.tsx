@@ -90,10 +90,18 @@ export default function AddMoney() {
   const profileName = auth.user?.name ?? null
 
   const [amount, setAmount] = useState('')
-  const [method, setMethod] = useState<DepositMethod>('alatpay_checkout')
   const [dismissed, setDismissed] = useState(false)
-  const form = useForm({ wallet_id: wallet?.id ?? '', amount: 0, method: 'alatpay_checkout' as DepositMethod })
+  const form = useForm({
+    wallet_id: wallet?.id ?? '',
+    amount: 0,
+    method: 'alatpay_checkout' as DepositMethod,
+  })
+  const method = form.data.method
   const minor = toMinor(amount)
+
+  function selectMethod(next: DepositMethod) {
+    form.setData('method', next)
+  }
 
   const activeDeposit =
     pendingDeposit && (pendingDeposit.status === 'pending' || pendingDeposit.status === 'completed')
@@ -114,7 +122,11 @@ export default function AddMoney() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.transform((data) => ({ ...data, amount: toMinor(amount), method }))
+    form.transform((data) => ({
+      ...data,
+      amount: toMinor(amount),
+      method: data.method,
+    }))
     form.post('/deposits')
   }
 
@@ -213,34 +225,46 @@ export default function AddMoney() {
 
                 <AmountField value={amount} onChange={setAmount} invalid={!!form.errors.amount} />
 
-                <div className="space-y-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Method</p>
-                  <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-surface-2/70 p-1">
+                <fieldset className="relative z-10 space-y-2">
+                  <legend className="text-[10px] font-semibold uppercase tracking-wide text-muted">Method</legend>
+                  <div
+                    className="grid grid-cols-3 gap-1.5 rounded-xl bg-surface-2/70 p-1"
+                    role="radiogroup"
+                    aria-label="Funding method"
+                  >
                     {methods.map((option) => {
                       const Icon = option.icon
                       const selected = method === option.id
                       return (
-                        <button
+                        <label
                           key={option.id}
-                          type="button"
-                          onClick={() => setMethod(option.id)}
                           className={cn(
-                            'flex flex-col items-center gap-1 rounded-lg px-1.5 py-2.5 text-center transition',
+                            'relative flex min-h-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2.5 text-center transition active:scale-[0.98]',
                             selected
-                              ? 'bg-surface text-mint shadow-sm ring-1 ring-mint/20'
-                              : 'text-muted hover:text-text',
+                              ? 'bg-surface text-mint shadow-sm ring-1 ring-mint/25'
+                              : 'text-muted hover:bg-surface/60 hover:text-text',
                           )}
                         >
-                          <Icon size={16} />
-                          <span className="text-[11px] font-semibold leading-tight">{option.title}</span>
-                        </button>
+                          <input
+                            type="radio"
+                            name="deposit_method"
+                            value={option.id}
+                            checked={selected}
+                            onChange={() => selectMethod(option.id)}
+                            className="sr-only"
+                          />
+                          <Icon size={16} className="pointer-events-none" />
+                          <span className="pointer-events-none text-[11px] font-semibold leading-tight">
+                            {option.title}
+                          </span>
+                        </label>
                       )
                     })}
                   </div>
-                  <p className="text-center text-[11px] text-muted">
+                  <p className="text-center text-[11px] text-muted" aria-live="polite">
                     {methods.find((m) => m.id === method)?.subtitle}
                   </p>
-                </div>
+                </fieldset>
 
                 {form.errors.amount && <p className="text-sm text-danger">{form.errors.amount}</p>}
                 {form.errors.method && <p className="text-sm text-danger">{form.errors.method}</p>}
