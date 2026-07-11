@@ -20,6 +20,7 @@ use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
+use App\Support\Banking\FundingAccountName;
 use App\Support\Money\Money;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -119,7 +120,7 @@ class StaticAccountService
             'wallet_type' => StaticWalletType::Individual,
             'status' => StaticAccountStatus::Active,
             'account_number' => $accountNumber,
-            'account_name' => $accountName,
+            'account_name' => FundingAccountName::display($accountName, (string) $user->name),
             'bank_name' => $bankName ?? 'ALAT by Wema',
             'otp_tracking_id' => null,
             'email' => $user->email,
@@ -221,7 +222,7 @@ class StaticAccountService
         // (including recovered duplicate-BVN accounts).
         if ($response->otpTrackingId === null && $response->accountNumber !== null) {
             $attributes['account_number'] = $response->accountNumber;
-            $attributes['account_name'] = $response->accountName;
+            $attributes['account_name'] = FundingAccountName::display($response->accountName, (string) $user->name);
             $attributes['bank_name'] = 'ALAT by Wema';
             $attributes['status'] = StaticAccountStatus::Active;
         }
@@ -243,9 +244,14 @@ class StaticAccountService
             trackingId: (string) $account->otp_tracking_id,
         ));
 
+        $account->loadMissing('user');
+
         $account->update([
             'account_number' => $response->accountNumber,
-            'account_name' => $response->accountName,
+            'account_name' => FundingAccountName::display(
+                $response->accountName,
+                (string) ($account->user?->name ?? ''),
+            ),
             'bank_name' => $response->bankName,
             'status' => StaticAccountStatus::Active,
         ]);

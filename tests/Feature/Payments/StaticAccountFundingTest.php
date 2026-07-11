@@ -116,6 +116,40 @@ it('shows the credited balance on the dashboard after polling', function () {
     expect($wallet->fresh()->balance)->toBe(15000);
 });
 
+it('shows a short personal funding account name on the dashboard', function () {
+    $user = readyUser(['name' => 'Gabriel Mogaji']);
+    ensureVerifiedBvn($user);
+    $wallet = app(WalletService::class)->open($user, 'NGN');
+
+    app(StaticAccountService::class)->linkVerifiedIndividualAccount(
+        $user,
+        'sw-short-name',
+        '0123456789',
+        'CLOUDFLOW TECHNOLOGY LTD - GABRIEL MOGAJI',
+    );
+
+    $this->actingAs($user)
+        ->get('/dashboard')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('depositAccount.account_name', 'GABRIEL MOGAJI')
+            ->where('depositAccount.account_number', '0123456789'));
+});
+
+it('stores a short personal name when linking a merchant-prefixed VA', function () {
+    $user = readyUser(['name' => 'Gabriel Mogaji']);
+    $wallet = app(WalletService::class)->open($user, 'NGN');
+
+    $account = app(StaticAccountService::class)->linkVerifiedIndividualAccount(
+        $user,
+        'sw-link-short',
+        '0987654321',
+        'CLOUDFLOW TECHNOLOGY LTD - GABRIEL MOGAJI',
+    );
+
+    expect($account->account_name)->toBe('GABRIEL MOGAJI');
+});
+
 it('resolves the active funding account by user when the viewed wallet has no VA', function () {
     [$account] = activeStaticAccount();
     $otherWallet = app(WalletService::class)->open($account->user, 'USD');
