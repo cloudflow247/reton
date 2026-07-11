@@ -27,7 +27,7 @@ final class AlatpayException extends RuntimeException
     public function userFacingMessage(string $fallback): string
     {
         if ($this->isDuplicateIndividualBvn()) {
-            return 'This BVN already has an ALATPay deposit account for this business, but we could not match it to your email. Use the same email as on ALATPay or contact support.';
+            return 'This BVN already has a deposit account for this business, but we could not match it to your email. Use the same email as before, or contact support.';
         }
 
         $status = null;
@@ -42,9 +42,9 @@ final class AlatpayException extends RuntimeException
         }
 
         return match ($status) {
-            400, 404, 422 => 'ALATPay rejected that BVN. Double-check the number — it must be your real BVN, not a demo value.',
-            401, 403 => 'ALATPay session was rejected. Ask an admin to set merchant email/password and Business ID in Integrations, then Test connection.',
-            408, 503, 504 => 'ALATPay timed out or is unreachable. Please try again in a moment.',
+            400, 404, 422 => 'That BVN was rejected. Double-check the number — it must be your real BVN, not a demo value.',
+            401, 403 => 'Payment provider session was rejected. Ask an admin to refresh Integrations credentials, then try again.',
+            408, 503, 504 => 'Verification timed out or is unreachable. Please try again in a moment.',
             default => $fallback,
         };
     }

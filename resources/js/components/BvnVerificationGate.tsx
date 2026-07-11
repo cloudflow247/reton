@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
-import { useForm, usePage } from '@inertiajs/react'
+import { router, useForm, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CheckIcon, LockIcon, ShieldIcon } from './icons'
 import { Button, Field, Pill } from './ui'
@@ -15,6 +15,8 @@ type BvnGateProps = {
   demoMode?: boolean
 }
 
+const RESEND_COOLDOWN_SECONDS = 60
+
 export function BvnVerificationGate({
   returnTo = '/add-money',
   pendingOtp = false,
@@ -24,12 +26,27 @@ export function BvnVerificationGate({
 }: BvnGateProps) {
   const { flash } = usePage<SharedProps>().props
   const [step, setStep] = useState<'bvn' | 'otp'>(pendingOtp ? 'otp' : 'bvn')
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [resending, setResending] = useState(false)
+  const [resendError, setResendError] = useState<string | null>(null)
 
   useEffect(() => {
     if (pendingOtp) {
       setStep('otp')
     }
   }, [pendingOtp])
+
+  useEffect(() => {
+    if (resendCooldown <= 0) {
+      return
+    }
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((seconds) => Math.max(0, seconds - 1))
+    }, 1000)
+
+    return () => window.clearInterval(timer)
+  }, [resendCooldown])
 
   const bvnForm = useForm({
     bvn: '',
@@ -46,16 +63,21 @@ export function BvnVerificationGate({
   function submitBvn(e: FormEvent) {
     e.preventDefault()
     bvnForm.clearErrors()
+    setResendError(null)
     toast.info(demoMode ? 'Starting demo BVN check…' : 'Sending verification code…', 2500)
     bvnForm.post('/profile/kyc/tier-2', {
       preserveScroll: true,
-      onSuccess: () => setStep('otp'),
+      onSuccess: () => {
+        setStep('otp')
+        setResendCooldown(RESEND_COOLDOWN_SECONDS)
+      },
     })
   }
 
   function submitOtp(e: FormEvent) {
     e.preventDefault()
     otpForm.clearErrors()
+    setResendError(null)
     toast.info('Confirming code…', 2000)
     otpForm.post('/profile/kyc/tier-2/confirm', {
       preserveScroll: true,
@@ -65,11 +87,41 @@ export function BvnVerificationGate({
     })
   }
 
+  function resendOtp() {
+    if (resending || resendCooldown > 0) {
+      return
+    }
+
+    setResending(true)
+    setResendError(null)
+    otpForm.clearErrors()
+    toast.info(demoMode ? 'Issuing a new demo code…' : 'Sending a new code…', 2500)
+
+    router.post(
+      '/profile/kyc/tier-2/resend',
+      { return_to: returnTo },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setResendCooldown(RESEND_COOLDOWN_SECONDS)
+          toast.success(demoMode ? 'New demo code ready — still use 123456' : 'New code sent', 3500)
+        },
+        onError: (errors) => {
+          const message = errors.otp ?? 'Could not resend the code. Try again shortly.'
+          setResendError(message)
+          toast.error(message, 4000)
+        },
+        onFinish: () => setResending(false),
+      },
+    )
+  }
+
   const bvnDigits = bvnForm.data.bvn.replace(/\D/g, '').length
   const canSubmitBvn =
     bvnDigits === 11 && bvnForm.data.date_of_birth !== '' && bvnForm.data.identity_consent && !bvnForm.processing
   const canSubmitOtp = otpForm.data.otp.length >= 4 && !otpForm.processing
   const usesAlatpay = provider === 'alatpay'
+  const otpError = otpForm.errors.otp ?? resendError ?? flash.error
 
   return (
     <div className="overflow-hidden rounded-2xl border border-mint/25 bg-gradient-to-b from-mint/[0.06] to-surface shadow-lg shadow-mint/5 sm:rounded-3xl">
@@ -167,8 +219,8 @@ export function BvnVerificationGate({
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border-line text-mint focus:ring-mint/30"
               />
               <span className="text-xs leading-relaxed text-muted">
-                I consent to Reton verifying my BVN with our licensed identity partner{' '}
-                under NDPR. My BVN is encrypted at rest and never stored in plain text.
+                I consent to verifying my BVN with our licensed identity partner under NDPR.
+                My BVN is encrypted at rest and never stored in plain text.
               </span>
             </label>
             {bvnForm.errors.identity_consent && (
@@ -201,9 +253,9 @@ export function BvnVerificationGate({
               </p>
             )}
 
-            {(flash.error || otpForm.errors.otp) && (
+            {otpError && (
               <p className="rounded-xl border border-danger/25 bg-danger/5 px-3.5 py-2.5 text-sm text-danger sm:px-4 sm:py-3">
-                {otpForm.errors.otp ?? flash.error}
+                {otpError}
               </p>
             )}
 
@@ -223,13 +275,31 @@ export function BvnVerificationGate({
               Confirm BVN & unlock funding
             </Button>
 
-            <button
-              type="button"
-              onClick={() => setStep('bvn')}
-              className="w-full py-1 text-sm text-muted transition hover:text-mint"
-            >
-              ← Use a different BVN
-            </button>
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                type="button"
+                onClick={resendOtp}
+                disabled={resending || resendCooldown > 0}
+                className="text-sm text-mint transition hover:text-mint/80 disabled:cursor-not-allowed disabled:text-muted"
+              >
+                {resending
+                  ? 'Sending…'
+                  : resendCooldown > 0
+                    ? `Resend code in ${resendCooldown}s`
+                    : 'Resend verification code'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('bvn')
+                  setResendError(null)
+                }}
+                className="py-1 text-sm text-muted transition hover:text-mint"
+              >
+                ← Use a different BVN
+              </button>
+            </div>
           </motion.form>
         )}
       </AnimatePresence>

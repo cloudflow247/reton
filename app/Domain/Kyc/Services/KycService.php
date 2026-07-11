@@ -71,6 +71,11 @@ class KycService
         return $this->alatpayBvn->confirm($user, $otp, $ipAddress);
     }
 
+    public function resendAlatpayTier2Otp(User $user, ?string $ipAddress = null): string
+    {
+        return $this->alatpayBvn->resend($user, $ipAddress);
+    }
+
     public function hasPendingAlatpayBvn(User $user): bool
     {
         return $this->alatpayBvn->hasPending($user);
@@ -250,7 +255,9 @@ class KycService
             ->exists();
 
         if ($taken) {
-            throw ValidationException::withMessages(['bvn' => ['This BVN is already linked to another Reton account.']]);
+            throw ValidationException::withMessages([
+                'bvn' => ['This BVN is already linked to another account. Sign in to that account, or contact support to release it.'],
+            ]);
         }
     }
 
@@ -263,7 +270,9 @@ class KycService
             ->exists();
 
         if ($taken) {
-            throw ValidationException::withMessages(['nin' => ['This NIN is already linked to another Reton account.']]);
+            throw ValidationException::withMessages([
+                'nin' => ['This NIN is already linked to another account. Sign in to that account, or contact support to release it.'],
+            ]);
         }
     }
 }

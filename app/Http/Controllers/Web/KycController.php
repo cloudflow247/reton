@@ -69,6 +69,23 @@ class KycController extends Controller
             : redirect()->route('profile')->with('success', $message);
     }
 
+    public function resendTier2Otp(Request $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'return_to' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $message = $this->kyc->resendAlatpayTier2Otp($user, $request->ip());
+        $returnTo = $this->safeReturnTo((string) ($validated['return_to'] ?? ''));
+
+        $redirect = $returnTo !== null ? redirect($returnTo) : redirect()->back();
+
+        return $redirect->with('success', $message);
+    }
+
     public function upgradeTier3(Request $request): RedirectResponse
     {
         /** @var User $user */

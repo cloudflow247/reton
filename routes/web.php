@@ -169,6 +169,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::post('/profile/kyc/tier-2', [KycController::class, 'upgradeTier2'])->middleware('throttle:6,1')->name('profile.kyc.tier2');
     Route::post('/profile/kyc/tier-2/confirm', [KycController::class, 'confirmTier2'])->middleware('throttle:12,1')->name('profile.kyc.tier2.confirm');
+    Route::post('/profile/kyc/tier-2/resend', [KycController::class, 'resendTier2Otp'])->middleware('throttle:3,1')->name('profile.kyc.tier2.resend');
 });
 
 /*

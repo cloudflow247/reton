@@ -34,7 +34,13 @@ class AlatpayBvnVerificationService
 {
     private const CACHE_PREFIX = 'bvn_pending:';
 
+    private const RESEND_COOLDOWN_PREFIX = 'bvn_resend_cd:';
+
     private const TTL_SECONDS = 900;
+
+    private const RESEND_COOLDOWN_SECONDS = 60;
+
+    private const MAX_RESENDS = 3;
 
     public function __construct(
         private readonly AlatpayGateway $gateway,
@@ -117,7 +123,7 @@ class AlatpayBvnVerificationService
         if ($response->staticWalletId === '' || $response->otpTrackingId === null) {
             $this->audit->record($user, 'bvn', $this->providerName(), 'failed', 'no_otp', $ipAddress);
             throw ValidationException::withMessages([
-                'bvn' => ['ALATPay could not start BVN verification. Check your integration settings and try again.'],
+                'bvn' => ['We could not start BVN verification. Please try again in a moment.'],
             ]);
         }
 
@@ -127,15 +133,104 @@ class AlatpayBvnVerificationService
             'static_wallet_id' => $response->staticWalletId,
             'tracking_id' => $response->otpTrackingId,
             'hint' => $response->otpHint ?? 'Enter the OTP sent to the phone linked to your BVN.',
+            'resend_count' => 0,
         ], self::TTL_SECONDS);
 
+        Cache::put($this->resendCooldownKey($user), true, self::RESEND_COOLDOWN_SECONDS);
         $this->audit->record($user, 'bvn', $this->providerName(), 'otp_sent', null, $ipAddress);
 
         if ($this->providerName() === 'alatpay_fake') {
-            return 'Demo mode: enter verification code 123456 below (no SMS when ALATPay driver is fake).';
+            return 'Demo mode: enter verification code 123456 below (no SMS in demo).';
         }
 
         return 'We sent a verification code to the phone linked to your BVN. Enter it below to unlock funding.';
+    }
+
+    /**
+     * Resend OTP for an active pending BVN session (cooldown + max attempts).
+     *
+     * @return non-empty-string User-facing message
+     */
+    public function resend(User $user, ?string $ipAddress = null): string
+    {
+        $pending = Cache::get($this->cacheKey($user));
+
+        if (! is_array($pending) || ! isset($pending['bvn'], $pending['dob'])) {
+            throw ValidationException::withMessages([
+                'otp' => ['Your verification session expired. Enter your BVN again to receive a new code.'],
+            ]);
+        }
+
+        $cooldownKey = $this->resendCooldownKey($user);
+
+        if (Cache::has($cooldownKey)) {
+            throw ValidationException::withMessages([
+                'otp' => ['Please wait 60 seconds before requesting another code.'],
+            ]);
+        }
+
+        $resendCount = (int) ($pending['resend_count'] ?? 0);
+
+        if ($resendCount >= self::MAX_RESENDS) {
+            throw ValidationException::withMessages([
+                'otp' => ['You have reached the maximum number of code resends. Enter your BVN again to start over.'],
+            ]);
+        }
+
+        $bvn = decrypt((string) $pending['bvn']);
+        $dob = Carbon::parse((string) $pending['dob']);
+
+        $this->assertBvnAvailable($user, $bvn);
+
+        try {
+            $response = $this->gateway->provisionStaticAccount(new StaticAccountRequest(
+                walletType: StaticWalletType::Individual->providerCode(),
+                bvn: $bvn,
+                email: (string) $user->email,
+                reference: 'BVN-RS-'.Str::upper((string) Str::ulid()),
+            ));
+        } catch (AlatpayException $e) {
+            $this->audit->record($user, 'bvn', $this->providerName(), 'failed', 'resend_failed', $ipAddress);
+            throw ValidationException::withMessages([
+                'otp' => [$e->userFacingMessage('We could not resend the code. Please wait a moment and try again.')],
+            ]);
+        }
+
+        if ($response->otpTrackingId === null && $response->accountNumber !== null) {
+            Cache::forget($this->cacheKey($user));
+            $this->forgetResendCooldown($user);
+            $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
+            $this->linkDepositAccountFromProvision($user, $response);
+
+            return 'BVN verified — your permanent deposit account is ready.';
+        }
+
+        if ($response->staticWalletId === '' || $response->otpTrackingId === null) {
+            $this->audit->record($user, 'bvn', $this->providerName(), 'failed', 'resend_no_otp', $ipAddress);
+            throw ValidationException::withMessages([
+                'otp' => ['We could not resend the verification code. Please try again shortly.'],
+            ]);
+        }
+
+        Cache::put($this->cacheKey($user), [
+            'bvn' => encrypt($bvn),
+            'dob' => $dob->toDateString(),
+            'static_wallet_id' => $response->staticWalletId,
+            'tracking_id' => $response->otpTrackingId,
+            'hint' => $response->otpHint ?? 'Enter the new OTP sent to the phone linked to your BVN.',
+            'resend_count' => $resendCount + 1,
+        ], self::TTL_SECONDS);
+
+        Cache::put($cooldownKey, true, self::RESEND_COOLDOWN_SECONDS);
+        $this->audit->record($user, 'bvn', $this->providerName(), 'otp_resent', null, $ipAddress, [
+            'resend_count' => $resendCount + 1,
+        ]);
+
+        if ($this->providerName() === 'alatpay_fake') {
+            return 'Demo mode: a new code was issued — still use 123456.';
+        }
+
+        return 'We sent a new verification code to the phone linked to your BVN.';
     }
 
     /** Step 2 — confirm OTP, activate Tier 2, and link the deposit VA. */
@@ -152,7 +247,7 @@ class AlatpayBvnVerificationService
         $otp = trim($otp);
 
         if ($otp === '' || ! preg_match('/^\d{4,8}$/', $otp)) {
-            throw ValidationException::withMessages(['otp' => ['Enter the verification code from ALATPay.']]);
+            throw ValidationException::withMessages(['otp' => ['Enter the verification code from your SMS.']]);
         }
 
         try {
@@ -164,13 +259,14 @@ class AlatpayBvnVerificationService
         } catch (AlatpayException $e) {
             $this->audit->record($user, 'bvn', $this->providerName(), 'failed', 'invalid_otp', $ipAddress);
             throw ValidationException::withMessages([
-                'otp' => [$e->userFacingMessage('Invalid or expired code. Check the OTP from ALATPay and try again.')],
+                'otp' => [$e->userFacingMessage('Invalid or expired code. Check the SMS and try again, or resend a new code.')],
             ]);
         }
 
         $bvn = decrypt((string) $pending['bvn']);
         $dob = Carbon::parse((string) $pending['dob']);
         Cache::forget($this->cacheKey($user));
+        $this->forgetResendCooldown($user);
 
         $kyc = $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
         $this->linkDepositAccountFromVerify($user, $verified);
@@ -248,7 +344,9 @@ class AlatpayBvnVerificationService
             ->exists();
 
         if ($taken) {
-            throw ValidationException::withMessages(['bvn' => ['This BVN is already linked to another Reton account.']]);
+            throw ValidationException::withMessages([
+                'bvn' => ['This BVN is already linked to another account. Sign in to that account, or contact support to release it.'],
+            ]);
         }
     }
 
@@ -270,14 +368,14 @@ class AlatpayBvnVerificationService
 
         if (in_array($bvn, $sandboxBvns, true)) {
             throw ValidationException::withMessages([
-                'bvn' => ['That looks like a demo/test BVN. Enter your real 11-digit BVN — ALATPay will SMS the phone registered to it.'],
+                'bvn' => ['That looks like a demo/test BVN. Enter your real 11-digit BVN — we will text the phone registered to it.'],
             ]);
         }
     }
 
     private function defaultProvisionFailureMessage(): string
     {
-        return 'ALATPay could not verify that BVN. Confirm the number is correct and matches the phone on your BVN record, then try again.';
+        return 'We could not verify that BVN. Confirm the number is correct and matches the phone on your BVN record, then try again.';
     }
 
     private function providerName(): string
@@ -288,5 +386,15 @@ class AlatpayBvnVerificationService
     private function cacheKey(User $user): string
     {
         return self::CACHE_PREFIX.$user->getKey();
+    }
+
+    private function resendCooldownKey(User $user): string
+    {
+        return self::RESEND_COOLDOWN_PREFIX.$user->getKey();
+    }
+
+    private function forgetResendCooldown(User $user): void
+    {
+        Cache::forget($this->resendCooldownKey($user));
     }
 }

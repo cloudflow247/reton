@@ -19,6 +19,7 @@ use App\Domain\Payments\Alatpay\Data\TransferRequest;
 use App\Domain\Payments\Alatpay\Data\TransferResponse;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 /**
  * AlatPay gateway for local development and tests. Deterministic; never touches
@@ -39,11 +40,18 @@ class FakeAlatpayGateway implements AlatpayGateway
 
     private bool $provisionImmediate = false;
 
-    /** @var array<string, array{accountNumber: ?string, otpTrackingId: ?string}> */
+    /** @var array<string, array{accountNumber: ?string, otpTrackingId: ?string, email?: ?string, walletType?: int, bvn?: string}> */
     private array $staticWallets = [];
 
     /** @var array<string, array<int, StaticAccountTransaction>> keyed by account number */
     private array $staticTransactions = [];
+
+    public function reset(): void
+    {
+        $this->staticWallets = [];
+        Cache::forget(self::STATIC_WALLETS_CACHE_KEY);
+        Cache::forget(self::STATIC_WALLETS_CACHE_KEY.':bvn');
+    }
 
     public function createCollection(CollectionRequest $request): CollectionResponse
     {
@@ -177,12 +185,27 @@ class FakeAlatpayGateway implements AlatpayGateway
                     ?? null;
 
                 if (is_array($existing) && ($existing['email'] ?? null) === $email) {
+                    // Still awaiting OTP — allow a fresh tracking id (resend).
+                    if (($existing['otpTrackingId'] ?? null) !== null) {
+                        $otpTrackingId = 'OTP-RESEND-'.substr(preg_replace('/\D/', '', (string) Str::ulid()).'000000', 0, 12);
+                        $existing['otpTrackingId'] = $otpTrackingId;
+                        $this->rememberStaticWallet($existingId, $existing);
+
+                        return new StaticAccountProvisionResponse(
+                            staticWalletId: $existingId,
+                            otpTrackingId: $otpTrackingId,
+                            accountNumber: null,
+                            accountName: null,
+                            otpHint: 'Demo mode: use verification code 123456 (resent).',
+                        );
+                    }
+
                     return new StaticAccountProvisionResponse(
                         staticWalletId: $existingId,
                         otpTrackingId: null,
                         accountNumber: $existing['accountNumber'],
                         accountName: 'RETON STATIC',
-                        otpHint: 'Existing ALATPay deposit account linked for this BVN.',
+                        otpHint: 'Existing deposit account linked for this BVN.',
                     );
                 }
 
@@ -266,6 +289,9 @@ class FakeAlatpayGateway implements AlatpayGateway
         if ($wallet === null || $wallet['accountNumber'] === null) {
             throw AlatpayException::requestFailed('verifyStaticAccount', 404, 'Static wallet not found.');
         }
+
+        $wallet['otpTrackingId'] = null;
+        $this->rememberStaticWallet($request->staticWalletId, $wallet);
 
         return new StaticAccountResponse(
             providerReference: $request->staticWalletId,

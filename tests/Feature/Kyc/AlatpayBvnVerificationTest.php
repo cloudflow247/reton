@@ -669,5 +669,83 @@ it('still blocks bvn already linked to another reton user', function () {
         'identity_consent' => true,
         'return_to' => '/add-money',
     ])->assertRedirect('/add-money')
-        ->assertSessionHasErrors('bvn');
+        ->assertSessionHasErrors([
+            'bvn' => 'This BVN is already linked to another account. Sign in to that account, or contact support to release it.',
+        ]);
+});
+
+it('resends alatpay bvn otp after cooldown clears', function () {
+    $user = alatpayKycUser();
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2', [
+        'bvn' => '22334455667',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money');
+
+    expect(app(KycService::class)->hasPendingAlatpayBvn($user))->toBeTrue();
+
+    $this->actingAs($user)->from('/add-money')->post('/profile/kyc/tier-2/resend', [
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHasErrors('otp');
+
+    \Illuminate\Support\Facades\Cache::forget('bvn_resend_cd:'.$user->id);
+
+    $this->actingAs($user)->from('/add-money')->post('/profile/kyc/tier-2/resend', [
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHas('success');
+
+    expect(app(KycService::class)->hasPendingAlatpayBvn($user))->toBeTrue();
+
+    $this->actingAs($user)->post('/profile/kyc/tier-2/confirm', [
+        'otp' => '123456',
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money');
+
+    expect(app(KycService::class)->forUser($user->fresh())->tier->value)->toBe(2);
+});
+
+it('rejects otp resend without a pending session', function () {
+    $user = alatpayKycUser();
+
+    $this->actingAs($user)->from('/add-money')->post('/profile/kyc/tier-2/resend', [
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHasErrors('otp');
+});
+
+it('releases bvn via artisan so another user can verify', function () {
+    $owner = alatpayKycUser('Owner');
+    $this->actingAs($owner)->post('/profile/kyc/tier-2', [
+        'bvn' => '22109876543',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+    ]);
+    $this->actingAs($owner)->post('/profile/kyc/tier-2/confirm', ['otp' => '123456']);
+
+    $this->artisan('kyc:release-bvn', [
+        'email' => $owner->email,
+        '--force' => true,
+    ])->assertSuccessful();
+
+    $ownerKyc = app(KycService::class)->forUser($owner->fresh());
+    expect($ownerKyc->bvn_hash)->toBeNull()
+        ->and($ownerKyc->tier->value)->toBe(1);
+
+    // Simulate provider-side cleanup after support release (BVN freed on Reton).
+    $gateway = app(\App\Domain\Payments\Alatpay\Contracts\AlatpayGateway::class);
+    expect($gateway)->toBeInstanceOf(\App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway::class);
+    $gateway->reset();
+
+    $other = alatpayKycUser('Other');
+    $this->actingAs($other)->post('/profile/kyc/tier-2', [
+        'bvn' => '22109876543',
+        'date_of_birth' => '1990-05-15',
+        'identity_consent' => true,
+        'return_to' => '/add-money',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHas('success');
 });

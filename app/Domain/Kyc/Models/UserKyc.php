@@ -72,6 +72,24 @@ class UserKyc extends Model
         $this->bvn_verified_at = now();
     }
 
+    /**
+     * Clear BVN identity so another user may verify the same BVN (support only).
+     * Does not delete deposit accounts — review those separately.
+     */
+    public function clearBvn(): void
+    {
+        $this->bvn_encrypted = null;
+        $this->bvn_hash = null;
+        $this->bvn_last4 = null;
+        $this->bvn_verified_at = null;
+
+        if ($this->tier === KycTier::Tier2) {
+            $this->tier = KycTier::Tier1;
+        }
+
+        $this->save();
+    }
+
     public function storeNin(string $nin): void
     {
         $this->nin_encrypted = Crypt::encryptString($nin);
