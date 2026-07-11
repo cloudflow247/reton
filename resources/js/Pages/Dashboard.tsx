@@ -8,8 +8,6 @@ import { pageItem, Page } from '@/components/page-kit'
 import { Badge } from '@/components/ui/badge'
 import {
   ArrowRightIcon,
-  BankIcon,
-  BillIcon,
   CardIcon,
   ChevronRightIcon,
   LockIcon,
@@ -20,6 +18,12 @@ import {
   WalletIcon,
 } from '@/components/icons'
 import { TrustProtectionListener } from '@/components/TrustProtectionListener'
+import {
+  DASHBOARD_MORE_SHORTCUTS,
+  DASHBOARD_SHORTCUTS,
+  isServiceSoon,
+  type AppService,
+} from '@/lib/app-services'
 import { ngn, shortDate } from '@/lib/format'
 import { useCountUp } from '@/lib/useCountUp'
 import { useUiStore } from '@/stores/ui-store'
@@ -87,8 +91,6 @@ export default function Dashboard() {
   const isNewUser = recent.length === 0
   const todo = nextTodo(needsPin, isNewUser)
   const copyAccount = wallet?.account_number ?? ''
-  const billsSoon = features?.bills === false
-  const withdrawSoon = features?.withdraw === false
   const cardsSoon = features?.cards === false
 
   const trust = summary ?? {
@@ -123,7 +125,7 @@ export default function Dashboard() {
       <Head title="Home" />
       {auth?.user?.id && <TrustProtectionListener userId={auth.user.id} only={['summary', 'activity']} />}
 
-      <div className="mx-auto max-w-2xl space-y-4 lg:max-w-none lg:grid lg:grid-cols-12 lg:gap-6 lg:space-y-0">
+      <div className="mx-auto max-w-2xl space-y-4 lg:max-w-none lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
         <div className="space-y-4 lg:col-span-8">
           <motion.header variants={item} className="flex items-end justify-between gap-3">
             <div className="min-w-0">
@@ -214,14 +216,35 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          <motion.div variants={item}>
-            <div className="grid grid-cols-4 gap-2">
-              <QuickAction href="/send" label="Send" Icon={SendIcon} primary />
-              <QuickAction href="/add-money" label="Add" Icon={PlusIcon} />
-              <QuickAction href="/bills" label="Bills" Icon={BillIcon} soon={billsSoon} />
-              <QuickAction href="/withdraw" label="Cash out" Icon={BankIcon} soon={withdrawSoon} />
+          <motion.section variants={item} aria-label="Services" className="space-y-2">
+            <div className="flex items-end justify-between px-0.5">
+              <div>
+                <h2 className="text-sm font-semibold">Services</h2>
+                <p className="text-[11px] text-muted">Security first · tap to move money</p>
+              </div>
             </div>
-          </motion.div>
+            <div className="grid grid-cols-4 gap-2">
+              {DASHBOARD_SHORTCUTS.map((service, index) => (
+                <QuickAction
+                  key={service.to}
+                  service={service}
+                  primary={index === 0}
+                  soon={isServiceSoon(service, features)}
+                  shortLabel={service.to === '/add-money' ? 'Add' : service.to === '/withdraw' ? 'Cash out' : undefined}
+                />
+              ))}
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {DASHBOARD_MORE_SHORTCUTS.map((service) => (
+                <QuickAction
+                  key={service.to}
+                  service={service}
+                  soon={isServiceSoon(service, features)}
+                  shortLabel={service.to === '/marketplace' ? 'Shop' : service.to === '/protection' ? 'Protect' : undefined}
+                />
+              ))}
+            </div>
+          </motion.section>
 
           <motion.div variants={item}>
             <div className="flex items-center justify-between px-0.5">
@@ -294,9 +317,9 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        <aside className="hidden space-y-4 lg:col-span-4 lg:block">
-          <motion.div variants={item}>
-            <div className="overflow-hidden rounded-2xl border border-mint/15 bg-gradient-to-br from-mint/[0.06] to-transparent p-5">
+        <aside className="space-y-4 lg:col-span-4">
+          <motion.div variants={item} className="lg:block">
+            <div className="overflow-hidden rounded-2xl border border-mint/15 bg-gradient-to-br from-mint/[0.06] to-transparent p-4 sm:p-5">
               <div className="flex items-center gap-3">
                 <TrustRing score={score} className={tone.ring} />
                 <div className="min-w-0">
@@ -304,9 +327,10 @@ export default function Dashboard() {
                   <Badge variant={tone.badge} className="mt-1">
                     {tone.label}
                   </Badge>
-                  <p className="mt-2 text-xs leading-relaxed text-muted">
+                  <p className="mt-2 hidden text-xs leading-relaxed text-muted sm:block">
                     Callbacks, recoveries, and protected transfers keep your score healthy.
                   </p>
+                  <p className="mt-1 text-xs text-muted sm:hidden">Protected transfers keep you safe.</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
@@ -317,6 +341,7 @@ export default function Dashboard() {
               </div>
               <Link
                 href="/protection"
+                prefetch
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold transition hover:border-mint/30 hover:text-mint"
               >
                 Protection hub
@@ -327,6 +352,7 @@ export default function Dashboard() {
           <motion.div variants={item}>
             <Link
               href="/cards"
+              prefetch
               className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 transition hover:border-mint/30"
             >
               <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-mint/10 text-mint">
@@ -355,36 +381,40 @@ export default function Dashboard() {
 Dashboard.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
 
 function QuickAction({
-  href,
-  label,
-  Icon,
+  service,
   primary = false,
   soon = false,
+  shortLabel,
 }: {
-  href: string
-  label: string
-  Icon: (p: { size?: number; className?: string }) => JSX.Element
+  service: AppService
   primary?: boolean
   soon?: boolean
+  shortLabel?: string
 }) {
+  const { to, label, Icon, hint } = service
+  const display = shortLabel ?? label
+
   return (
     <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
       <Link
-        href={href}
-        title={soon ? `${label} — coming soon` : label}
-        className={`elevate relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition ${
+        href={to}
+        prefetch
+        title={soon ? `${label} — coming soon` : hint}
+        className={`elevate relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-1.5 py-3 text-center transition sm:px-2 ${
           primary
             ? 'border-mint/30 bg-mint text-white shadow-[0_12px_28px_-16px_rgba(9,79,57,0.5)] hover:bg-mint-strong'
             : 'border-line bg-surface hover:border-mint/30'
         }`}
       >
         {soon && (
-          <span className="absolute right-1.5 top-1.5 rounded-md bg-amber/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber">
+          <span className="absolute right-1 top-1 rounded-md bg-amber/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber">
             Soon
           </span>
         )}
         <Icon size={20} className={primary ? 'text-white' : 'text-mint'} />
-        <span className={`text-[11px] font-semibold ${primary ? 'text-white' : 'text-text'}`}>{label}</span>
+        <span className={`max-w-full truncate text-[11px] font-semibold ${primary ? 'text-white' : 'text-text'}`}>
+          {display}
+        </span>
       </Link>
     </motion.div>
   )

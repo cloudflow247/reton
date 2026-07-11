@@ -101,7 +101,7 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
       <Card className={`space-y-3 ${compact ? 'p-4' : 'p-5'}`}>
         <p className="text-sm font-semibold">Activate your deposit account</p>
         <p className="text-xs text-muted">
-          Enter the OTP ALATPay sent to the phone on your BVN.
+          Enter the one-time code sent to the phone on your BVN.
         </p>
         {flash.success && <p className="text-xs text-mint">{flash.success}</p>}
         <form onSubmit={verifyOtp} className="flex flex-wrap gap-2">
@@ -128,7 +128,7 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
         <div>
           <p className="text-sm font-semibold text-text">Permanent bank account</p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            Get a personal ALATPay number for unlimited transfers. Your tier sets limits (
+            Get a personal Reton deposit number for unlimited transfers. Your tier sets limits (
             {ngn(kyc.limits.wallet_balance_max)} balance cap).
           </p>
         </div>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import type { SharedProps } from '@/types'
 import { useAdminBase } from '@/lib/admin'
 import { PAGE_SPRING } from '@/components/page-kit'
+import { ServicesSheet } from '@/components/ServicesSheet'
 import { Wordmark } from './ui'
 import { ProfileMenu } from './ProfileMenu'
 import {
@@ -14,13 +15,24 @@ import {
   ChatIcon,
   ChevronDownIcon,
   GiftIcon,
+  GridIcon,
   HomeIcon,
   LockIcon,
-  PlusIcon,
   SendIcon,
   ShieldIcon,
   UserIcon,
 } from './icons'
+
+const servicesHighlightPaths = [
+  '/withdraw',
+  '/bills',
+  '/cards',
+  '/protection',
+  '/marketplace',
+  '/support',
+  '/pin',
+  '/add-money',
+]
 
 type NavItem = {
   to: string
@@ -31,11 +43,11 @@ type NavItem = {
   feature?: keyof SharedProps['features']
 }
 
-/** Always visible — core money actions with labels. */
+/** Always visible on desktop — core money actions with labels. */
 const primaryNav: NavItem[] = [
   { to: '/dashboard', label: 'Home', end: true, Icon: HomeIcon, hint: 'Wallet & overview' },
   { to: '/send', label: 'Send', Icon: SendIcon, hint: 'Transfer money' },
-  { to: '/withdraw', label: 'Withdraw', Icon: BankIcon, hint: 'Cash out to bank', feature: 'withdraw' },
+  { to: '/withdraw', label: 'Cash out', Icon: BankIcon, hint: 'Withdraw to bank', feature: 'withdraw' },
   { to: '/bills', label: 'Bills', Icon: BillIcon, hint: 'Airtime, power & more', feature: 'bills' },
   { to: '/cards', label: 'Cards', Icon: CardIcon, hint: 'Virtual cards', feature: 'cards' },
 ]
@@ -49,12 +61,10 @@ const moreNav: NavItem[] = [
 
 const dockLeft: NavItem[] = [
   { to: '/dashboard', label: 'Home', end: true, Icon: HomeIcon },
-  { to: '/bills', label: 'Bills', Icon: BillIcon, feature: 'bills' },
+  { to: '/activity', label: 'Activity', Icon: ActivityIcon },
 ]
-const dockRight: NavItem[] = [
-  { to: '/add-money', label: 'Add', Icon: PlusIcon },
-  { to: '/profile', label: 'Me', Icon: UserIcon },
-]
+
+const dockRight: NavItem[] = [{ to: '/profile', label: 'Me', Icon: UserIcon }]
 
 export function AppShell({ children }: { children: ReactNode }) {
   const page = usePage<SharedProps>()
@@ -64,15 +74,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = page.url.split('?')[0]
   const needsPin = !user?.has_transaction_pin
   const [moreOpen, setMoreOpen] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
 
   const active = (to: string, end?: boolean) => (end ? pathname === to : pathname.startsWith(to))
   const moreActive = moreNav.some(({ to, end }) => active(to, end))
+  const servicesActive =
+    servicesOpen ||
+    servicesHighlightPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
   const isSoon = (feature?: keyof SharedProps['features']) =>
     feature !== undefined && features?.[feature] === false
 
   useEffect(() => {
     setMoreOpen(false)
+    setServicesOpen(false)
   }, [pathname])
 
   useEffect(() => {
@@ -137,6 +152,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       key={to}
                       href={to}
                       role="menuitem"
+                      prefetch
                       onClick={() => setMoreOpen(false)}
                       className={`flex items-start gap-3 rounded-xl px-3 py-2.5 transition ${
                         on ? 'bg-mint/[0.1] text-mint' : 'text-text hover:bg-surface-2'
@@ -161,7 +177,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </nav>
 
-        <div className="relative z-20 flex shrink-0 items-center gap-1">
+        <div className="relative z-20 ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
           {user?.is_admin && page.props.adminPath && (
             <Link
               href={adminBase}
@@ -241,11 +257,45 @@ export function AppShell({ children }: { children: ReactNode }) {
             </motion.span>
           </Link>
 
+          <button
+            type="button"
+            onClick={() => setServicesOpen(true)}
+            aria-expanded={servicesOpen}
+            aria-haspopup="dialog"
+            className={`relative flex min-w-[3.5rem] flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[10px] font-semibold transition-colors ${
+              servicesActive ? 'text-mint' : 'text-muted'
+            }`}
+          >
+            <span
+              className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition ${
+                servicesActive ? 'bg-mint/15 text-mint' : 'text-muted'
+              }`}
+            >
+              <GridIcon size={20} />
+            </span>
+            Services
+            {servicesActive && (
+              <motion.span
+                layoutId="dock-dot"
+                className="absolute bottom-1 h-1 w-1 rounded-full bg-mint"
+                transition={PAGE_SPRING}
+              />
+            )}
+          </button>
+
           {dockRight.map((n) => (
             <DockItem key={n.to} {...n} on={active(n.to, n.end)} soon={isSoon(n.feature)} />
           ))}
         </div>
       </nav>
+
+      <ServicesSheet
+        open={servicesOpen}
+        onClose={() => setServicesOpen(false)}
+        features={features}
+        pathname={pathname}
+        needsPin={needsPin}
+      />
     </div>
   )
 }
@@ -255,6 +305,7 @@ function NavLink({ item, on, soon }: { item: NavItem; on: boolean; soon?: boolea
   return (
     <Link
       href={to}
+      prefetch
       title={soon ? `${label} — coming soon` : (item.hint ?? label)}
       className="relative shrink-0 rounded-full px-3 py-2 text-sm font-medium"
     >
@@ -299,6 +350,7 @@ function DockItem({
   return (
     <Link
       href={to}
+      prefetch
       className={`relative flex min-w-[3.5rem] flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[10px] font-semibold transition-colors ${
         on ? 'text-mint' : 'text-muted'
       }`}

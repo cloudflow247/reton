@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
-import { AlatMark } from '@/components/PoweredByAlat'
 import { BvnVerificationGate } from '@/components/BvnVerificationGate'
 import { StaticWalletCard } from '@/components/StaticWalletCard'
 import { Page, PageHero } from '@/components/page-kit'
@@ -35,9 +34,9 @@ const methods: {
 }[] = [
   {
     id: 'alatpay_checkout',
-    title: 'Pay with ALATPay',
+    title: 'Secure checkout',
     subtitle: 'Card, transfer, USSD & more',
-    detail: 'Secure hosted checkout — pick any ALATPay channel.',
+    detail: 'Encrypted hosted checkout — pick any channel you prefer.',
     icon: ShieldIcon,
     highlight: true,
   },
@@ -59,7 +58,7 @@ const methods: {
 
 const methodLabel: Record<DepositMethod, string> = {
   bank_transfer: 'Bank transfer',
-  alatpay_checkout: 'ALATPay checkout',
+  alatpay_checkout: 'Secure checkout',
   alatpay_card: 'Card payment',
 }
 
@@ -137,7 +136,7 @@ export default function AddMoney() {
         <PageHero
           icon={PlusIcon}
           title="Add money"
-          subtitle="Fund your wallet — bank transfer, card, or ALATPay checkout."
+          subtitle="Fund your wallet — bank transfer, card, or secure checkout."
           balance={wallet?.available_balance}
           tone="mint"
         />
@@ -211,7 +210,7 @@ export default function AddMoney() {
                           selected ? 'bg-mint text-white' : 'bg-surface text-muted'
                         }`}
                       >
-                        {option.id === 'alatpay_checkout' ? <AlatMark size={28} /> : <Icon size={18} />}
+                        <Icon size={18} />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2">
@@ -249,7 +248,7 @@ export default function AddMoney() {
               )}
               {method === 'alatpay_checkout' && (
                 <>
-                  <ShieldIcon size={18} /> Continue to ALATPay
+                  <ShieldIcon size={18} /> Continue to secure checkout
                 </>
               )}
               {method === 'alatpay_card' && (
@@ -263,16 +262,18 @@ export default function AddMoney() {
               <LockIcon size={13} className="shrink-0" />
               {method === 'bank_transfer'
                 ? 'Your transfer details are saved — you can leave and return from this page anytime.'
-                : 'You will be redirected to ALATPay’s secure checkout. We never see your card or bank login.'}
+                : 'You will be redirected to a secure checkout. We never see your card or bank login.'}
             </p>
           </form>
         </Card>
 
         <Card className="flex items-center gap-3 p-4">
-          <AlatMark size={36} />
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mint/10 text-mint">
+            <ShieldIcon size={18} />
+          </span>
           <p className="text-xs leading-relaxed text-muted">
-            Settlement is powered by <span className="font-medium text-text">ALAT by Wema</span> — a licensed bank rail.
-            Every deposit is ledger-backed and reconciled.
+            Every deposit is <span className="font-medium text-text">ledger-backed</span>, encrypted in transit, and
+            reconciled automatically — security first.
           </p>
         </Card>
           </>
@@ -351,12 +352,12 @@ function CheckoutPendingPanel({ deposit, onDismiss }: { deposit: Deposit; onDism
       <Card className="space-y-4 p-6">
         <div className="flex items-start gap-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint/10 text-mint">
-            {isCard ? <CardIcon size={22} /> : <AlatMark size={32} />}
+            {isCard ? <CardIcon size={22} /> : <ShieldIcon size={22} />}
           </span>
           <div>
             <h2 className="font-display text-lg font-bold">Complete your payment</h2>
             <p className="mt-1 text-sm text-muted">
-              {ngn(deposit.amount)} · {isCard ? 'card checkout' : 'ALATPay checkout'}
+              {ngn(deposit.amount)} · {isCard ? 'card checkout' : 'secure checkout'}
             </p>
           </div>
         </div>
@@ -368,7 +369,7 @@ function CheckoutPendingPanel({ deposit, onDismiss }: { deposit: Deposit; onDism
 
         <a href={payUrl} className="btn flex w-full items-center justify-center gap-2 bg-mint py-3 text-sm text-white hover:bg-mint-strong">
           {isCard ? <CardIcon size={18} /> : <ShieldIcon size={18} />}
-          {isCard ? 'Continue to card checkout' : 'Continue to ALATPay'}
+          {isCard ? 'Continue to card checkout' : 'Continue to secure checkout'}
         </a>
 
         <p className="rounded-xl border border-amber/25 bg-amber/5 px-3 py-2 text-xs text-muted">
@@ -424,7 +425,7 @@ function SuccessPanel({ deposit, onDismiss }: { deposit: Deposit; onDismiss: () 
             )}
             {(deposit.provider_reference || bank?.provider_reference) && (
               <p className="font-mono text-[11px] text-muted">
-                Provider ref {deposit.provider_reference ?? bank?.provider_reference}
+                Payment ref {deposit.provider_reference ?? bank?.provider_reference}
               </p>
             )}
             <p className="font-mono text-[11px] text-muted">Reton ref {deposit.reference}</p>

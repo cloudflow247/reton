@@ -92,12 +92,12 @@ export function BvnVerificationGate({
               {step === 'otp'
                 ? otpHint ??
                   (demoMode
-                    ? 'Demo mode: use code 123456. No SMS is sent when ALATPay driver is fake.'
-                    : 'ALATPay sent a one-time code to the phone linked to your BVN. Enter it below to unlock wallet funding.')
+                    ? 'Demo mode: use code 123456. No SMS is sent in demo.'
+                    : 'We sent a one-time code to the phone linked to your BVN. Enter it below to unlock wallet funding.')
                 : usesAlatpay
                   ? demoMode
-                    ? 'Demo ALATPay BVN check — you will confirm with code 123456 (no SMS).'
-                    : 'ALATPay verifies your BVN and sends a one-time code to your registered phone. Your BVN is encrypted at rest.'
+                    ? 'Demo BVN check — you will confirm with code 123456 (no SMS).'
+                    : 'We verify your BVN and send a one-time code to your registered phone. Your BVN is encrypted at rest.'
                   : 'Verify your identity before funding your wallet. Your BVN is encrypted at rest.'}
             </p>
           </div>
@@ -140,7 +140,7 @@ export function BvnVerificationGate({
                   ? `${bvnDigits}/11 digits`
                   : demoMode
                     ? 'Demo: any valid-looking 11 digits works with code 123456'
-                    : 'Must be your real BVN — ALATPay texts the phone on that record'
+                    : 'Must be your real BVN — we text the phone on that record'
               }
             />
 
@@ -167,7 +167,7 @@ export function BvnVerificationGate({
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border-line text-mint focus:ring-mint/30"
               />
               <span className="text-xs leading-relaxed text-muted">
-                I consent to Reton verifying my BVN with {usesAlatpay ? 'ALATPay' : 'our licensed identity partner'}{' '}
+                I consent to Reton verifying my BVN with our licensed identity partner{' '}
                 under NDPR. My BVN is encrypted at rest and never stored in plain text.
               </span>
             </label>
@@ -216,7 +216,7 @@ export function BvnVerificationGate({
               value={otpForm.data.otp}
               onChange={(e) => otpForm.setData('otp', e.target.value.replace(/\D/g, '').slice(0, 8))}
               error={otpForm.errors.otp}
-              hint={demoMode ? 'Demo code: 123456' : 'Check the SMS from ALATPay'}
+              hint={demoMode ? 'Demo code: 123456' : 'Check the SMS on your BVN phone'}
             />
 
             <Button type="submit" loading={otpForm.processing} disabled={!canSubmitOtp} className="w-full">
