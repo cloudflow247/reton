@@ -16,6 +16,9 @@ Route::middleware('throttle:60,1')->group(function (): void {
     Route::post('/users', [AdminUsersController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [AdminUsersController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminUsersController::class, 'destroy'])->name('users.destroy');
+    Route::post('/users/{user}/rebind-provider-email', [AdminUsersController::class, 'rebindProviderEmail'])
+        ->middleware('throttle:12,1')
+        ->name('users.rebind-provider-email');
     Route::get('/integrations', [AdminIntegrationsController::class, 'index'])->name('integrations');
     Route::post('/integrations/save', [AdminIntegrationsController::class, 'update'])->name('integrations.update');
     Route::post('/integrations/{integration}/test', [AdminIntegrationsController::class, 'test'])->name('integrations.test');

@@ -57,6 +57,12 @@ interface AlatpayGateway
      */
     public function listStaticAccounts(int $page = 1, int $limit = 50, int $status = 1): array;
 
+    /**
+     * Update the contact email on an existing static wallet (Wema bank alerts).
+     * Used to move alerts from a customer inbox onto the merchant/CEO alias.
+     */
+    public function updateStaticAccountEmail(string $staticWalletId, string $email): void;
+
     /** @return array<int, StaticAccountTransaction> */
     public function fetchStaticAccountTransactions(
         string $accountNumber,

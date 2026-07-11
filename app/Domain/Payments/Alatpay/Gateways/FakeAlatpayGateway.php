@@ -284,6 +284,21 @@ class FakeAlatpayGateway implements AlatpayGateway
         return $summaries;
     }
 
+    public function updateStaticAccountEmail(string $staticWalletId, string $email): void
+    {
+        $email = strtolower(trim($email));
+        $wallet = $this->staticWallets[$staticWalletId]
+            ?? $this->cachedStaticWallets()[$staticWalletId]
+            ?? null;
+
+        if (! is_array($wallet)) {
+            throw AlatpayException::requestFailed('updateStaticAccountEmail', 404, 'Static wallet not found.');
+        }
+
+        $wallet['email'] = $email;
+        $this->rememberStaticWallet($staticWalletId, $wallet);
+    }
+
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
     {
         if ($request->otp !== '123456') {

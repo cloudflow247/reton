@@ -446,6 +446,86 @@ class HttpAlatpayGateway implements AlatpayGateway
     }
 
     /**
+     * Attempt to move Wema bank alerts onto the merchant/CEO contact email.
+     * ALATPay does not publicly document this endpoint — we try known update
+     * shapes and surface a clear support message when the provider rejects them.
+     */
+    public function updateStaticAccountEmail(string $staticWalletId, string $email): void
+    {
+        $this->assertConfigured('updateStaticAccountEmail');
+
+        $email = strtolower(trim($email));
+        $payload = array_filter([
+            'businessId' => (string) config('services.alatpay.business_id'),
+            'id' => $staticWalletId,
+            'staticWalletId' => $staticWalletId,
+            'email' => $email,
+        ], static fn (mixed $value): bool => $value !== null && $value !== '');
+
+        $attempts = [
+            ['method' => 'put', 'path' => '/alatpay-wallet/api/v1/staticaccount'],
+            ['method' => 'post', 'path' => '/alatpay-wallet/api/v1/staticaccount/update'],
+            ['method' => 'patch', 'path' => '/alatpay-wallet/api/v1/staticaccount/'.$staticWalletId],
+        ];
+
+        $lastStatus = 0;
+        $lastMessage = null;
+
+        foreach ($attempts as $attempt) {
+            try {
+                $response = $this->sendWithSessionRetry(
+                    fn () => match ($attempt['method']) {
+                        'put' => $this->client()->put($attempt['path'], $payload),
+                        'patch' => $this->client()->patch($attempt['path'], $payload),
+                        default => $this->client()->post($attempt['path'], $payload),
+                    },
+                );
+            } catch (ConnectionException|RequestException $e) {
+                throw AlatpayException::requestFailed(
+                    'updateStaticAccountEmail',
+                    503,
+                    'Could not reach ALATPay while updating the deposit-account contact email.',
+                );
+            }
+
+            $body = $response->json();
+            $lastStatus = $response->status();
+            $lastMessage = $this->extractErrorMessage(is_array($body) ? $body : null);
+
+            if ($response->successful()) {
+                $data = $this->unwrapPayload($body);
+                $root = is_array($body) ? $body : [];
+
+                if (! $this->looksLikeSoftFailure($root, is_array($data) ? $data : [])) {
+                    Log::info('ALATPay updateStaticAccountEmail succeeded', [
+                        'static_wallet_id' => $staticWalletId,
+                        'path' => $attempt['path'],
+                        'method' => $attempt['method'],
+                    ]);
+
+                    return;
+                }
+            }
+
+            if (in_array($response->status(), [404, 405, 501], true)) {
+                continue;
+            }
+        }
+
+        Log::warning('ALATPay updateStaticAccountEmail unsupported or rejected', [
+            'static_wallet_id' => $staticWalletId,
+            'status' => $lastStatus,
+            'message' => $lastMessage,
+        ]);
+
+        throw AlatpayException::requestFailed(
+            'updateStaticAccountEmail',
+            $lastStatus > 0 ? $lastStatus : 400,
+            $lastMessage ?? 'ALATPay does not allow updating this contact email via API. Ask ALATPay support to set it.',
+        );
+    }
+
+    /**
      * When ALATPay says the BVN already has an Individual wallet, reuse the
      * existing active account that matches any candidate contact email.
      */

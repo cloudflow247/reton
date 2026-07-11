@@ -106,6 +106,18 @@ export default function Users() {
     })
   }
 
+  function rebindProviderEmail(user: UserRow) {
+    if (
+      !window.confirm(
+        `Move Wema/ALATPay bank alerts for ${user.email} onto the Reton merchant (CEO) inbox? The customer will only receive Reton alerts.`,
+      )
+    ) {
+      return
+    }
+
+    router.post(buildAdminUrl(adminBase, `users/${user.id}/rebind-provider-email`), {}, { preserveScroll: true })
+  }
+
   const actionError =
     (typeof errors.user === 'string' ? errors.user : errors.user?.[0]) ??
     (typeof errors.email === 'string' ? errors.email : errors.email?.[0])
@@ -242,6 +254,14 @@ export default function Users() {
                       <div className="flex flex-wrap gap-2">
                         <button type="button" className="text-xs font-semibold text-mint hover:underline" onClick={() => openEdit(user)}>
                           Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-mint hover:underline"
+                          onClick={() => rebindProviderEmail(user)}
+                          title="Move Wema bank alerts to the CEO merchant inbox"
+                        >
+                          Rebind alerts
                         </button>
                         <button type="button" className="text-xs font-semibold text-danger hover:underline" onClick={() => removeUser(user)}>
                           Remove

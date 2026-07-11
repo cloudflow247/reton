@@ -5,18 +5,24 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Admin;
 
 use App\Domain\Auth\Services\UserAdminService;
+use App\Domain\Payments\Data\ProviderContactRebindResult;
+use App\Domain\Payments\Services\ProviderContactRebindService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminStoreUserRequest;
 use App\Http\Requests\Admin\AdminUpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AdminUsersController extends Controller
 {
-    public function __construct(private readonly UserAdminService $users) {}
+    public function __construct(
+        private readonly UserAdminService $users,
+        private readonly ProviderContactRebindService $providerContact,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -87,6 +93,26 @@ class AdminUsersController extends Controller
         $this->users->delete($request->user(), $user, $request->ip());
 
         return back()->with('success', 'User removed and access revoked.');
+    }
+
+    public function rebindProviderEmail(Request $request, string $adminPrefix, User $user): RedirectResponse
+    {
+        unset($adminPrefix);
+
+        $this->authorize('update', $user);
+
+        try {
+            $result = $this->providerContact->rebindForUser($user, dryRun: false, actorIp: $request->ip());
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+
+        if ($result->status === ProviderContactRebindResult::STATUS_NEEDS_SUPPORT
+            || $result->status === ProviderContactRebindResult::STATUS_MISSING_ACCOUNT) {
+            return back()->with('error', $result->message);
+        }
+
+        return back()->with('success', $result->message);
     }
 
     /**
