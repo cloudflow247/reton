@@ -265,7 +265,10 @@ class HttpAlatpayGateway implements AlatpayGateway
             $message = $this->extractErrorMessage($payload);
 
             if ($this->isDuplicateIndividualBvnMessage($message)) {
-                $recovered = $this->recoverExistingIndividualAccount($request->email);
+                $recovered = $this->recoverExistingIndividualAccount(
+                    $request->email,
+                    ...$request->recoveryEmails,
+                );
 
                 if ($recovered !== null) {
                     return $recovered;
@@ -286,7 +289,10 @@ class HttpAlatpayGateway implements AlatpayGateway
             $message = $this->extractErrorMessage($payload) ?? 'ALATPay rejected the BVN request.';
 
             if ($this->isDuplicateIndividualBvnMessage($message)) {
-                $recovered = $this->recoverExistingIndividualAccount($request->email);
+                $recovered = $this->recoverExistingIndividualAccount(
+                    $request->email,
+                    ...$request->recoveryEmails,
+                );
 
                 if ($recovered !== null) {
                     return $recovered;
@@ -441,13 +447,16 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     /**
      * When ALATPay says the BVN already has an Individual wallet, reuse the
-     * existing active account that matches the caller's email.
+     * existing active account that matches any candidate contact email.
      */
-    private function recoverExistingIndividualAccount(?string $email): ?StaticAccountProvisionResponse
+    private function recoverExistingIndividualAccount(?string ...$emails): ?StaticAccountProvisionResponse
     {
-        $email = strtolower(trim((string) $email));
+        $candidates = array_values(array_unique(array_filter(array_map(
+            static fn (?string $email): string => strtolower(trim((string) $email)),
+            $emails,
+        ))));
 
-        if ($email === '') {
+        if ($candidates === []) {
             return null;
         }
 
@@ -464,7 +473,9 @@ class HttpAlatpayGateway implements AlatpayGateway
                         continue;
                     }
 
-                    if (strtolower(trim((string) $account->email)) !== $email) {
+                    $accountEmail = strtolower(trim((string) $account->email));
+
+                    if ($accountEmail === '' || ! in_array($accountEmail, $candidates, true)) {
                         continue;
                     }
 
@@ -488,7 +499,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             }
         } catch (AlatpayException|ConnectionException|RequestException $e) {
             Log::warning('ALATPay could not recover existing Individual static account', [
-                'email' => $email,
+                'emails' => $candidates,
                 'error' => $e->getMessage(),
             ]);
         }

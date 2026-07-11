@@ -6,6 +6,7 @@ import { FormPanel, Page, PageHero, SectionLabel } from '@/components/page-kit'
 import { Button, Pill } from '@/components/ui'
 import {
   BankIcon,
+  BellIcon,
   CheckIcon,
   ChevronRightIcon,
   LockIcon,
@@ -24,19 +25,61 @@ type ProfileProps = PageProps<{
   bvnOtpHint?: string | null
   bvnProvider?: string
   bvnDemoMode?: boolean
+  smsAlertFeeMinor?: number
 }>
 
 export default function Profile() {
-  const { auth, flash, kyc, bvnPendingOtp, bvnOtpHint, bvnProvider, bvnDemoMode } = usePage<ProfileProps>().props
+  const {
+    auth,
+    flash,
+    kyc,
+    bvnPendingOtp,
+    bvnOtpHint,
+    bvnProvider,
+    bvnDemoMode,
+    smsAlertFeeMinor = 600,
+  } = usePage<ProfileProps>().props
   const user = auth.user
   const wallet = auth.wallets[0]
   const initial = user?.name?.trim().charAt(0).toUpperCase() || '?'
+  const smsFeeLabel = ngn(smsAlertFeeMinor)
 
   const tier3 = useForm({ nin: '', address_line1: '', city: '', state: '', identity_consent: false })
+  const notifications = useForm({
+    notify_email: user?.notify_email ?? true,
+    notify_sms: user?.notify_sms ?? false,
+  })
 
   function submitTier3(e: FormEvent) {
     e.preventDefault()
     tier3.post('/profile/kyc/tier-3', { preserveScroll: true })
+  }
+
+  function toggleEmail(next: boolean) {
+    notifications.transform(() => ({
+      notify_email: next,
+      notify_sms: notifications.data.notify_sms,
+    })).put('/profile/notifications', {
+      preserveScroll: true,
+      onSuccess: () => notifications.setData('notify_email', next),
+    })
+  }
+
+  function toggleSms(next: boolean) {
+    if (next) {
+      const ok = window.confirm(
+        `SMS alerts cost ${smsFeeLabel} per message, deducted from your Reton wallet when an alert is sent. Continue?`,
+      )
+      if (!ok) return
+    }
+
+    notifications.transform(() => ({
+      notify_email: notifications.data.notify_email,
+      notify_sms: next,
+    })).put('/profile/notifications', {
+      preserveScroll: true,
+      onSuccess: () => notifications.setData('notify_sms', next),
+    })
   }
 
   return (
@@ -51,6 +94,9 @@ export default function Profile() {
 
       {flash.success && (
         <p className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
+      )}
+      {flash.error && (
+        <p className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
       )}
 
       <FormPanel>
@@ -234,6 +280,36 @@ export default function Profile() {
           />
       </FormPanel>
 
+      <SectionLabel>Notifications</SectionLabel>
+      <FormPanel className="!space-y-0 !p-0">
+        <p className="border-b border-line px-5 py-3 text-xs leading-relaxed text-muted">
+          Transaction alerts come from Reton only — not from your bank. Email is free. SMS is charged per alert.
+        </p>
+        <PreferenceToggle
+          icon={<MailIcon size={18} />}
+          label="Email alerts"
+          sub="Credits, debits, and account notices — free"
+          checked={notifications.data.notify_email}
+          disabled={notifications.processing}
+          onChange={toggleEmail}
+          error={notifications.errors.notify_email}
+        />
+        <PreferenceToggle
+          icon={<BellIcon size={18} />}
+          label="SMS alerts"
+          sub={`Off by default · ${smsFeeLabel} per SMS when enabled`}
+          checked={notifications.data.notify_sms}
+          disabled={notifications.processing || !user?.phone}
+          onChange={toggleSms}
+          error={notifications.errors.notify_sms}
+        />
+        {!user?.phone && (
+          <p className="border-t border-line px-5 py-3 text-xs text-amber">
+            Add a phone number to your account before enabling SMS alerts.
+          </p>
+        )}
+      </FormPanel>
+
       <SectionLabel>Security</SectionLabel>
       <FormPanel className="divide-y divide-line !space-y-0 !p-0">
           <LinkRow
@@ -265,6 +341,53 @@ function VerifyPill({ ok, label }: { ok: boolean; label: string }) {
     </Pill>
   ) : (
     <Pill tone="amber">{label} unverified</Pill>
+  )
+}
+
+function PreferenceToggle({
+  icon,
+  label,
+  sub,
+  checked,
+  disabled,
+  onChange,
+  error,
+}: {
+  icon: ReactNode
+  label: string
+  sub: string
+  checked: boolean
+  disabled?: boolean
+  onChange: (next: boolean) => void
+  error?: string
+}) {
+  return (
+    <div className="flex items-start gap-3 border-t border-line px-5 py-4 first:border-t-0">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint/10 text-mint">
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-text">{label}</span>
+        <span className="block text-xs text-muted">{sub}</span>
+        {error && <span className="mt-1 block text-xs text-danger">{error}</span>}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+          checked ? 'bg-mint' : 'bg-line'
+        } disabled:opacity-50`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 size-6 rounded-full bg-white shadow transition ${
+            checked ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        />
+      </button>
+    </div>
   )
 }
 

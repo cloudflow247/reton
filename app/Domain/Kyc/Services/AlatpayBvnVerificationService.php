@@ -15,6 +15,7 @@ use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Enums\StaticWalletType;
 use App\Domain\Payments\Services\StaticAccountService;
 use App\Models\User;
+use App\Support\Banking\ProviderContactEmail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -98,8 +99,9 @@ class AlatpayBvnVerificationService
             $response = $this->gateway->provisionStaticAccount(new StaticAccountRequest(
                 walletType: StaticWalletType::Individual->providerCode(),
                 bvn: $bvn,
-                email: (string) $user->email,
+                email: ProviderContactEmail::forUser($user),
                 reference: 'BVN-'.Str::upper((string) Str::ulid()),
+                recoveryEmails: ProviderContactEmail::recoveryCandidates($user),
             ));
         } catch (AlatpayException $e) {
             if ($e->isDuplicateIndividualBvn()) {
@@ -186,8 +188,9 @@ class AlatpayBvnVerificationService
             $response = $this->gateway->provisionStaticAccount(new StaticAccountRequest(
                 walletType: StaticWalletType::Individual->providerCode(),
                 bvn: $bvn,
-                email: (string) $user->email,
+                email: ProviderContactEmail::forUser($user),
                 reference: 'BVN-RS-'.Str::upper((string) Str::ulid()),
+                recoveryEmails: ProviderContactEmail::recoveryCandidates($user),
             ));
         } catch (AlatpayException $e) {
             $this->audit->record($user, 'bvn', $this->providerName(), 'failed', 'resend_failed', $ipAddress);

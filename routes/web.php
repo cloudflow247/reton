@@ -203,6 +203,9 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
     Route::get('/activity/{entry}', [ActivityController::class, 'show'])->name('activity.show');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile/notifications', [ProfileController::class, 'updateNotifications'])
+        ->middleware('throttle:12,1')
+        ->name('profile.notifications');
     Route::post('/profile/kyc/tier-3', [KycController::class, 'upgradeTier3'])->middleware('throttle:6,1')->name('profile.kyc.tier3');
 
     // Virtual cards (Bridgecard NGN & USD)

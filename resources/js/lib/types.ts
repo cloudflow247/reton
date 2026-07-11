@@ -9,6 +9,8 @@ export type User = {
   phone_verified: boolean
   has_transaction_pin: boolean
   is_admin?: boolean
+  notify_email?: boolean
+  notify_sms?: boolean
 }
 
 export type KycProfile = {

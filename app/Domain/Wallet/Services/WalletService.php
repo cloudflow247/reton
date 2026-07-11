@@ -15,6 +15,7 @@ use App\Domain\Ledger\Services\SystemAccountResolver;
 use App\Domain\Wallet\Exceptions\InsufficientFundsException;
 use App\Domain\Wallet\Exceptions\WalletCurrencyMismatchException;
 use App\Domain\Wallet\Models\Wallet;
+use App\Events\Wallet\WalletFundsMoved;
 use App\Support\Money\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -85,9 +86,14 @@ class WalletService
     {
         $this->assertCurrency($wallet, $amount);
 
+        $replay = $this->ledger->findByIdempotencyKey($idempotencyKey);
+        if ($replay !== null) {
+            return $replay;
+        }
+
         $cash = $this->system->resolve(SystemAccount::Cash, $wallet->currency);
 
-        return $this->ledger->post(
+        $transaction = $this->ledger->post(
             PostingDraft::for(TransactionType::WalletFunding)
                 ->describedAs($description ?: 'Wallet funding')
                 ->idempotentBy($idempotencyKey)
@@ -95,6 +101,10 @@ class WalletService
                 ->debit($cash, $amount)
                 ->credit($wallet->ledger_account_id, $amount)
         );
+
+        $this->announce($wallet, $transaction, 'credit', $amount);
+
+        return $transaction;
     }
 
     /**
@@ -110,7 +120,7 @@ class WalletService
             return $replay;
         }
 
-        return DB::transaction(function () use ($wallet, $amount, $idempotencyKey, $metadata): Transaction {
+        $transaction = DB::transaction(function () use ($wallet, $amount, $idempotencyKey, $metadata): Transaction {
             $this->assertSufficientFunds($wallet, $amount);
 
             $settlement = $this->system->resolve(SystemAccount::SettlementPayable, $wallet->currency);
@@ -124,6 +134,10 @@ class WalletService
                     ->credit($settlement, $amount)
             );
         });
+
+        $this->announce($wallet, $transaction, 'debit', $amount);
+
+        return $transaction;
     }
 
     /**
@@ -140,7 +154,7 @@ class WalletService
             return $replay;
         }
 
-        return DB::transaction(function () use ($from, $to, $amount, $idempotencyKey, $metadata): Transaction {
+        $transaction = DB::transaction(function () use ($from, $to, $amount, $idempotencyKey, $metadata): Transaction {
             $this->assertSufficientFunds($from, $amount);
 
             return $this->ledger->post(
@@ -155,6 +169,11 @@ class WalletService
                     ->credit($to->ledger_account_id, $amount)
             );
         });
+
+        $this->announce($from, $transaction, 'debit', $amount);
+        $this->announce($to, $transaction, 'credit', $amount);
+
+        return $transaction;
     }
 
     /**
@@ -237,6 +256,11 @@ class WalletService
                     ->credit($sender->ledger_account_id, $amount)
             );
         });
+    }
+
+    private function announce(Wallet $wallet, Transaction $transaction, string $direction, Money $amount): void
+    {
+        WalletFundsMoved::dispatch($wallet, $transaction, $direction, $amount);
     }
 
     private function assertCurrency(Wallet $wallet, Money $amount): void

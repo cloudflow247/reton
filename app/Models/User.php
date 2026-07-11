@@ -43,6 +43,16 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'status',
         'is_admin',
+        'notify_email',
+        'notify_sms',
+    ];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'notify_email' => true,
+        'notify_sms' => false,
     ];
 
     /**
@@ -66,8 +76,20 @@ class User extends Authenticatable implements MustVerifyEmail
             'pin_locked_until' => 'datetime',
             'pin_attempts' => 'integer',
             'is_admin' => 'boolean',
+            'notify_email' => 'boolean',
+            'notify_sms' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    public function wantsEmailAlerts(): bool
+    {
+        return (bool) $this->notify_email;
+    }
+
+    public function wantsSmsAlerts(): bool
+    {
+        return (bool) $this->notify_sms;
     }
 
     /** @return MorphMany<Wallet, $this> */

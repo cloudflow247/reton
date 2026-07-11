@@ -184,36 +184,44 @@ class FakeAlatpayGateway implements AlatpayGateway
                     ?? $this->cachedStaticWallets()[$existingId]
                     ?? null;
 
-                if (is_array($existing) && ($existing['email'] ?? null) === $email) {
-                    // Still awaiting OTP — allow a fresh tracking id (resend).
-                    if (($existing['otpTrackingId'] ?? null) !== null) {
-                        $otpTrackingId = 'OTP-RESEND-'.substr(preg_replace('/\D/', '', (string) Str::ulid()).'000000', 0, 12);
-                        $existing['otpTrackingId'] = $otpTrackingId;
-                        $this->rememberStaticWallet($existingId, $existing);
+                if (is_array($existing)) {
+                    $existingEmail = strtolower(trim((string) ($existing['email'] ?? '')));
+                    $candidates = array_values(array_unique(array_filter(array_map(
+                        static fn (mixed $value): string => strtolower(trim((string) $value)),
+                        array_merge([$email], $request->recoveryEmails),
+                    ))));
+
+                    if ($existingEmail !== '' && in_array($existingEmail, $candidates, true)) {
+                        // Still awaiting OTP — allow a fresh tracking id (resend).
+                        if (($existing['otpTrackingId'] ?? null) !== null) {
+                            $otpTrackingId = 'OTP-RESEND-'.substr(preg_replace('/\D/', '', (string) Str::ulid()).'000000', 0, 12);
+                            $existing['otpTrackingId'] = $otpTrackingId;
+                            $this->rememberStaticWallet($existingId, $existing);
+
+                            return new StaticAccountProvisionResponse(
+                                staticWalletId: $existingId,
+                                otpTrackingId: $otpTrackingId,
+                                accountNumber: null,
+                                accountName: null,
+                                otpHint: 'Demo mode: use verification code 123456 (resent).',
+                            );
+                        }
 
                         return new StaticAccountProvisionResponse(
                             staticWalletId: $existingId,
-                            otpTrackingId: $otpTrackingId,
-                            accountNumber: null,
-                            accountName: null,
-                            otpHint: 'Demo mode: use verification code 123456 (resent).',
+                            otpTrackingId: null,
+                            accountNumber: $existing['accountNumber'],
+                            accountName: 'RETON STATIC',
+                            otpHint: 'Existing deposit account linked for this BVN.',
                         );
                     }
 
-                    return new StaticAccountProvisionResponse(
-                        staticWalletId: $existingId,
-                        otpTrackingId: null,
-                        accountNumber: $existing['accountNumber'],
-                        accountName: 'RETON STATIC',
-                        otpHint: 'Existing deposit account linked for this BVN.',
+                    throw AlatpayException::requestFailed(
+                        'provisionStaticAccount',
+                        400,
+                        'BVN has been used to create an individual static account for this business before',
                     );
                 }
-
-                throw AlatpayException::requestFailed(
-                    'provisionStaticAccount',
-                    400,
-                    'BVN has been used to create an individual static account for this business before',
-                );
             }
         }
 

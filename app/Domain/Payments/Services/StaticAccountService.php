@@ -21,6 +21,7 @@ use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
 use App\Support\Banking\FundingAccountName;
+use App\Support\Banking\ProviderContactEmail;
 use App\Support\Money\Money;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -171,8 +172,9 @@ class StaticAccountService
             $response = $this->gateway->provisionStaticAccount(new StaticAccountRequest(
                 walletType: $type->providerCode(),
                 bvn: $bvn,
-                email: (string) $user->email,
+                email: ProviderContactEmail::forUser($user),
                 reference: 'SA-'.Str::upper((string) Str::ulid()),
+                recoveryEmails: ProviderContactEmail::recoveryCandidates($user),
             ));
         } catch (AlatpayException $e) {
             $account->delete();

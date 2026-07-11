@@ -232,6 +232,7 @@ class PlatformSettingsService
             'otp_enabled' => true,
             'whatsapp_otp_enabled' => false,
             'default_channel' => 'sms',
+            'alert_fee_minor' => 600,
         ],
         'seo' => [
             'site_name' => 'Reton',
@@ -633,6 +634,7 @@ class PlatformSettingsService
                 'otp_enabled' => (bool) ($values['otp_enabled'] ?? true),
                 'whatsapp_otp_enabled' => (bool) ($values['whatsapp_otp_enabled'] ?? false),
                 'default_channel' => (string) ($values['default_channel'] ?? 'sms'),
+                'alert_fee_minor' => (int) ($values['alert_fee_minor'] ?? config('reton.sms.alert_fee_minor', 600)),
             ]]),
             'seo' => config(['reton.seo' => [
                 'site_name' => (string) ($values['site_name'] ?? 'Reton'),

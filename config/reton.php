@@ -338,6 +338,8 @@ return [
         'otp_enabled' => (bool) env('RETON_SMS_OTP_ENABLED', true),
         'whatsapp_otp_enabled' => (bool) env('RETON_SMS_WHATSAPP_OTP', false),
         'default_channel' => env('RETON_SMS_DEFAULT_CHANNEL', 'sms'),
+        /** Fee charged per SMS transaction alert in minor units (kobo). Default ₦6.00 */
+        'alert_fee_minor' => (int) env('RETON_SMS_ALERT_FEE_MINOR', 600),
     ],
 
     /*
