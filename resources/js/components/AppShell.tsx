@@ -109,8 +109,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [moreOpen])
 
   return (
-    <div className="mx-auto flex min-h-full max-w-6xl flex-col px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10">
-      <header className="dock sticky top-3 z-30 mt-3 flex items-center gap-3 rounded-2xl px-3 py-2.5 sm:gap-4 sm:px-4">
+    <div className="mx-auto flex min-h-full max-w-6xl flex-col px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10">
+      <header className="dock sticky top-0 z-40 mt-2 flex items-center gap-2 rounded-2xl px-3 py-2.5 sm:mt-3 sm:gap-4 sm:px-4">
         <Link href="/dashboard" className="relative z-20 shrink-0 transition-opacity hover:opacity-90">
           <Wordmark />
         </Link>
@@ -227,7 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 pt-4 sm:pt-5">
+      <main className="relative z-0 flex-1 pt-5 sm:pt-6">
         <motion.div
           key={pathname}
           initial={{ opacity: 0, y: 4 }}
@@ -239,7 +239,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:hidden"
         aria-label="Main"
       >
         <div className="dock relative mx-auto flex max-w-[22rem] items-end justify-between rounded-[1.35rem] px-1.5 py-1.5 shadow-[0_12px_40px_-18px_rgba(16,40,33,0.55)]">

@@ -121,25 +121,25 @@ export default function Dashboard() {
   }, [activityFlow, recent])
 
   return (
-    <Page className="!pb-3">
+    <Page className="!pb-4 sm:!pb-6">
       <Head title="Home" />
       {auth?.user?.id && <TrustProtectionListener userId={auth.user.id} only={['summary', 'activity']} />}
 
       <div className="mx-auto max-w-2xl space-y-4 lg:max-w-none lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
         <div className="space-y-4 lg:col-span-8">
-          <motion.header variants={item} className="flex items-end justify-between gap-3 px-0.5">
-            <div className="min-w-0">
+          <motion.header variants={item} className="flex items-start justify-between gap-2 px-0.5 sm:items-end sm:gap-3">
+            <div className="min-w-0 flex-1">
               <p className="text-sm text-muted">{greeting()}</p>
-              <h1 className="font-display text-2xl font-bold tracking-tight text-text">{firstName}</h1>
+              <h1 className="font-display text-xl font-bold tracking-tight text-text sm:text-2xl">{firstName}</h1>
             </div>
 
             <Link
               href="/protection"
-              className="group flex shrink-0 items-center gap-2.5 rounded-2xl border border-mint/25 bg-mint/[0.06] px-2.5 py-2 transition hover:border-mint/40 hover:bg-mint/[0.1]"
+              className="group flex shrink-0 items-center gap-2 rounded-2xl border border-mint/25 bg-mint/[0.06] px-2 py-1.5 transition hover:border-mint/40 hover:bg-mint/[0.1] sm:gap-2.5 sm:px-2.5 sm:py-2"
               aria-label={`Trust score ${score} — open protection`}
               title="Trust & protection"
             >
-              <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-mint text-white shadow-sm ring-1 ring-mint/30 transition group-hover:scale-[1.03]">
+              <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-mint text-white shadow-sm ring-1 ring-mint/30 transition group-hover:scale-[1.03] sm:h-10 sm:w-10">
                 <ShieldIcon size={18} />
                 {attentionCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber px-1 text-[9px] font-bold text-white ring-2 ring-bg">
@@ -147,7 +147,8 @@ export default function Dashboard() {
                   </span>
                 )}
               </span>
-              <span className="pr-0.5 text-right">
+              <span className={`font-num text-sm font-bold sm:hidden ${tone.ring}`}>{score}</span>
+              <span className="hidden pr-0.5 text-right sm:block">
                 <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted">Trust</span>
                 <span className={`font-num text-sm font-bold ${tone.ring}`}>
                   {score}
@@ -209,7 +210,7 @@ export default function Dashboard() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[10px] font-semibold uppercase tracking-wide text-mint">To do</span>
-                  <span className="block truncate text-sm font-semibold text-text">
+                  <span className="block text-sm font-semibold leading-snug text-text">
                     {todo.title}
                     <span className="font-normal text-muted"> — {todo.detail}</span>
                   </span>
@@ -226,24 +227,34 @@ export default function Dashboard() {
                 <p className="text-[11px] font-medium text-text/65">Security first · tap to move money</p>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
               {DASHBOARD_SHORTCUTS.map((service, index) => (
                 <QuickAction
                   key={service.to}
                   service={service}
                   primary={index === 0}
                   soon={isServiceSoon(service, features)}
-                  shortLabel={service.to === '/add-money' ? 'Add' : service.to === '/withdraw' ? 'Cash out' : undefined}
+                  shortLabel={
+                    service.to === '/add-money' ? 'Add' : service.to === '/withdraw' ? 'Cash' : undefined
+                  }
                 />
               ))}
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
               {DASHBOARD_MORE_SHORTCUTS.map((service) => (
                 <QuickAction
                   key={service.to}
                   service={service}
                   soon={isServiceSoon(service, features)}
-                  shortLabel={service.to === '/marketplace' ? 'Shop' : service.to === '/protection' ? 'Protect' : undefined}
+                  shortLabel={
+                    service.to === '/marketplace'
+                      ? 'Shop'
+                      : service.to === '/protection'
+                        ? 'Protect'
+                        : service.to === '/activity'
+                          ? 'Activity'
+                          : undefined
+                  }
                 />
               ))}
             </div>
@@ -403,19 +414,21 @@ function QuickAction({
         href={to}
         prefetch
         title={soon ? `${label} — coming soon` : hint}
-        className={`elevate relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-1.5 py-3 text-center transition sm:px-2 ${
+        className={`elevate relative flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2.5 text-center transition sm:min-h-[4.5rem] sm:gap-1.5 sm:px-2 sm:py-3 ${
           primary
             ? 'border-mint/30 bg-mint text-white shadow-[0_12px_28px_-16px_rgba(9,79,57,0.5)] hover:bg-mint-strong'
             : 'border-line bg-surface hover:border-mint/30'
         }`}
       >
         {soon && (
-          <span className="absolute right-1 top-1 rounded-md bg-amber/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber">
+          <span className="absolute right-0.5 top-0.5 rounded-md bg-amber/15 px-1 py-0.5 text-[7px] font-bold uppercase tracking-wide text-amber sm:right-1 sm:top-1 sm:text-[8px]">
             Soon
           </span>
         )}
-        <Icon size={20} className={primary ? 'text-white' : 'text-mint'} />
-        <span className={`max-w-full truncate text-[11px] font-semibold ${primary ? 'text-white' : 'text-text'}`}>
+        <Icon size={18} className={primary ? 'text-white' : 'text-mint'} />
+        <span
+          className={`max-w-full text-[10px] font-semibold leading-tight sm:text-[11px] ${primary ? 'text-white' : 'text-text'}`}
+        >
           {display}
         </span>
       </Link>
