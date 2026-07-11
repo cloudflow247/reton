@@ -192,7 +192,7 @@ export default function AddMoney() {
                       <div className="min-w-0">
                         <p className="text-sm font-semibold">{ngn(deposit.amount)}</p>
                         <p className="truncate text-[11px] text-muted">
-                          {methodLabel[deposit.method ?? 'bank_transfer']}
+                          {methodLabel[(deposit.method ?? 'bank_transfer') as DepositMethod]}
                         </p>
                       </div>
                       <Button className="shrink-0 px-3 py-1.5 text-xs" onClick={() => resume(deposit.reference)}>

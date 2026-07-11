@@ -7,7 +7,6 @@ import { BillerLogo } from '@/components/BillerLogo'
 import { Page, SuccessScreen } from '@/components/page-kit'
 import { AmountField, Button, Card, Pill } from '@/components/ui'
 import {
-  BillIcon,
   CheckIcon,
   ChevronRightIcon,
   LockIcon,

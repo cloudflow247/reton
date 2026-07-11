@@ -19,29 +19,6 @@ export const pageItem = {
 
 type IconCmp = ComponentType<{ size?: number; className?: string }>
 
-const heroTones = {
-  mint: {
-    gradient: 'from-emerald-500/20 via-mint/10 to-transparent',
-    iconBg: 'bg-mint/15 text-mint',
-  },
-  slate: {
-    gradient: 'from-slate-500/15 via-slate-400/10 to-transparent',
-    iconBg: 'bg-slate-500/15 text-slate-600',
-  },
-  violet: {
-    gradient: 'from-violet-500/20 via-purple-400/10 to-transparent',
-    iconBg: 'bg-violet-500/15 text-violet-600',
-  },
-  amber: {
-    gradient: 'from-amber-500/20 via-orange-400/10 to-transparent',
-    iconBg: 'bg-amber-500/15 text-amber-600',
-  },
-  sky: {
-    gradient: 'from-sky-500/20 via-blue-400/10 to-transparent',
-    iconBg: 'bg-sky-500/15 text-sky-600',
-  },
-} as const
-
 /** Staggered page wrapper — use on every authenticated screen. */
 export function Page({
   children,
@@ -98,20 +75,18 @@ export function PageHeader({
   )
 }
 
-/** @deprecated Prefer PageHeader — kept for callers that still pass icon/tone. */
+/** Prefer PageHeader — kept for callers that still pass icon/tone. */
 export function PageHero({
   icon: _Icon,
   title,
   subtitle,
   balance,
-  tone: _tone = 'mint',
-  mesh: _mesh = false,
 }: {
   icon: IconCmp
   title: string
   subtitle: string
   balance?: number
-  tone?: keyof typeof heroTones
+  tone?: 'mint' | 'slate' | 'violet' | 'amber' | 'sky'
   mesh?: boolean
 }) {
   return <PageHeader title={title} subtitle={subtitle} balance={balance} />

@@ -1,6 +1,6 @@
 import type { Bill, Deposit, Payout, User, Wallet } from '@/lib/types'
 
-export type { KycProfile, StaticAccount, DigitalListing, DigitalOrder, Wallet } from '@/lib/types'
+export type { Deposit, KycProfile, StaticAccount, DigitalListing, DigitalOrder, Wallet } from '@/lib/types'
 
 export type TransferReceipt = {
   reference: string
