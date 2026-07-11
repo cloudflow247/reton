@@ -92,6 +92,36 @@ it('initiates a card-only deposit with channel 1', function () {
         ->and($deposit->metadata['payment_link_url'])->toContain('channel=1');
 });
 
+it('marks the deposit failed when payment link creation is rejected', function () {
+    $gateway = new class extends FakeAlatpayGateway
+    {
+        public function createPaymentLink(\App\Domain\Payments\Alatpay\Data\PaymentLinkRequest $request): \App\Domain\Payments\Alatpay\Data\PaymentLinkResponse
+        {
+            throw \App\Domain\Payments\Alatpay\Exceptions\AlatpayException::requestFailed(
+                'createPaymentLink',
+                404,
+                'Resource not found',
+            );
+        }
+    };
+    $this->app->instance(AlatpayGateway::class, $gateway);
+
+    [$user, $wallet] = depositor();
+
+    try {
+        deposits()->initiate(
+            $user,
+            $wallet,
+            Money::of(500_00, 'NGN'),
+            DepositMethod::AlatpayCheckout,
+        );
+        expect(false)->toBeTrue();
+    } catch (\App\Domain\Payments\Alatpay\Exceptions\AlatpayException $e) {
+        expect($e->operation())->toBe('createPaymentLink')
+            ->and(Deposit::query()->latest('id')->first()?->status)->toBe(DepositStatus::Failed);
+    }
+});
+
 it('matches deposits by business reference on webhook', function () {
     [$user, $wallet] = depositor();
     $deposit = deposits()->initiate(

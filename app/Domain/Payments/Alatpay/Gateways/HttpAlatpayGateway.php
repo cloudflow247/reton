@@ -67,39 +67,49 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     public function createPaymentLink(PaymentLinkRequest $request): PaymentLinkResponse
     {
-        $payload = [
+        $this->assertConfigured('createPaymentLink');
+
+        $payload = array_filter([
             'businessId' => config('services.alatpay.business_id'),
             'amount' => $request->amount->amount,
             'currency' => $request->amount->currency,
             'orderId' => $request->reference,
             'title' => $request->title,
-            'description' => $request->description,
+            'description' => $request->description !== '' ? $request->description : null,
             'customer' => array_filter([
-                'email' => $request->customerEmail,
-                'name' => $request->customerName ?: null,
+                'email' => $request->customerEmail !== '' ? $request->customerEmail : null,
+                'name' => $request->customerName !== '' ? $request->customerName : null,
                 'phone' => $request->customerPhone,
                 'bvn' => $request->customerBvn,
             ]),
             'redirectUrl' => $request->redirectUrl,
             'expiresAt' => $request->expiresAt,
-        ];
-
-        if ($request->channel !== null) {
-            $payload['channel'] = $request->channel;
-        }
+            // Omit "*" / null — ALATPay treats missing channel as all methods.
+            'channel' => ($request->channel !== null && $request->channel !== '*')
+                ? $request->channel
+                : null,
+        ], static fn (mixed $value): bool => $value !== null && $value !== []);
 
         $response = $this->client()->post('/payment-link/api/v1/links', $payload);
 
         if (! $response->successful()) {
-            throw AlatpayException::requestFailed('createPaymentLink', $response->status());
+            throw AlatpayException::requestFailed(
+                'createPaymentLink',
+                $response->status(),
+                $this->extractErrorMessage($response->json()),
+            );
         }
 
         $data = (array) $response->json('data', []);
 
-        $paymentLinkUrl = (string) ($data['url'] ?? $data['paymentLink'] ?? '');
+        $paymentLinkUrl = (string) ($data['url'] ?? $data['paymentLink'] ?? $data['paymentUrl'] ?? '');
 
         if ($paymentLinkUrl === '') {
-            throw AlatpayException::requestFailed('createPaymentLink', $response->status());
+            throw AlatpayException::requestFailed(
+                'createPaymentLink',
+                $response->status() ?: 502,
+                'ALATPay did not return a payment link URL. Confirm Payment Link is enabled for this business.',
+            );
         }
 
         return new PaymentLinkResponse(

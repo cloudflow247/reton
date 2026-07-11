@@ -267,6 +267,60 @@ it('redirects to the pay route for alatpay card', function () {
     expect(Deposit::latest()->first()?->metadata['method'] ?? null)->toBe('alatpay_card');
 });
 
+it('flashes a friendly error when checkout payment link fails instead of 500', function () {
+    $this->app->instance(AlatpayGateway::class, new class extends FakeAlatpayGateway
+    {
+        public function createPaymentLink(\App\Domain\Payments\Alatpay\Data\PaymentLinkRequest $request): \App\Domain\Payments\Alatpay\Data\PaymentLinkResponse
+        {
+            throw \App\Domain\Payments\Alatpay\Exceptions\AlatpayException::requestFailed(
+                'createPaymentLink',
+                404,
+            );
+        }
+    });
+    [$user, $wallet] = webUser();
+
+    $this->actingAs($user)
+        ->from('/add-money')
+        ->post('/deposits', [
+            'wallet_id' => $wallet->id,
+            'amount' => 1000_00,
+            'method' => 'alatpay_checkout',
+        ])
+        ->assertRedirect('/add-money')
+        ->assertSessionHas('error')
+        ->assertSessionMissing('errors');
+
+    expect(session('error'))->toContain('One-time transfer')
+        ->and(Deposit::latest()->first()?->status->value)->toBe('failed');
+});
+
+it('flashes a friendly error when card payment link fails instead of 500', function () {
+    $this->app->instance(AlatpayGateway::class, new class extends FakeAlatpayGateway
+    {
+        public function createPaymentLink(\App\Domain\Payments\Alatpay\Data\PaymentLinkRequest $request): \App\Domain\Payments\Alatpay\Data\PaymentLinkResponse
+        {
+            throw \App\Domain\Payments\Alatpay\Exceptions\AlatpayException::requestFailed(
+                'createPaymentLink',
+                404,
+            );
+        }
+    });
+    [$user, $wallet] = webUser();
+
+    $this->actingAs($user)
+        ->from('/add-money')
+        ->post('/deposits', [
+            'wallet_id' => $wallet->id,
+            'amount' => 1000_00,
+            'method' => 'alatpay_card',
+        ])
+        ->assertRedirect('/add-money')
+        ->assertSessionHas('error');
+
+    expect(session('error'))->toContain('Card and checkout');
+});
+
 it('shows the local demo checkout when alatpay driver is fake', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     [$user, $wallet] = webUser();

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
+use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
 use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Models\Deposit;
@@ -170,12 +171,23 @@ class AddMoneyController extends Controller
 
         $method = DepositMethod::tryFrom($request->string('method')->toString()) ?? DepositMethod::BankTransfer;
 
-        $deposit = $this->deposits->initiate(
-            $user,
-            $wallet,
-            Money::of($request->integer('amount'), $wallet->currency),
-            $method,
-        );
+        try {
+            $deposit = $this->deposits->initiate(
+                $user,
+                $wallet,
+                Money::of($request->integer('amount'), $wallet->currency),
+                $method,
+            );
+        } catch (AlatpayException $e) {
+            report($e);
+
+            return back()->with(
+                'error',
+                $e->userFacingMessage(
+                    'Could not start that payment. Please try again, or use One-time transfer.',
+                ),
+            );
+        }
 
         if ($method !== DepositMethod::BankTransfer) {
             return redirect()->route('deposits.pay', $deposit);

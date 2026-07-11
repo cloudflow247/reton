@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Http\Middleware\ApplyPlatformSecurityHeaders;
 use App\Http\Middleware\EnsureAdminPath;
 use App\Http\Middleware\EnsureEmailIsVerified;
@@ -55,6 +56,15 @@ return Application::configure(basePath: dirname(__DIR__))
             // Inertia XHR must never receive the API JSON envelope — that body has
             // no X-Inertia header, so the client shows a generic "500 | SERVER ERROR".
             if ($request->header('X-Inertia') || (! $request->is('api/*') && ! $request->expectsJson())) {
+                if ($e instanceof AlatpayException) {
+                    return back()->with(
+                        'error',
+                        $e->userFacingMessage(
+                            'Something went wrong with the payment provider. Please try again shortly.',
+                        ),
+                    );
+                }
+
                 if ($e instanceof RenderableApiException) {
                     return back()->with('error', $e->getMessage());
                 }
@@ -72,6 +82,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 $e instanceof ModelNotFoundException,
                 $e instanceof NotFoundHttpException => ApiResponse::error('Resource not found.', 'not_found', 404),
+
+                $e instanceof AlatpayException => ApiResponse::error(
+                    $e->userFacingMessage('Payment provider error.'),
+                    $e->apiCode(),
+                    $e->apiStatus(),
+                ),
 
                 $e instanceof RenderableApiException => ApiResponse::error($e->getMessage(), $e->apiCode(), $e->apiStatus()),
 

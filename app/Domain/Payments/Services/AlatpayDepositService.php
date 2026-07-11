@@ -9,6 +9,7 @@ use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\CollectionRequest;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
+use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Enums\DepositStatus;
 use App\Domain\Payments\Models\Deposit;
@@ -80,18 +81,29 @@ class AlatpayDepositService
         $bvn ??= $this->kyc->assertBvnVerifiedForPayments($user);
         $deposit = $this->createPendingDeposit($user, $wallet, $amount, $method);
 
-        $link = $this->gateway->createPaymentLink(new PaymentLinkRequest(
-            reference: $deposit->reference,
-            amount: $amount,
-            title: 'Fund Reton wallet',
-            description: 'Add money to your protected Reton wallet',
-            customerEmail: (string) $user->email,
-            customerName: (string) $user->name,
-            customerPhone: $user->phone,
-            customerBvn: $bvn,
-            redirectUrl: route('add-money.return', ['reference' => $deposit->reference]),
-            channel: $method->alatpayChannel(),
-        ));
+        try {
+            $link = $this->gateway->createPaymentLink(new PaymentLinkRequest(
+                reference: $deposit->reference,
+                amount: $amount,
+                title: 'Fund Reton wallet',
+                description: 'Add money to your protected Reton wallet',
+                customerEmail: (string) $user->email,
+                customerName: (string) $user->name,
+                customerPhone: $user->phone,
+                customerBvn: $bvn,
+                redirectUrl: route('add-money.return', ['reference' => $deposit->reference]),
+                channel: $method->alatpayChannel(),
+            ));
+        } catch (AlatpayException $e) {
+            $deposit->update([
+                'status' => DepositStatus::Failed,
+                'metadata' => array_merge((array) ($deposit->metadata ?? []), [
+                    'failure' => $e->getMessage(),
+                ]),
+            ]);
+
+            throw $e;
+        }
 
         $deposit->update([
             'provider_reference' => $link->providerReference,

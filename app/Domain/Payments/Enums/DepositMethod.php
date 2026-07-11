@@ -19,12 +19,11 @@ enum DepositMethod: string
         };
     }
 
-    /** ALAT Pay channel code — null means all channels on hosted checkout. */
+    /** ALAT Pay channel code — null omits the field (all channels on hosted checkout). */
     public function alatpayChannel(): ?string
     {
         return match ($this) {
-            self::BankTransfer => null,
-            self::AlatpayCheckout => '*',
+            self::BankTransfer, self::AlatpayCheckout => null,
             self::AlatpayCard => '1',
         };
     }
