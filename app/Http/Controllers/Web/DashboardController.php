@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Dashboard\Data\DashboardSummary;
 use App\Domain\Dashboard\Services\DashboardSummaryService;
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Ledger\Models\LedgerEntry;
@@ -45,9 +46,14 @@ class DashboardController extends Controller
             );
         }
 
-        $wallet = $user->wallets()->with([
-            'staticAccount' => fn ($q) => $q->where('status', StaticAccountStatus::Active),
-        ])->first();
+        try {
+            $wallet = $user->wallets()->with([
+                'staticAccount' => fn ($q) => $q->where('status', StaticAccountStatus::Active->value),
+            ])->first();
+        } catch (\Throwable $e) {
+            report($e);
+            $wallet = $user->wallets()->first();
+        }
 
         if ($credited > 0) {
             $request->session()->flash(
@@ -58,16 +64,42 @@ class DashboardController extends Controller
             );
         }
 
-        $entries = $wallet instanceof Wallet
-            ? $this->recentEntries($wallet)
-            : new Collection;
+        $summary = ['pending_callbacks' => 0, 'open_recoveries' => 0, 'protected_transfers_pending' => 0, 'open_fraud_alerts' => 0, 'trust_score' => 100];
+        $kycTier = 1;
+        $activity = [];
+        $activityFlow = ['inflow' => 0, 'outflow' => 0, 'net' => 0, 'count' => 0];
+        $depositAccount = null;
+
+        try {
+            $summary = $this->summary->forUser($user)->toArray();
+        } catch (\Throwable $e) {
+            report($e);
+            $summary = (new DashboardSummary(0, 0, 0, 0, 100))->toArray();
+        }
+
+        try {
+            $kycTier = $this->kyc->forUser($user)->tier->value;
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            $entries = $wallet instanceof Wallet
+                ? $this->recentEntries($wallet)
+                : new Collection;
+            $activity = StatementEntryResource::collection($entries)->resolve();
+            $activityFlow = StatementMoneyFlow::fromEntries($entries);
+            $depositAccount = $this->depositAccountPayload($wallet);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return Inertia::render('Dashboard', [
-            'summary' => $this->summary->forUser($user)->toArray(),
-            'kycTier' => $this->kyc->forUser($user)->tier->value,
-            'activity' => StatementEntryResource::collection($entries)->resolve(),
-            'activityFlow' => StatementMoneyFlow::fromEntries($entries),
-            'depositAccount' => $this->depositAccountPayload($wallet),
+            'summary' => $summary,
+            'kycTier' => $kycTier,
+            'activity' => $activity,
+            'activityFlow' => $activityFlow,
+            'depositAccount' => $depositAccount,
         ]);
     }
 

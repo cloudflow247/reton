@@ -101,9 +101,9 @@ class ActivityController extends Controller
                     'id' => $wallet->id,
                     'account_number' => $wallet->account_number,
                     'currency' => $wallet->currency,
-                    'available_balance' => $wallet->availableMinor(),
-                    'held_balance' => $wallet->heldMinor(),
-                    'balance' => $wallet->ledgerMinor(),
+                    'available_balance' => max(0, (int) $wallet->balance - (int) $wallet->held_balance),
+                    'held_balance' => max(0, (int) $wallet->held_balance),
+                    'balance' => max(0, (int) $wallet->balance),
                 ]
                 : null,
             'receipt' => [

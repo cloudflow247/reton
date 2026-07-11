@@ -21,13 +21,21 @@ class StatementEntryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $direction = $this->direction;
+
         return [
             'id' => $this->id,
-            'direction' => $this->direction->value,
+            'direction' => is_object($direction) && property_exists($direction, 'value')
+                ? $direction->value
+                : (string) $direction,
             'amount' => $this->amount,
             'currency' => $this->currency,
             'created_at' => $this->created_at,
-            'transaction' => new TransactionResource($this->whenLoaded('transaction')),
+            'transaction' => $this->whenLoaded('transaction', function () {
+                return $this->transaction !== null
+                    ? (new TransactionResource($this->transaction))->resolve()
+                    : null;
+            }),
         ];
     }
 }
