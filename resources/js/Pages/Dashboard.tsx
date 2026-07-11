@@ -135,14 +135,25 @@ export default function Dashboard() {
 
             <Link
               href="/protection"
-              className="shrink-0 text-right"
-              aria-label={`Trust score ${score}`}
+              className="group flex shrink-0 items-center gap-2.5 rounded-2xl border border-mint/25 bg-mint/[0.06] px-2.5 py-2 transition hover:border-mint/40 hover:bg-mint/[0.1]"
+              aria-label={`Trust score ${score} — open protection`}
+              title="Trust & protection"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Trust</p>
-              <p className={`font-num text-sm font-bold ${tone.ring}`}>
-                {score}
-                <span className="ml-1 text-[10px] font-semibold text-muted">{tone.label}</span>
-              </p>
+              <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-mint text-white shadow-sm ring-1 ring-mint/30 transition group-hover:scale-[1.03]">
+                <ShieldIcon size={18} />
+                {attentionCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber px-1 text-[9px] font-bold text-white ring-2 ring-bg">
+                    {attentionCount > 9 ? '9+' : attentionCount}
+                  </span>
+                )}
+              </span>
+              <span className="pr-0.5 text-right">
+                <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted">Trust</span>
+                <span className={`font-num text-sm font-bold ${tone.ring}`}>
+                  {score}
+                  <span className="ml-1 text-[10px] font-semibold text-muted">{tone.label}</span>
+                </span>
+              </span>
             </Link>
           </motion.header>
 
