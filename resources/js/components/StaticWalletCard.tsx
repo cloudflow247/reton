@@ -1,9 +1,8 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Link, router, useForm, usePage } from '@inertiajs/react'
-import { motion } from 'framer-motion'
-import { Button, Card, CopyRow, Pill } from '@/components/ui'
-import { AlatMark } from '@/components/PoweredByAlat'
+import { DepositAccountBox } from '@/components/DepositAccountBox'
+import { Button, Card, Pill } from '@/components/ui'
 import { BankIcon, ShieldIcon } from '@/components/icons'
 import { ngn } from '@/lib/format'
 import type { KycProfile, PageProps, StaticAccount, Wallet } from '@/types'
@@ -13,10 +12,11 @@ type Props = {
   staticAccount: StaticAccount | null
   wallet: Wallet | undefined
   compact?: boolean
+  profileName?: string | null
 }
 
-export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }: Props) {
-  const { flash, errors } = usePage<PageProps>().props
+export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false, profileName }: Props) {
+  const { auth, flash, errors } = usePage<PageProps>().props
   const [otp, setOtp] = useState('')
   const form = useForm({ wallet_id: wallet?.id ?? '' })
 
@@ -24,10 +24,12 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
     return null
   }
 
+  const resolvedName = profileName ?? auth.user?.name ?? null
   const walletTypeLabel = kyc.limits.static_wallet_type === 'individual' ? 'Personal' : 'Basic collection'
-  const provisionError = (errors as Record<string, string> | undefined)?.wallet
-    ?? (errors as Record<string, string> | undefined)?.bvn
-    ?? (errors as Record<string, string> | undefined)?.kyc
+  const provisionError =
+    (errors as Record<string, string> | undefined)?.wallet ??
+    (errors as Record<string, string> | undefined)?.bvn ??
+    (errors as Record<string, string> | undefined)?.kyc
 
   function provision() {
     form.post('/static-account', { preserveScroll: true })
@@ -41,68 +43,24 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
 
   if (staticAccount?.status === 'active' && staticAccount.account_number) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <Card className={`overflow-hidden ${compact ? 'p-0' : 'p-0'}`}>
-          <div className="bg-gradient-to-br from-mint/15 via-mint/[0.06] to-transparent px-5 pb-4 pt-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                  <Pill tone="mint">Active</Pill>
-                  <span className="text-[11px] font-medium text-muted">{walletTypeLabel} account</span>
-                </div>
-                <p className="text-base font-semibold tracking-tight text-text">Your deposit account</p>
-                <p className="mt-0.5 text-xs text-muted">
-                  Transfer from any Nigerian bank — funds credit your Reton wallet automatically.
-                </p>
-              </div>
-              <AlatMark size={40} />
-            </div>
-          </div>
-
-          <div className="divide-y divide-line/80 px-5">
-            <CopyRow label="Bank" value={staticAccount.bank_name ?? 'Wema Bank'} />
-            <CopyRow label="Account name" value={staticAccount.account_name ?? '—'} wrap />
-            <div className="py-4">
-              <p className="text-xs text-muted">Account number</p>
-              <div className="mt-1 flex items-center justify-between gap-3">
-                <p className="font-num text-2xl font-semibold tracking-[0.12em] text-text sm:text-[1.65rem]">
-                  {staticAccount.account_number}
-                </p>
-                <CopyOnly value={staticAccount.account_number} />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2 border-t border-line/80 px-5 py-3">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => router.post('/add-money/check-deposits', {}, { preserveScroll: true })}
-            >
-              Check for deposits
-            </Button>
-            <p className="text-[11px] leading-relaxed text-muted">
-              Tier {kyc.tier} · up to {ngn(kyc.limits.wallet_balance_max)} balance. Escrow and fraud checks still apply
-              after credit.
-            </p>
-          </div>
-        </Card>
-      </motion.div>
+      <DepositAccountBox
+        staticAccount={staticAccount}
+        profileName={resolvedName}
+        walletTypeLabel={walletTypeLabel}
+        kyc={kyc}
+        compact={compact}
+      />
     )
   }
 
   if (staticAccount?.status === 'pending_otp' || staticAccount?.needs_otp) {
     return (
       <Card className={`space-y-3 ${compact ? 'p-4' : 'p-5'}`}>
-        <p className="text-sm font-semibold">Activate your deposit account</p>
-        <p className="text-xs text-muted">
-          Enter the one-time code sent to the phone on your BVN.
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Pill tone="amber">OTP required</Pill>
+          <p className="text-sm font-semibold">Activate your deposit account</p>
+        </div>
+        <p className="text-xs text-muted">Enter the one-time code sent to the phone on your BVN.</p>
         {flash.success && <p className="text-xs text-mint">{flash.success}</p>}
         <form onSubmit={verifyOtp} className="flex flex-wrap gap-2">
           <input
@@ -112,6 +70,7 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
             className="field min-w-[8rem] flex-1 px-3 py-2 text-sm"
             inputMode="numeric"
             autoComplete="one-time-code"
+            aria-label="Deposit account OTP"
           />
           <Button type="submit">Verify</Button>
         </form>
@@ -146,32 +105,12 @@ export function StaticWalletCard({ kyc, staticAccount, wallet, compact = false }
       )}
 
       {provisionError && (
-        <p className="rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-xs text-danger">
-          {provisionError}
-        </p>
+        <p className="rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-xs text-danger">{provisionError}</p>
       )}
 
       <Button type="button" onClick={provision} loading={form.processing} className="w-full">
         {form.processing ? 'Opening account…' : 'Get my account number'}
       </Button>
     </Card>
-  )
-}
-
-function CopyOnly({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false)
-
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        void navigator.clipboard.writeText(value)
-        setCopied(true)
-        window.setTimeout(() => setCopied(false), 1400)
-      }}
-      className="shrink-0 rounded-full border border-mint/30 bg-mint/10 px-3.5 py-1.5 text-xs font-semibold text-mint transition hover:bg-mint/15"
-    >
-      {copied ? 'Copied' : 'Copy'}
-    </button>
   )
 }

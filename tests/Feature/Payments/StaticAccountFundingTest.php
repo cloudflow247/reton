@@ -136,6 +136,27 @@ it('shows a short personal funding account name on the dashboard', function () {
             ->where('depositAccount.account_number', '0123456789'));
 });
 
+it('shows a short personal funding account name on add money', function () {
+    $user = readyUser(['name' => 'Gabriel Mogaji']);
+    ensureVerifiedBvn($user);
+    app(WalletService::class)->open($user, 'NGN');
+
+    app(StaticAccountService::class)->linkVerifiedIndividualAccount(
+        $user,
+        'sw-add-money-short',
+        '0123456790',
+        'CLOUDFLOW TECHNOLOGY LTD - GABRIEL MOGAJI',
+    );
+
+    $this->actingAs($user)
+        ->get('/add-money')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('AddMoney')
+            ->where('staticAccount.account_name', 'GABRIEL MOGAJI')
+            ->where('staticAccount.account_number', '0123456790'));
+});
+
 it('stores a short personal name when linking a merchant-prefixed VA', function () {
     $user = readyUser(['name' => 'Gabriel Mogaji']);
     $wallet = app(WalletService::class)->open($user, 'NGN');

@@ -338,6 +338,8 @@ class StaticAccountService
             ->whereNotNull('account_number')
             ->where('account_number', '!=', '');
 
+        $account = null;
+
         if ($wallet instanceof Wallet) {
             $onWallet = (clone $base)
                 ->where('wallet_id', $wallet->getKey())
@@ -345,16 +347,30 @@ class StaticAccountService
                 ->first();
 
             if ($onWallet instanceof StaticAccount) {
-                return $onWallet;
+                $account = $onWallet;
             }
         }
 
-        $onUser = (clone $base)
-            ->where('user_id', $user->getKey())
-            ->latest()
-            ->first();
+        if ($account === null) {
+            $onUser = (clone $base)
+                ->where('user_id', $user->getKey())
+                ->latest()
+                ->first();
 
-        return $onUser instanceof StaticAccount ? $onUser : null;
+            $account = $onUser instanceof StaticAccount ? $onUser : null;
+        }
+
+        if ($account === null) {
+            return null;
+        }
+
+        $displayName = FundingAccountName::display($account->account_name, (string) $user->name);
+
+        if ($displayName !== '' && $displayName !== $account->account_name) {
+            $account->forceFill(['account_name' => $displayName])->saveQuietly();
+        }
+
+        return $account;
     }
 
     /**

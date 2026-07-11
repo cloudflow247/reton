@@ -31,9 +31,21 @@ class ReceiveController extends Controller
         $wallet = $user->wallets()->first();
         $profile = $this->kyc->forUser($user);
 
-        $staticAccount = $wallet
-            ? StaticAccount::query()->where('wallet_id', $wallet->getKey())->latest()->first()
-            : null;
+        $staticAccount = $this->staticAccounts->activeFundingAccountFor(
+            $user,
+            $wallet instanceof Wallet ? $wallet : null,
+        );
+
+        if ($staticAccount === null && $wallet instanceof Wallet) {
+            $staticAccount = StaticAccount::query()
+                ->where('wallet_id', $wallet->getKey())
+                ->latest()
+                ->first()
+                ?? StaticAccount::query()
+                    ->where('user_id', $user->getKey())
+                    ->latest()
+                    ->first();
+        }
 
         return Inertia::render('Receive', [
             'kyc' => (new KycResource($profile))->resolve(),

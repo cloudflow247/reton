@@ -60,9 +60,22 @@ class AddMoneyController extends Controller
 
         $wallet = $user->wallets()->first();
         $profile = $this->kyc->forUser($user);
-        $staticAccount = $wallet
-            ? StaticAccount::query()->where('wallet_id', $wallet->getKey())->latest()->first()
-            : null;
+        $staticAccount = $this->staticAccounts->activeFundingAccountFor(
+            $user,
+            $wallet instanceof Wallet ? $wallet : null,
+        );
+
+        // Prefer latest row (incl. pending OTP) when no active VA exists yet.
+        if ($staticAccount === null && $wallet instanceof Wallet) {
+            $staticAccount = StaticAccount::query()
+                ->where('wallet_id', $wallet->getKey())
+                ->latest()
+                ->first()
+                ?? StaticAccount::query()
+                    ->where('user_id', $user->getKey())
+                    ->latest()
+                    ->first();
+        }
 
         // Already BVN-verified but missing a linked VA (e.g. verified before auto-link):
         // recover/provision quietly so Add Money shows the account immediately.
@@ -83,7 +96,10 @@ class AddMoneyController extends Controller
         if ($staticAccount !== null && $staticAccount->isActive()) {
             try {
                 $credited = $this->staticAccounts->pollActiveForUser($user);
-                $staticAccount->refresh();
+                $staticAccount = $this->staticAccounts->activeFundingAccountFor(
+                    $user,
+                    $wallet instanceof Wallet ? $wallet : null,
+                ) ?? $staticAccount->refresh();
 
                 if ($credited > 0) {
                     $request->session()->flash(
