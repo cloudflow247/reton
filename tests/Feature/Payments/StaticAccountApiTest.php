@@ -83,7 +83,8 @@ it('lists only the callers static accounts', function () {
     [$user, $wallet] = apiStaticOwner();
     app(StaticAccountService::class)->provision($user, $wallet, StaticWalletType::Individual, '12345678901');
     [$other, $otherWallet] = apiStaticOwner();
-    app(StaticAccountService::class)->provision($other, $otherWallet, StaticWalletType::Individual, '12345678901');
+    // Distinct BVN — ALATPay (and the fake) reject reusing one BVN under a different email.
+    app(StaticAccountService::class)->provision($other, $otherWallet, StaticWalletType::Individual, '10987654321');
 
     $this->actingAs($user)->getJson('/api/v1/static-accounts')
         ->assertOk()
