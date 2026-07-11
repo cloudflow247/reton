@@ -45,7 +45,7 @@ export default function Profile() {
       <PageHero
         icon={UserIcon}
         title="Profile"
-        subtitle="Your identity, verification tier, and account settings."
+        subtitle="Identity, KYC, and settings"
         tone="slate"
       />
 
@@ -53,7 +53,7 @@ export default function Profile() {
         <p className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
       )}
 
-      <FormPanel className="shield-glow">
+      <FormPanel>
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-mint to-mint-strong font-display text-2xl font-bold text-white shadow-sm">
             {initial}

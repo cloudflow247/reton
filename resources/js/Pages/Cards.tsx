@@ -230,8 +230,8 @@ export default function Cards({ cards, cardsReady, cardsDriver, fx, minFunding }
       <Head title="Cards" />
       <PageHero
         icon={CardIcon}
-        title="Your cards"
-        subtitle="Spend online in Naira or Dollars — fund from your wallet, convert at checkout rates, freeze instantly."
+        title="Cards"
+        subtitle="Virtual cards funded from your wallet"
         tone="violet"
       />
 

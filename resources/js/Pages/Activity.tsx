@@ -49,7 +49,7 @@ export default function Activity() {
       <PageHero
         icon={ActivityIcon}
         title="Activity"
-        subtitle="Every movement in and out of your wallet — tap a row for details, print, or share."
+        subtitle="Wallet statement and transfers"
         tone="sky"
       />
 

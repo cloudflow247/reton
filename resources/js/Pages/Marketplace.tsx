@@ -65,46 +65,29 @@ export default function Marketplace() {
   }
 
   return (
-    <motion.div variants={list} initial="hidden" animate="show" className="space-y-5 pb-6">
+    <motion.div variants={list} initial="hidden" animate="show" className="space-y-4 pb-6">
       <Head title="Shop" />
 
-      {/* Hero */}
-      <motion.section variants={fadeUp} className="mesh relative overflow-hidden rounded-[24px] p-5 text-white sm:p-7">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="blob absolute -left-10 -top-12 h-40 w-40 bg-white/10 blur-2xl" />
-          <div className="blob-slow absolute -bottom-8 right-0 h-48 w-48 bg-emerald-300/15 blur-3xl" />
+      <motion.header variants={fadeUp} className="flex items-end justify-between gap-3 px-0.5">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-text">Shop</h1>
+          <p className="mt-0.5 text-sm text-muted">Escrow-protected marketplace</p>
         </div>
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-md">
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
-              <ShieldIcon size={14} /> Protected marketplace
-            </p>
-            <h1 className="mt-2 font-display text-2xl font-bold tracking-tight sm:text-3xl">Shop with confidence</h1>
-            <p className="mt-2 text-sm leading-relaxed text-white/75">
-              Listings are private — buyers need your share link or item code. Escrow and Giglogistics verification on
-              every sale.
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowCreate(true)}
-            className="shrink-0 border border-white/20 bg-white/15 text-white backdrop-blur hover:bg-white/25"
+        <Button onClick={() => setShowCreate(true)} className="shrink-0 gap-1.5 px-3 py-2 text-xs">
+          <SparkleIcon size={14} /> Sell
+        </Button>
+      </motion.header>
+
+      <motion.div variants={fadeUp} className="flex flex-wrap gap-1.5">
+        {flowSteps.map((s) => (
+          <span
+            key={s.n}
+            className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-[10px] font-semibold text-muted"
           >
-            <SparkleIcon size={16} /> Sell an item
-          </Button>
-        </div>
-        <div className="relative mt-5 grid gap-2 sm:grid-cols-4">
-          {flowSteps.map((s) => (
-            <div
-              key={s.n}
-              className="rounded-xl border border-white/15 bg-white/10 px-3 py-2.5 backdrop-blur-sm transition hover:bg-white/15"
-            >
-              <p className="text-[10px] font-bold text-white/60">Step {s.n}</p>
-              <p className="text-xs font-semibold">{s.title}</p>
-              <p className="mt-0.5 text-[10px] leading-snug text-white/65">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </motion.section>
+            <span className="text-mint">{s.n}</span> {s.title}
+          </span>
+        ))}
+      </motion.div>
 
       {flash.success && (
         <motion.p variants={fadeUp} className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">

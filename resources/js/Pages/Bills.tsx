@@ -14,7 +14,6 @@ import {
   PhoneIcon,
   SparkleIcon,
   UserIcon,
-  WalletIcon,
 } from '@/components/icons'
 import { billersByCategory, findBiller, type Biller } from '@/lib/billers'
 import { billCategoryMeta, categoryMeta } from '@/lib/bill-categories'
@@ -225,38 +224,21 @@ export default function Bills({ categories: categoriesProp, bills: billsProp }: 
     <Page narrow className="max-w-lg pb-32 sm:pb-8">
       <Head title="Bills" />
 
-      {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`card relative overflow-hidden border-0 bg-gradient-to-br ${cat.gradient} p-5`}
-      >
-        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative flex items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${cat.iconBg}`}>
-                <cat.Icon size={20} />
-              </span>
-              <div>
-                <h1 className="font-display text-xl font-bold tracking-tight">Pay bills</h1>
-                <p className="text-xs text-muted">Airtime · Data · Power · TV · Betting · Remita</p>
-              </div>
-            </div>
-          </div>
-          {wallet && (
-            <div className="rounded-xl bg-surface/80 px-3 py-2 text-right backdrop-blur-sm">
-              <div className="flex items-center justify-end gap-1 text-[10px] font-medium uppercase tracking-wide text-muted">
-                <WalletIcon size={12} /> Balance
-              </div>
-              <div className="font-num text-sm font-bold text-mint">{ngn(wallet.available_balance)}</div>
-            </div>
-          )}
+      <div className="flex items-end justify-between gap-3 px-0.5">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-text">Bills</h1>
+          <p className="mt-0.5 text-sm text-muted">Airtime · data · power · TV</p>
         </div>
-      </motion.div>
+        {wallet && (
+          <div className="text-right">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Available</p>
+            <p className="font-num text-sm font-bold text-mint">{ngn(wallet.available_balance)}</p>
+          </div>
+        )}
+      </div>
 
       {/* Category grid */}
-      <div className="mt-5">
+      <div>
         <p className="mb-2.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-muted">Choose service</p>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {categories.map((c) => {

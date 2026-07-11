@@ -6,7 +6,7 @@ import { AppShell } from '@/components/AppShell'
 import { BvnVerificationGate } from '@/components/BvnVerificationGate'
 import { ComplianceStrip } from '@/components/dashboard/DashboardKit'
 import { StaticWalletCard } from '@/components/StaticWalletCard'
-import { Page, pageItem } from '@/components/page-kit'
+import { Page, PageHeader } from '@/components/page-kit'
 import { AmountField, Button, Card, CopyRow, Pill } from '@/components/ui'
 import {
   BankIcon,
@@ -153,21 +153,14 @@ export default function AddMoney() {
 
   return (
     <AppShell>
-      <Page narrow className="max-w-lg space-y-4">
+      <Page narrow className="max-w-lg">
         <Head title="Add money" />
 
-        <motion.header variants={pageItem} className="flex items-end justify-between gap-3 px-0.5">
-          <div className="min-w-0">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-text">Add money</h1>
-            <p className="mt-0.5 text-sm text-muted">Bank transfer or checkout</p>
-          </div>
-          {wallet && (
-            <div className="text-right">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Available</p>
-              <p className="font-num text-sm font-bold text-mint">{ngn(wallet.available_balance)}</p>
-            </div>
-          )}
-        </motion.header>
+        <PageHeader
+          title="Add money"
+          subtitle="Bank transfer or checkout"
+          balance={wallet?.available_balance}
+        />
 
         {kyc?.bvn_verified && (
           <StaticWalletCard

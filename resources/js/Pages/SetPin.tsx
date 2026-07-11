@@ -22,7 +22,7 @@ export default function SetPin() {
       <PageHero
         icon={LockIcon}
         title={hasPin ? 'Change PIN' : 'Set up PIN'}
-        subtitle="4 digits. Required for every payment — separate from your password."
+        subtitle="4 digits — required for every payment"
         tone="mint"
       />
 

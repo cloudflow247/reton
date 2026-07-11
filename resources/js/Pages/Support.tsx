@@ -178,8 +178,8 @@ export default function Support() {
       <Head title="Support" />
       <PageHero
         icon={ChatIcon}
-        title="Reton Support"
-        subtitle="Find transactions, understand protection, and escalate to our team."
+        title="Support"
+        subtitle="Ask Reton or escalate to the team"
         tone="violet"
       />
 

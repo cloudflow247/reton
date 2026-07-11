@@ -143,8 +143,8 @@ export default function Protection() {
 
       <PageHero
         icon={ShieldIcon}
-        title="Protection hub"
-        subtitle="Recall payments, settle disputes, recover mistaken transfers — your undo button for money."
+        title="Protection"
+        subtitle="Callbacks, holds, and recovery"
         tone="amber"
       />
       {flash.success && <p className="text-sm text-mint">{flash.success}</p>}

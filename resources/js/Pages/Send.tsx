@@ -29,7 +29,7 @@ export default function Send() {
       <PageHero
         icon={SendIcon}
         title="Send money"
-        subtitle="Protected by default — funds stay in escrow until you release. Switch to Standard for instant sends."
+        subtitle="Protected by default — or Standard for instant"
         balance={wallet?.available_balance}
         tone="mint"
       />

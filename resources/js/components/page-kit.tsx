@@ -57,21 +57,55 @@ export function Page({
       variants={pageList}
       initial="hidden"
       animate="show"
-      className={`${narrow ? 'mx-auto max-w-lg' : ''} space-y-5 pb-6 ${className}`}
+      className={`${narrow ? 'mx-auto max-w-lg' : ''} space-y-4 pb-6 ${className}`}
     >
       {children}
     </motion.div>
   )
 }
 
-/** Compact hero — title, one-line instruction, optional balance chip. */
-export function PageHero({
-  icon: Icon,
+/**
+ * Portable page header — title + subtitle + optional balance.
+ * Matches Add Money: clean, no icon card, no gradient panel.
+ */
+export function PageHeader({
   title,
   subtitle,
   balance,
-  tone = 'mint',
-  mesh = false,
+  balanceLabel = 'Available',
+  action,
+}: {
+  title: string
+  subtitle?: string
+  balance?: number
+  balanceLabel?: string
+  action?: ReactNode
+}) {
+  return (
+    <motion.header variants={pageItem} className="flex items-end justify-between gap-3 px-0.5">
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-text">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
+      </div>
+      {action}
+      {balance !== undefined && !action && (
+        <div className="shrink-0 text-right">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">{balanceLabel}</p>
+          <p className="font-num text-sm font-bold text-mint">{ngn(balance)}</p>
+        </div>
+      )}
+    </motion.header>
+  )
+}
+
+/** @deprecated Prefer PageHeader — kept for callers that still pass icon/tone. */
+export function PageHero({
+  icon: _Icon,
+  title,
+  subtitle,
+  balance,
+  tone: _tone = 'mint',
+  mesh: _mesh = false,
 }: {
   icon: IconCmp
   title: string
@@ -80,60 +114,7 @@ export function PageHero({
   tone?: keyof typeof heroTones
   mesh?: boolean
 }) {
-  const t = heroTones[tone]
-
-  if (mesh) {
-    return (
-      <motion.div variants={pageItem} className="mesh sheen relative overflow-hidden rounded-[22px] p-5 text-white sm:p-6">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="blob absolute -right-10 -top-12 h-40 w-40 bg-white/10 blur-2xl" />
-          <div className="blob-slow absolute -bottom-10 left-0 h-36 w-36 bg-emerald-300/20 blur-3xl" />
-        </div>
-        <div className="relative flex items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-                <Icon size={20} />
-              </span>
-              <div>
-                <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
-                <p className="mt-0.5 text-xs text-white/75 sm:text-sm">{subtitle}</p>
-              </div>
-            </div>
-          </div>
-          {balance !== undefined && (
-            <div className="rounded-xl bg-white/12 px-3 py-2 text-right backdrop-blur-sm">
-              <div className="flex items-center justify-end gap-1 text-[10px] font-medium uppercase tracking-wide text-white/60">
-                <WalletIcon size={11} /> Available
-              </div>
-              <div className="font-num text-sm font-bold">{ngn(balance)}</div>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    )
-  }
-
-  return (
-    <motion.div
-      variants={pageItem}
-      className={`panel relative overflow-hidden bg-gradient-to-br ${t.gradient} p-5`}
-    >
-      <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-mint/8 blur-2xl" />
-      <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${t.iconBg}`}>
-            <Icon size={22} />
-          </span>
-          <div className="min-w-0">
-            <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
-            <p className="mt-1 text-sm leading-relaxed text-muted">{subtitle}</p>
-          </div>
-        </div>
-        {balance !== undefined && <BalanceChip balance={balance} />}
-      </div>
-    </motion.div>
-  )
+  return <PageHeader title={title} subtitle={subtitle} balance={balance} />
 }
 
 export function BalanceChip({ balance }: { balance: number }) {
@@ -251,7 +232,7 @@ export function InfoStrip({
 /** Primary form surface — consistent padding, glow, spacing. */
 export function FormPanel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <motion.div variants={pageItem} className={`panel shield-glow space-y-5 p-4 sm:p-5 ${className}`}>
+    <motion.div variants={pageItem} className={`panel space-y-4 p-4 ${className}`}>
       {children}
     </motion.div>
   )

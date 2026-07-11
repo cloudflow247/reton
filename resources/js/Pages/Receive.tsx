@@ -5,11 +5,11 @@ import { motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { AppShell } from '@/components/AppShell'
 import { StaticWalletCard } from '@/components/StaticWalletCard'
-import { FormPanel, InfoStrip, Page, PageHero, pageItem } from '@/components/page-kit'
-import { AmountField } from '@/components/ui'
-import { CheckIcon, CopyIcon, PlusIcon, QrIcon, ReceiveIcon, ShareIcon, ShieldIcon } from '@/components/icons'
+import { FormPanel, Page, PageHeader } from '@/components/page-kit'
+import { AmountField, Card } from '@/components/ui'
+import { CheckIcon, CopyIcon, PlusIcon, QrIcon, ShareIcon, ShieldIcon } from '@/components/icons'
 import { ngn, toMinor } from '@/lib/format'
-import type { KycProfile, PageProps, SharedProps, StaticAccount } from '@/types'
+import type { KycProfile, SharedProps, StaticAccount } from '@/types'
 
 type ReceiveProps = SharedProps & {
   kyc: KycProfile
@@ -20,119 +20,112 @@ export default function Receive() {
   const { auth, kyc, staticAccount } = usePage<ReceiveProps>().props
   const wallet = auth.wallets[0]
   const account = wallet?.account_number ?? ''
+  const profileName = auth.user?.name ?? null
 
   const [copied, setCopied] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [amount, setAmount] = useState('')
   const minor = toMinor(amount)
 
-  // A scannable pay link. Encodes the account (and an optional requested
-  // amount) so a future deep-link / scanner can prefill a transfer.
   const payload = useMemo(() => {
     const base = `https://retonpay.com/pay/${account}`
     return minor > 0 ? `${base}?amount=${minor}` : base
   }, [account, minor])
 
   function copy() {
-    navigator.clipboard.writeText(minor > 0 ? `${account} · ${ngn(minor)}` : account)
+    void navigator.clipboard.writeText(minor > 0 ? `${account} · ${ngn(minor)}` : account)
     setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    window.setTimeout(() => setCopied(false), 1500)
   }
 
   async function share() {
     const text =
       minor > 0
-        ? `Pay me ${ngn(minor)} on Reton — RETON ID ${account} (${auth.user?.name ?? ''}).`
-        : `Pay me on Reton — RETON ID ${account} (${auth.user?.name ?? ''}).`
+        ? `Pay me ${ngn(minor)} on Reton — RETON ID ${account} (${profileName ?? ''}).`
+        : `Pay me on Reton — RETON ID ${account} (${profileName ?? ''}).`
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Pay me on Reton', text, url: payload })
         return
       } catch {
-        /* user dismissed the share sheet — fall through to copy */
+        /* dismissed */
       }
     }
-    navigator.clipboard.writeText(`${text} ${payload}`)
+    void navigator.clipboard.writeText(`${text} ${payload}`)
     setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    window.setTimeout(() => setCopied(false), 1500)
   }
 
   return (
     <Page narrow>
       <Head title="Receive" />
-      <PageHero
-        icon={ReceiveIcon}
-        title="Receive money"
-        subtitle="Share your account or QR — bank transfers and Reton-to-Reton both work."
-        tone="mint"
+      <PageHeader title="Receive" subtitle="Bank transfer or Reton ID" />
+
+      <StaticWalletCard
+        kyc={kyc}
+        staticAccount={staticAccount}
+        wallet={wallet}
+        profileName={profileName}
       />
 
-      <StaticWalletCard kyc={kyc} staticAccount={staticAccount} wallet={wallet} />
-
-      <p className="text-center text-xs font-semibold uppercase tracking-wide text-muted">On Reton</p>
-
-      {/* QR + account hero — a living emerald mesh with morphing light. */}
-      <motion.div
-        initial={{ opacity: 0, y: 14, scale: 0.99 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="mesh sheen relative overflow-hidden rounded-3xl p-7 text-center text-white shield-glow"
-      >
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="blob absolute -right-16 -top-20 h-56 w-56 bg-white/10 blur-2xl" />
-          <div className="blob-slow absolute -bottom-20 -left-16 h-52 w-52 bg-mint/30 blur-2xl" />
+      <Card className="overflow-hidden p-0">
+        <div className="flex items-center justify-between gap-2 border-b border-line/70 px-4 py-2.5">
+          <div className="flex items-center gap-2 text-[11px] font-semibold text-muted">
+            <ShieldIcon size={13} className="text-mint" />
+            Reton ID
+          </div>
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted">
+            <QrIcon size={12} /> Scan to pay
+          </span>
         </div>
 
-        <div className="relative">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
-            <QrIcon size={13} /> Scan to pay
-          </span>
-
-          {/* The QR sits on a white tile for reliable scanning. */}
-          <motion.div
-            key={payload}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.25 }}
-            className="mx-auto mt-6 w-fit rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-white/40"
-          >
-            <QRCodeSVG value={payload} size={172} level="M" fgColor="#0b2e25" bgColor="#ffffff" marginSize={0} />
-          </motion.div>
+        <div className="flex flex-col items-center px-4 py-5">
+          <div className="rounded-2xl border border-line bg-white p-3 shadow-sm">
+            <QRCodeSVG value={payload} size={156} level="M" fgColor="#0b2e25" bgColor="#ffffff" marginSize={0} />
+          </div>
 
           {minor > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-5 font-num text-3xl font-bold tracking-tight"
-            >
-              {ngn(minor)}
-            </motion.div>
+            <p className="mt-3 font-num text-xl font-bold text-text">{ngn(minor)}</p>
           )}
 
-          <p className="mt-5 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-white/65">RETON ID</p>
-          <div className="mt-1.5 font-num text-3xl font-bold tracking-[0.14em]">{account || '—'}</div>
-          <p className="mt-1.5 text-sm font-medium text-white/85">{auth.user?.name}</p>
+          <button
+            type="button"
+            onClick={copy}
+            className="mt-4 flex w-full max-w-xs items-center gap-3 rounded-xl border border-line bg-surface-2/50 px-3.5 py-3 text-left transition hover:border-mint/30"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted">Account</span>
+              <span className="mt-0.5 block font-num text-lg font-bold tracking-wider text-text">
+                {account || '—'}
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-muted">{profileName}</span>
+            </span>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-mint/10 text-mint">
+              {copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
+            </span>
+          </button>
 
-          <div className="mt-7 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid w-full max-w-xs grid-cols-2 gap-2">
             <button
+              type="button"
               onClick={copy}
-              className="btn inline-flex items-center justify-center gap-2 border border-white/25 bg-white/10 px-4 py-3 text-sm text-white backdrop-blur-sm transition hover:bg-white/20"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold transition hover:border-mint/30"
             >
-              {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+              {copied ? <CheckIcon size={13} className="text-mint" /> : <CopyIcon size={13} className="text-mint" />}
               {copied ? 'Copied' : 'Copy'}
             </button>
             <button
+              type="button"
               onClick={share}
-              className="btn inline-flex items-center justify-center gap-2 bg-white px-4 py-3 text-sm text-mint-strong shadow-sm transition hover:bg-white/90"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-mint/25 bg-mint/10 px-3 py-2 text-xs font-semibold text-mint transition hover:bg-mint/15"
             >
-              <ShareIcon size={16} /> Share
+              <ShareIcon size={13} /> Share
             </button>
           </div>
         </div>
-      </motion.div>
+      </Card>
 
-      {/* Optional: request a specific amount */}
-      <FormPanel className="space-y-4">
+      <FormPanel className="!space-y-3 !p-3.5">
         <button
           type="button"
           onClick={() => {
@@ -141,33 +134,27 @@ export default function Receive() {
           }}
           className="flex w-full items-center justify-between gap-3"
         >
-          <span className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mint/10 text-mint">
-              <PlusIcon size={18} />
+          <span className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint/10 text-mint">
+              <PlusIcon size={16} />
             </span>
             <span className="text-left">
-              <span className="block font-display text-sm font-semibold">Request a specific amount</span>
-              <span className="block text-xs text-muted">Bake a figure into your QR &amp; share link</span>
+              <span className="block text-sm font-semibold">Request amount</span>
+              <span className="block text-xs text-muted">Add to QR & share link</span>
             </span>
           </span>
-          <span className="shrink-0 text-sm font-semibold text-mint">{requesting ? 'Clear' : 'Add'}</span>
+          <span className="text-xs font-semibold text-mint">{requesting ? 'Clear' : 'Add'}</span>
         </button>
         {requesting && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="overflow-hidden"
+            className="overflow-hidden border-t border-line pt-3"
           >
-            <div className="border-t border-line pt-4">
-              <AmountField value={amount} onChange={setAmount} />
-            </div>
+            <AmountField value={amount} onChange={setAmount} />
           </motion.div>
         )}
       </FormPanel>
-
-      <InfoStrip tone="mint">
-        Payments to you are screened by Reton fraud checks and recovery tools.
-      </InfoStrip>
     </Page>
   )
 }

@@ -140,7 +140,7 @@ export default function Withdraw({
       <PageHero
         icon={BankIcon}
         title="Withdraw"
-        subtitle="Send to your personal bank — account name must match your profile."
+        subtitle="To your bank — name must match profile"
         balance={wallet?.available_balance}
         tone="slate"
       />

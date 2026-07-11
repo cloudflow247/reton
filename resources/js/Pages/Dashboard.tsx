@@ -66,7 +66,7 @@ function nextTodo(needsPin: boolean, isNewUser: boolean) {
 }
 
 export default function Dashboard() {
-  const { auth, activity, activityFlow, summary, kycTier, features, depositAccount } = usePage<
+  const { auth, activity, activityFlow, summary, features, depositAccount } = usePage<
     PageProps<{
       activity: StatementEntry[]
       activityFlow?: { inflow: number; outflow: number; net: number; count: number }
@@ -127,30 +127,22 @@ export default function Dashboard() {
 
       <div className="mx-auto max-w-2xl space-y-4 lg:max-w-none lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
         <div className="space-y-4 lg:col-span-8">
-          <motion.header variants={item} className="flex items-end justify-between gap-3">
+          <motion.header variants={item} className="flex items-end justify-between gap-3 px-0.5">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-text/70">{greeting()}</p>
-              <h1 className="font-display text-2xl font-bold tracking-tight text-text sm:text-[1.65rem]">{firstName}</h1>
-              <p className="mt-1">
-                <Badge variant="muted" className="text-[10px] font-semibold text-text/80">
-                  KYC Tier {kycTier ?? 1}
-                </Badge>
-              </p>
+              <p className="text-sm text-muted">{greeting()}</p>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-text">{firstName}</h1>
             </div>
 
-            {/* Trust score sits under the brand shield metaphor — compact, always visible */}
             <Link
               href="/protection"
-              className="group flex shrink-0 flex-col items-center gap-1 rounded-2xl border border-mint/20 bg-gradient-to-b from-mint/[0.08] to-transparent px-3 py-2.5 transition hover:border-mint/40"
+              className="shrink-0 text-right"
               aria-label={`Trust score ${score}`}
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mint/15 text-mint ring-1 ring-mint/25 transition group-hover:scale-105">
-                <ShieldIcon size={18} />
-              </span>
-              <span className="flex items-baseline gap-0.5">
-                <span className={`font-num text-sm font-bold ${tone.ring}`}>{score}</span>
-                <span className="text-[10px] font-medium text-muted">trust</span>
-              </span>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Trust</p>
+              <p className={`font-num text-sm font-bold ${tone.ring}`}>
+                {score}
+                <span className="ml-1 text-[10px] font-semibold text-muted">{tone.label}</span>
+              </p>
             </Link>
           </motion.header>
 
