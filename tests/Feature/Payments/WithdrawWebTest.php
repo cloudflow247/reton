@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
-use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
+use App\Domain\Payments\Contracts\PayoutGateway;
 use App\Domain\Payments\Models\Payout;
+use App\Domain\Payments\Paystack\Gateways\FakePaystackPayoutGateway;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
@@ -16,8 +16,12 @@ use Inertia\Testing\AssertableInertia as Assert;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
-    config(['reton.features.withdraw' => true]);
+    config([
+        'reton.features.withdraw' => true,
+        'reton.payouts.provider' => 'paystack',
+        'services.paystack.driver' => 'fake',
+    ]);
+    $this->app->instance(PayoutGateway::class, new FakePaystackPayoutGateway);
 });
 
 /**
@@ -45,6 +49,7 @@ it('renders the withdraw page with banks', function () {
             ->has('banks')
             ->where('accountNameHint', 'ADA LOVELACE')
             ->where('payoutsAvailable', true)
+            ->where('payoutProvider', 'paystack')
             ->has('recentPayouts', 0));
 });
 
@@ -55,7 +60,7 @@ it('renders recent payouts on the withdraw page', function () {
         'reference' => 'PO-RECENT001',
         'user_id' => $user->id,
         'wallet_id' => $wallet->id,
-        'provider' => 'alatpay',
+        'provider' => 'paystack',
         'status' => 'pending',
         'amount' => 25_000,
         'currency' => 'NGN',
@@ -80,7 +85,7 @@ it('still renders withdraw when a payout has an unexpected status value', functi
         'reference' => 'PO-BADSTATUS',
         'user_id' => $user->id,
         'wallet_id' => $wallet->id,
-        'provider' => 'alatpay',
+        'provider' => 'paystack',
         'status' => 'pending',
         'amount' => 10_000,
         'currency' => 'NGN',
@@ -115,7 +120,7 @@ it('initiates a withdrawal when the account name matches the profile', function 
         ->assertSessionHas('payout');
 
     expect($wallet->fresh()->balance)->toBe(60000)
-        ->and(Payout::where('user_id', $user->id)->exists())->toBeTrue();
+        ->and(Payout::where('user_id', $user->id)->where('provider', 'paystack')->exists())->toBeTrue();
 });
 
 it('rejects a withdrawal when the account name does not match', function () {
@@ -150,9 +155,9 @@ it('rejects a withdrawal with the wrong pin', function () {
 });
 
 it('does not debit the wallet when outbound payouts are unavailable', function () {
-    $gateway = Mockery::mock(AlatpayGateway::class);
+    $gateway = Mockery::mock(PayoutGateway::class);
     $gateway->shouldReceive('supportsOutboundTransfers')->andReturn(false);
-    $this->app->instance(AlatpayGateway::class, $gateway);
+    $this->app->instance(PayoutGateway::class, $gateway);
 
     [$user, $wallet] = withdrawWebUser();
 

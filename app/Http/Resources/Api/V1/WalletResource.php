@@ -22,8 +22,8 @@ class WalletResource extends JsonResource
             'id' => $this->id,
             'account_number' => $this->account_number,
             'currency' => $this->currency,
-            'balance' => $this->balance,
-            'held_balance' => $this->held_balance,
+            'balance' => $this->ledgerMinor(),
+            'held_balance' => $this->heldMinor(),
             'available_balance' => $this->availableMinor(),
             'status' => $this->status,
         ];

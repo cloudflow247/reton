@@ -404,16 +404,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Outbound payouts (wallet withdrawals)
+    |--------------------------------------------------------------------------
+    |
+    | provider: paystack (Transfers API) or alatpay (Wema Debit Wallet).
+    |
+    */
+
+    'payouts' => [
+        'provider' => env('RETON_PAYOUT_PROVIDER', 'paystack'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Product feature flags
     |--------------------------------------------------------------------------
     |
-    | Flip these on when the underlying provider is live (Wema Debit Wallet for
-    | withdraw, Interswitch for bills, Bridgecard for cards). Off = Coming Soon.
+    | Flip these on when the underlying provider is live. Overridable from
+    | Admin → Platform. Off = Coming Soon.
     |
     */
 
     'features' => [
-        'withdraw' => (bool) env('RETON_FEATURE_WITHDRAW', false),
+        'withdraw' => (bool) env('RETON_FEATURE_WITHDRAW', true),
         'bills' => (bool) env('RETON_FEATURE_BILLS', false),
         'cards' => (bool) env('RETON_FEATURE_CARDS', false),
     ],

@@ -40,6 +40,14 @@ class PayoutController extends Controller
 
     public function store(RequestPayoutRequest $request): JsonResponse
     {
+        if (! (bool) config('reton.features.withdraw', true)) {
+            return ApiResponse::error(
+                'Bank withdrawals are coming soon. Your balance was not charged.',
+                'feature_disabled',
+                503,
+            );
+        }
+
         /** @var User $user */
         $user = $request->user();
 

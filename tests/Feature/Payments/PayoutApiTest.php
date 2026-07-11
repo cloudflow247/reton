@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Domain\Payments\Alatpay\AlatpaySignatureVerifier;
-use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
-use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
+use App\Domain\Payments\Contracts\PayoutGateway;
 use App\Domain\Payments\Models\Payout;
+use App\Domain\Payments\Paystack\Gateways\FakePaystackPayoutGateway;
+use App\Domain\Payments\Paystack\PaystackSignatureVerifier;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
@@ -16,7 +16,14 @@ use Illuminate\Support\Facades\Hash;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    config([
+        'reton.payouts.provider' => 'paystack',
+        'reton.features.withdraw' => true,
+        'services.paystack.driver' => 'fake',
+        'services.paystack.webhook_secret' => 'test-paystack-webhook',
+    ]);
+
+    $this->app->instance(PayoutGateway::class, new FakePaystackPayoutGateway);
 });
 
 /**
@@ -62,29 +69,52 @@ it('rejects a payout with the wrong pin and does not reserve funds', function ()
     expect($wallet->fresh()->balance)->toBe(100000);
 });
 
-it('settles a payout through the AlatPay webhook (transfer event)', function () {
+it('settles a payout through the Paystack webhook (transfer.success)', function () {
     [$user, $wallet] = payoutUser(1_000_00);
 
-    $providerRef = $this->actingAs($user)->postJson('/api/v1/payouts', [
+    $response = $this->actingAs($user)->postJson('/api/v1/payouts', [
         'wallet_id' => $wallet->id,
         'amount' => 400_00,
         'bank_code' => '044',
         'account_number' => '0123456789',
         'account_name' => 'Ada Lovelace',
         'pin' => '1234',
-    ])->json('data.provider_reference');
+    ])->assertCreated();
+
+    $providerRef = $response->json('data.provider_reference');
+    $reference = $response->json('data.reference');
 
     $payload = json_encode([
-        'id' => 'evt_transfer_1',
-        'type' => 'transfer.completed',
-        'data' => ['reference' => $providerRef, 'status' => 'completed'],
-    ]);
-    $signature = app(AlatpaySignatureVerifier::class)->sign($payload);
+        'event' => 'transfer.success',
+        'data' => [
+            'id' => 'evt_transfer_1',
+            'transfer_code' => $providerRef,
+            'reference' => $reference,
+            'status' => 'success',
+        ],
+    ], JSON_THROW_ON_ERROR);
+    $signature = app(PaystackSignatureVerifier::class)->sign($payload);
 
-    $this->call('POST', '/api/v1/webhooks/alatpay', [], [], [], [
+    $this->call('POST', '/api/v1/webhooks/paystack', [], [], [], [
         'CONTENT_TYPE' => 'application/json',
-        'HTTP_X_ALATPAY_SIGNATURE' => $signature,
+        'HTTP_X_PAYSTACK_SIGNATURE' => $signature,
     ], $payload)->assertOk();
 
     expect(Payout::where('provider_reference', $providerRef)->first()->status->value)->toBe('completed');
+});
+
+it('blocks payouts when the withdraw feature is disabled', function () {
+    config(['reton.features.withdraw' => false]);
+    [$user, $wallet] = payoutUser(1_000_00);
+
+    $this->actingAs($user)->postJson('/api/v1/payouts', [
+        'wallet_id' => $wallet->id,
+        'amount' => 400_00,
+        'bank_code' => '044',
+        'account_number' => '0123456789',
+        'account_name' => 'Ada Lovelace',
+        'pin' => '1234',
+    ])->assertStatus(503)->assertJsonPath('code', 'feature_disabled');
+
+    expect($wallet->fresh()->balance)->toBe(100000);
 });

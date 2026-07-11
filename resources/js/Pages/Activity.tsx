@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
-import { Head, usePage } from '@inertiajs/react'
+import { Head, Link, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
 import { ActivityIcon, ReceiveIcon, SendIcon, TrendIcon } from '@/components/icons'
@@ -12,17 +12,36 @@ import type { PageProps } from '@/types'
 
 type Tab = 'statement' | 'transfers'
 
+type MoneyFlow = { inflow: number; outflow: number; net: number; count: number }
+
 export default function Activity() {
-  const { transfers, statement } = usePage<PageProps<{ transfers: Transfer[]; statement: StatementEntry[] }>>().props
+  const { transfers, statement, flow: serverFlow, windowLabel } = usePage<
+    PageProps<{
+      transfers: Transfer[]
+      statement: StatementEntry[]
+      flow?: MoneyFlow
+      windowLabel?: string
+    }>
+  >().props
   const [tab, setTab] = useState<Tab>('statement')
 
   const flow = useMemo(() => {
+    if (serverFlow) {
+      const total = Math.max(serverFlow.inflow + serverFlow.outflow, 1)
+      return {
+        inflow: serverFlow.inflow,
+        outflow: serverFlow.outflow,
+        inPct: (serverFlow.inflow / total) * 100,
+        outPct: (serverFlow.outflow / total) * 100,
+      }
+    }
+
     const entries = statement ?? []
     const inflow = entries.filter((e) => e.direction === 'credit').reduce((s, e) => s + e.amount, 0)
     const outflow = entries.filter((e) => e.direction === 'debit').reduce((s, e) => s + e.amount, 0)
     const total = Math.max(inflow + outflow, 1)
     return { inflow, outflow, inPct: (inflow / total) * 100, outPct: (outflow / total) * 100 }
-  }, [statement])
+  }, [serverFlow, statement])
 
   return (
     <Page>
@@ -30,14 +49,19 @@ export default function Activity() {
       <PageHero
         icon={ActivityIcon}
         title="Activity"
-        subtitle="Every movement in and out of your wallet — tap a row for details."
+        subtitle="Every movement in and out of your wallet — tap a row for details, print, or share."
         tone="sky"
       />
 
       <FormPanel className="!space-y-4">
-        <span className="inline-flex items-center gap-2 text-sm font-semibold">
-          <TrendIcon size={16} className="text-mint" /> Money flow
-        </span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold">
+            <TrendIcon size={16} className="text-mint" /> Money flow
+          </span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted">
+            {windowLabel ?? 'Loaded window'}
+          </span>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <FlowBar label="Money in" value={ngn(flow.inflow)} pct={flow.inPct} tone="mint" />
           <FlowBar label="Money out" value={ngn(flow.outflow)} pct={flow.outPct} tone="muted" />
@@ -60,6 +84,7 @@ export default function Activity() {
             {(transfers ?? []).map((t) => (
               <Row
                 key={t.id}
+                href="/protection"
                 icon={<SendIcon size={16} />}
                 accent={t.type === 'protected'}
                 title={t.note || (t.type === 'protected' ? 'Protected transfer' : 'Transfer')}
@@ -79,6 +104,7 @@ export default function Activity() {
             {(statement ?? []).map((e) => (
               <Row
                 key={e.id}
+                href={`/activity/${e.id}`}
                 icon={e.direction === 'credit' ? <ReceiveIcon size={16} /> : <SendIcon size={16} />}
                 accent={e.direction === 'credit'}
                 title={e.transaction?.description ?? e.transaction?.type ?? 'Movement'}
@@ -102,12 +128,14 @@ export default function Activity() {
 Activity.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
 
 function Row({
+  href,
   icon,
   accent,
   title,
   sub,
   right,
 }: {
+  href: string
   icon: ReactNode
   accent?: boolean
   title: string
@@ -115,7 +143,10 @@ function Row({
   right: ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-surface-2/50 sm:px-5">
+    <Link
+      href={href}
+      className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-surface-2/50 sm:px-5"
+    >
       <div className="flex min-w-0 items-center gap-3">
         <span
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
@@ -130,7 +161,7 @@ function Row({
         </div>
       </div>
       <div className="shrink-0">{right}</div>
-    </div>
+    </Link>
   )
 }
 

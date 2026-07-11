@@ -50,10 +50,14 @@ use App\Domain\Notifications\Gateways\HttpTermiiGateway;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\HttpAlatpayGateway;
+use App\Domain\Payments\Contracts\PayoutGateway;
+use App\Domain\Payments\Gateways\AlatpayPayoutGateway;
 use App\Domain\Payments\Models\Deposit;
 use App\Domain\Payments\Models\PaymentRequest;
 use App\Domain\Payments\Models\Payout;
 use App\Domain\Payments\Models\StaticAccount;
+use App\Domain\Payments\Paystack\Gateways\FakePaystackPayoutGateway;
+use App\Domain\Payments\Paystack\Gateways\HttpPaystackPayoutGateway;
 use App\Domain\Payments\Policies\DepositPolicy;
 use App\Domain\Payments\Policies\PaymentRequestPolicy;
 use App\Domain\Payments\Policies\PayoutPolicy;
@@ -123,6 +127,19 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AlatpayGateway::class, fn () => config('services.alatpay.driver') === 'fake'
             ? new FakeAlatpayGateway
             : new HttpAlatpayGateway);
+
+        // Outbound payouts: Paystack Transfers (default) or ALATPay Debit Wallet adapter.
+        $this->app->singleton(PayoutGateway::class, function ($app) {
+            $provider = (string) config('reton.payouts.provider', 'paystack');
+
+            if ($provider === 'alatpay') {
+                return new AlatpayPayoutGateway($app->make(AlatpayGateway::class));
+            }
+
+            return config('services.paystack.driver') === 'fake'
+                ? new FakePaystackPayoutGateway
+                : $app->make(HttpPaystackPayoutGateway::class);
+        });
 
         // Bill payments: Interswitch Quickteller VAS (live) or in-memory fake for tests.
         $this->app->singleton(BillProviderGateway::class, function ($app) {

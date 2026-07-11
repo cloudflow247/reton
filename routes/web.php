@@ -200,6 +200,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
 
     // Activity + profile
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
+    Route::get('/activity/{entry}', [ActivityController::class, 'show'])->name('activity.show');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profile/kyc/tier-3', [KycController::class, 'upgradeTier3'])->middleware('throttle:6,1')->name('profile.kyc.tier3');
 

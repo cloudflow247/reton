@@ -42,7 +42,7 @@ class AlatpayWebhookRouter
         $type = (string) ($payload['type'] ?? '');
 
         if (Str::startsWith($type, 'transfer')) {
-            $this->payouts->process($event, $data);
+            $this->payouts->process($event, $data, 'alatpay');
 
             return $event->refresh();
         }

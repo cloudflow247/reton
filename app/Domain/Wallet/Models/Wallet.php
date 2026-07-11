@@ -118,10 +118,30 @@ class Wallet extends Model
         return $this->hasOne(StaticAccount::class)->latestOfMany();
     }
 
-    /** Funds in total balance that cannot be spent yet (pending sales, recovery holds). */
+    /**
+     * Spendable funds = ledger balance minus escrow holds.
+     * Never report negative available (defensive clamp for fintech safety).
+     */
     public function availableMinor(): int
     {
-        return $this->balance - $this->held_balance;
+        return max(0, (int) $this->balance - (int) $this->held_balance);
+    }
+
+    /**
+     * Escrow / protected / recovery holds that count toward ledger balance
+     * but cannot be spent until released.
+     */
+    public function heldMinor(): int
+    {
+        return max(0, (int) $this->held_balance);
+    }
+
+    /**
+     * Full ledger liability balance (available + escrow).
+     */
+    public function ledgerMinor(): int
+    {
+        return max(0, (int) $this->balance);
     }
 
     public function available(): Money

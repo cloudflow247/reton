@@ -109,6 +109,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Paystack (Transfers / withdrawals)
+    |--------------------------------------------------------------------------
+    | @see https://paystack.com/docs/transfers/single-transfers/
+    */
+    'paystack' => [
+        'driver' => env('PAYSTACK_DRIVER', 'http'),
+        'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        // Prefer dedicated webhook secret; falls back to secret_key in verifier.
+        'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET', ''),
+        'timeout' => (int) env('PAYSTACK_TIMEOUT', 15),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Dojah (BVN / NIN identity verification)
     |--------------------------------------------------------------------------
     | @see https://docs.dojah.io

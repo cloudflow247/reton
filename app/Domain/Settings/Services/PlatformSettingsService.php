@@ -27,6 +27,7 @@ class PlatformSettingsService
     /** @var list<string> */
     private const SERVICE_GROUPS = [
         'alatpay',
+        'paystack',
         'interswitch',
         'bridgecard',
         'giglogistics',
@@ -38,6 +39,7 @@ class PlatformSettingsService
     /** @var array<string, list<string>> */
     private const SECRET_FIELDS = [
         'alatpay' => ['api_key', 'merchant_password', 'business_bvn', 'webhook_secret'],
+        'paystack' => ['secret_key', 'webhook_secret'],
         'interswitch' => ['client_id', 'client_secret'],
         'bridgecard' => ['access_token', 'secret_key'],
         'giglogistics' => ['api_key', 'webhook_secret'],
@@ -61,6 +63,14 @@ class PlatformSettingsService
             'business_bvn' => '',
             'webhook_secret' => '',
             'timeout' => 12,
+        ],
+        'paystack' => [
+            'driver' => 'http',
+            'base_url' => 'https://api.paystack.co',
+            'secret_key' => '',
+            'public_key' => '',
+            'webhook_secret' => '',
+            'timeout' => 15,
         ],
         'interswitch' => [
             'driver' => 'fake',
@@ -190,6 +200,14 @@ class PlatformSettingsService
         ],
         'bills' => [
             'provider' => 'interswitch',
+        ],
+        'payouts' => [
+            'provider' => 'paystack',
+        ],
+        'features' => [
+            'withdraw' => true,
+            'bills' => false,
+            'cards' => false,
         ],
         'horizon' => [
             'allowed_emails' => '',
@@ -329,6 +347,8 @@ class PlatformSettingsService
                     && ! empty($values['business_id'])
                     && ! empty($values['business_bvn'])
                 ),
+            'paystack' => ($values['driver'] ?? '') === 'fake'
+                || ! empty($values['secret_key']),
             'termii' => ($values['driver'] ?? '') === 'fake'
                 || (! empty($values['api_key']) && ! empty($values['sender_id'])),
             'remita' => ($values['driver'] ?? '') === 'fake'
@@ -413,7 +433,7 @@ class PlatformSettingsService
             unset($input["{$field}_set"]);
         }
 
-        foreach (['api_key', 'merchant_email', 'merchant_password', 'business_id', 'business_bvn', 'webhook_secret', 'base_url'] as $trimField) {
+        foreach (['api_key', 'merchant_email', 'merchant_password', 'business_id', 'business_bvn', 'webhook_secret', 'base_url', 'secret_key', 'public_key'] as $trimField) {
             if (isset($input[$trimField]) && is_string($input[$trimField])) {
                 $input[$trimField] = trim($input[$trimField]);
             }
@@ -601,6 +621,12 @@ class PlatformSettingsService
                 'reton.fraud.escalate_min' => (int) ($values['escalate_min'] ?? 90),
             ]),
             'bills' => config(['reton.bills.provider' => (string) ($values['provider'] ?? 'interswitch')]),
+            'payouts' => config(['reton.payouts.provider' => (string) ($values['provider'] ?? 'paystack')]),
+            'features' => config([
+                'reton.features.withdraw' => filter_var($values['withdraw'] ?? true, FILTER_VALIDATE_BOOLEAN),
+                'reton.features.bills' => filter_var($values['bills'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'reton.features.cards' => filter_var($values['cards'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            ]),
             'horizon' => config(['reton.horizon.allowed_emails' => (string) ($values['allowed_emails'] ?? '')]),
             'sms' => config(['reton.sms' => [
                 'notifications_enabled' => (bool) ($values['notifications_enabled'] ?? false),
@@ -781,6 +807,14 @@ class PlatformSettingsService
             'fraud' => config('reton.fraud'),
             'bills' => [
                 'provider' => (string) config('reton.bills.provider'),
+            ],
+            'payouts' => [
+                'provider' => (string) config('reton.payouts.provider', 'paystack'),
+            ],
+            'features' => [
+                'withdraw' => (bool) config('reton.features.withdraw', true),
+                'bills' => (bool) config('reton.features.bills', false),
+                'cards' => (bool) config('reton.features.cards', false),
             ],
             'horizon' => [
                 'allowed_emails' => (string) config('reton.horizon.allowed_emails'),

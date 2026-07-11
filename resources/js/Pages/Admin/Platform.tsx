@@ -18,6 +18,8 @@ type PlatformGroup =
   | 'fx'
   | 'cards'
   | 'bills'
+  | 'payouts'
+  | 'features'
   | 'horizon'
 
 type GroupValues = Record<string, string | number | boolean>
@@ -37,6 +39,8 @@ const tabs: { id: PlatformGroup; label: string }[] = [
   { id: 'fx', label: 'FX rates' },
   { id: 'cards', label: 'Virtual cards' },
   { id: 'bills', label: 'Bill payments' },
+  { id: 'payouts', label: 'Withdrawals' },
+  { id: 'features', label: 'Features' },
   { id: 'horizon', label: 'Operations' },
 ]
 
@@ -407,6 +411,50 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
             Configure credentials under Integrations. Biller payment codes remain in config for now.
           </span>
         </label>
+      )}
+
+      {group === 'payouts' && (
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Withdrawal provider</span>
+          <select
+            value={String(form.data.provider ?? 'paystack')}
+            onChange={(e) => form.setData('provider', e.target.value)}
+            className="field w-full px-4 py-3 text-sm"
+          >
+            <option value="paystack">Paystack Transfers</option>
+            <option value="alatpay">ALATPay Debit Wallet</option>
+          </select>
+          <span className="mt-1 block text-xs text-muted">
+            Paystack is the default for bank withdrawals. Configure keys under Integrations → Paystack. ALATPay requires
+            Debit Wallet enablement.
+          </span>
+        </label>
+      )}
+
+      {group === 'features' && (
+        <div className="space-y-4">
+          {(
+            [
+              ['withdraw', 'Bank withdrawals', 'Cash-out to Nigerian bank accounts via the payout provider.'],
+              ['bills', 'Bill payments', 'Airtime, data, power, TV, and betting.'],
+              ['cards', 'Virtual cards', 'Bridgecard NGN / USD virtual cards.'],
+            ] as const
+          ).map(([key, label, hint]) => (
+            <label key={key} className="flex items-start gap-3 rounded-xl border border-line bg-surface-2/40 px-4 py-3">
+              <input
+                type="checkbox"
+                className="mt-1 size-4 accent-[var(--mint)]"
+                checked={Boolean(form.data[key])}
+                onChange={(e) => form.setData(key, e.target.checked)}
+              />
+              <span>
+                <span className="block text-sm font-medium text-text">{label}</span>
+                <span className="mt-0.5 block text-xs text-muted">{hint}</span>
+              </span>
+            </label>
+          ))}
+          <p className="text-xs text-muted">Off = Coming Soon page for customers. Credentials still live under Integrations.</p>
+        </div>
       )}
 
       {group === 'horizon' && (

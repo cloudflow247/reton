@@ -29,6 +29,8 @@ class AdminPlatformSettingsController extends Controller
                 'fx' => $this->settings->maskedGroup('fx'),
                 'cards' => $this->settings->maskedGroup('cards'),
                 'bills' => $this->settings->maskedGroup('bills'),
+                'payouts' => $this->settings->maskedGroup('payouts'),
+                'features' => $this->settings->maskedGroup('features'),
                 'horizon' => $this->settings->maskedGroup('horizon'),
             ],
         ]);
@@ -37,7 +39,7 @@ class AdminPlatformSettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,horizon'],
+            'group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,payouts,features,horizon'],
         ]);
 
         $group = (string) $request->input('group');
@@ -112,13 +114,21 @@ class AdminPlatformSettingsController extends Controller
             'bills' => [
                 'provider' => ['required', 'in:interswitch,remita'],
             ],
+            'payouts' => [
+                'provider' => ['required', 'in:paystack,alatpay'],
+            ],
+            'features' => [
+                'withdraw' => ['required', 'boolean'],
+                'bills' => ['required', 'boolean'],
+                'cards' => ['required', 'boolean'],
+            ],
             'horizon' => [
                 'allowed_emails' => ['nullable', 'string', 'max:2000'],
             ],
         };
 
         $validated = $request->validate(array_merge(
-            ['group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,horizon']],
+            ['group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,payouts,features,horizon']],
             $rules,
         ));
 

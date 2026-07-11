@@ -9,6 +9,7 @@ use App\Domain\Bills\Interswitch\Services\InterswitchTokenService;
 use App\Domain\Cards\Bridgecard\Gateways\HttpBridgecardVirtualCardGateway;
 use App\Domain\Notifications\Contracts\SmsGateway;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
+use App\Domain\Payments\Contracts\PayoutGateway;
 use App\Domain\Payments\Services\StaticAccountService;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ class AdminIntegrationsController extends Controller
     public function __construct(
         private readonly PlatformSettingsService $settings,
         private readonly AlatpayGateway $alatpay,
+        private readonly PayoutGateway $payouts,
         private readonly StaticAccountService $staticAccounts,
         private readonly HttpInterswitchProvider $interswitch,
         private readonly HttpBridgecardVirtualCardGateway $bridgecard,
@@ -36,6 +38,10 @@ class AdminIntegrationsController extends Controller
                 'alatpay' => array_merge(
                     $this->settings->maskedGroup('alatpay'),
                     ['ready' => $this->settings->isIntegrationReady('alatpay')],
+                ),
+                'paystack' => array_merge(
+                    $this->settings->maskedGroup('paystack'),
+                    ['ready' => $this->settings->isIntegrationReady('paystack')],
                 ),
                 'interswitch' => array_merge(
                     $this->settings->maskedGroup('interswitch'),
@@ -64,9 +70,11 @@ class AdminIntegrationsController extends Controller
             ],
             'webhookUrls' => [
                 'alatpay' => url('/api/v1/webhooks/alatpay'),
+                'paystack' => url('/api/v1/webhooks/paystack'),
                 'giglogistics' => url('/api/v1/webhooks/giglogistics'),
             ],
             'docsUrls' => [
+                'paystack' => 'https://paystack.com/docs/transfers/single-transfers/',
                 'interswitch' => 'https://docs.interswitchgroup.com/docs/bills-payment-1',
                 'bridgecard' => 'https://docs.bridgecard.co/',
                 'dojah' => 'https://docs.dojah.io',
@@ -79,7 +87,7 @@ class AdminIntegrationsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita,termii'],
+            'integration' => ['required', 'in:alatpay,paystack,interswitch,bridgecard,giglogistics,dojah,remita,termii'],
         ]);
 
         $group = (string) $request->input('integration');
@@ -93,6 +101,14 @@ class AdminIntegrationsController extends Controller
                 'merchant_password' => ['nullable', 'string', 'max:500'],
                 'business_id' => ['nullable', 'string', 'max:120'],
                 'business_bvn' => ['nullable', 'string', 'max:20'],
+                'webhook_secret' => ['nullable', 'string', 'max:500'],
+                'timeout' => ['required', 'integer', 'min:5', 'max:120'],
+            ],
+            'paystack' => [
+                'driver' => ['required', 'in:fake,http'],
+                'base_url' => ['required', 'url', 'max:255'],
+                'secret_key' => ['nullable', 'string', 'max:500'],
+                'public_key' => ['nullable', 'string', 'max:500'],
                 'webhook_secret' => ['nullable', 'string', 'max:500'],
                 'timeout' => ['required', 'integer', 'min:5', 'max:120'],
             ],
@@ -146,7 +162,7 @@ class AdminIntegrationsController extends Controller
         };
 
         $validated = $request->validate(array_merge(
-            ['integration' => ['required', 'in:alatpay,interswitch,bridgecard,giglogistics,dojah,remita,termii']],
+            ['integration' => ['required', 'in:alatpay,paystack,interswitch,bridgecard,giglogistics,dojah,remita,termii']],
             $rules,
         ));
 
@@ -181,6 +197,24 @@ class AdminIntegrationsController extends Controller
                 return back()->with('success', 'ALATPay merchant login + Static Wallet API reachable.');
             } catch (\Throwable $e) {
                 return back()->with('error', 'ALATPay Static Wallet test failed: '.$e->getMessage());
+            }
+        }
+
+        if ($integration === 'paystack') {
+            if (! $this->settings->isIntegrationReady('paystack')) {
+                return back()->with('error', 'Add a Paystack secret key (or switch driver to demo) before testing.');
+            }
+
+            if (config('services.paystack.driver') === 'fake') {
+                return back()->with('success', 'Paystack is in demo (fake) mode — switch driver to Live HTTP to test Transfers.');
+            }
+
+            try {
+                $this->payouts->ping();
+
+                return back()->with('success', 'Paystack Transfers API reachable — withdrawals ready.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Paystack test failed: '.$e->getMessage());
             }
         }
 

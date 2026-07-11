@@ -27,6 +27,7 @@ type AdminDashboardProps = PageProps<{
   }
   integrations: {
     alatpay: IntegrationRow
+    paystack: IntegrationRow
     interswitch: IntegrationRow
     giglogistics: IntegrationRow
     dojah: IntegrationRow
@@ -70,6 +71,7 @@ export default function AdminDashboard() {
 
   const integrationRows: IntegrationRow[] = [
     { key: 'ALATPay', ...integrations.alatpay },
+    { key: 'Paystack', ...integrations.paystack },
     {
       key: 'BVN verification',
       ready: integrations.bvn?.ready ?? false,

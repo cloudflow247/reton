@@ -15,9 +15,15 @@ final class PayoutUnavailableException extends RuntimeException implements Rende
 {
     public static function make(): self
     {
-        return new self(
-            'Bank withdrawals are not available yet. ALATPay is connected for deposits only — outbound payouts need Wema Debit Wallet access. Your balance was not charged.'
-        );
+        $provider = (string) config('reton.payouts.provider', 'paystack');
+
+        $message = match ($provider) {
+            'paystack' => 'Bank withdrawals are unavailable. Add a Paystack secret key in Admin → Integrations (or switch driver to demo). Your balance was not charged.',
+            'alatpay' => 'Bank withdrawals are unavailable. ALATPay Debit Wallet is not enabled. Your balance was not charged.',
+            default => 'Bank withdrawals are unavailable on the configured payout provider. Your balance was not charged.',
+        };
+
+        return new self($message);
     }
 
     public function apiStatus(): int

@@ -7,7 +7,7 @@ import { CheckIcon } from '@/components/icons'
 import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import type { PageProps } from '@/types'
 
-type IntegrationGroup = 'alatpay' | 'interswitch' | 'bridgecard' | 'giglogistics' | 'dojah' | 'remita' | 'termii'
+type IntegrationGroup = 'alatpay' | 'paystack' | 'interswitch' | 'bridgecard' | 'giglogistics' | 'dojah' | 'remita' | 'termii'
 
 type GroupValues = Record<string, string | number | boolean>
 
@@ -19,6 +19,7 @@ type IntegrationsProps = PageProps<{
 
 const tabs: { id: IntegrationGroup; label: string }[] = [
   { id: 'alatpay', label: 'ALATPay' },
+  { id: 'paystack', label: 'Paystack (Withdraw)' },
   { id: 'interswitch', label: 'Interswitch (Bills)' },
   { id: 'remita', label: 'Remita (RRR)' },
   { id: 'bridgecard', label: 'Bridgecard (Cards)' },
@@ -218,6 +219,51 @@ function IntegrationForm({
             <span className="font-semibold text-text">BVN verification</span> logs into ALATPay with your merchant
             email/password, uses the session + subscriptionPrimaryKey, then creates an Individual Static Wallet OTP for
             the customer BVN. Test connection exercises that same path.
+          </p>
+        </>
+      )}
+
+      {group === 'paystack' && (
+        <>
+          <SecretField
+            label="Secret key"
+            name="secret_key"
+            value={String(form.data.secret_key ?? '')}
+            isSet={!!form.data.secret_key_set}
+            onChange={(v) => form.setData('secret_key', v)}
+            hint="sk_live_… or sk_test_… from Paystack Settings → API Keys."
+          />
+          <Field
+            label="Public key"
+            value={String(form.data.public_key ?? '')}
+            onChange={(e) => form.setData('public_key', e.target.value)}
+            hint="Optional pk_live_… / pk_test_… (not required for Transfers)."
+          />
+          <SecretField
+            label="Webhook secret"
+            name="webhook_secret"
+            value={String(form.data.webhook_secret ?? '')}
+            isSet={!!form.data.webhook_secret_set}
+            onChange={(v) => form.setData('webhook_secret', v)}
+            hint="Optional. Defaults to the secret key when empty — HMAC SHA512 on x-paystack-signature."
+          />
+          <Field
+            label="Timeout (seconds)"
+            type="number"
+            min={5}
+            max={120}
+            value={String(form.data.timeout ?? 15)}
+            onChange={(e) => form.setData('timeout', Number(e.target.value))}
+          />
+          {webhookUrl && (
+            <div className="rounded-xl border border-line bg-surface-2/50 px-4">
+              <CopyRow label="Webhook URL (register in Paystack)" value={webhookUrl} mono />
+            </div>
+          )}
+          <p className="rounded-xl border border-mint/20 bg-mint/[0.04] px-4 py-3 text-xs leading-relaxed text-muted">
+            <span className="font-semibold text-text">Bank withdrawals</span> use Paystack Transfers. Disable Transfer OTP
+            in the Paystack dashboard for automated payouts, fund your Paystack balance, and set Platform → Payouts to
+            Paystack. Enable the withdraw feature under Platform → Features.
           </p>
         </>
       )}
@@ -498,6 +544,11 @@ function IntegrationForm({
             Driver is Demo/fake — live NIP deposits will not credit Reton wallets. Switch to Live HTTP, save, then Sync VA
             deposits.
           </p>
+        )}
+        {group === 'paystack' && driver === 'http' && (
+          <Button type="button" variant="ghost" onClick={testConnection}>
+            Test Paystack
+          </Button>
         )}
         {group === 'interswitch' && driver === 'http' && (
           <Button type="button" variant="ghost" onClick={testConnection}>

@@ -41,8 +41,13 @@ class AdminDashboardController extends Controller
                 'alatpay' => [
                     'ready' => $this->settings->isIntegrationReady('alatpay'),
                     'driver' => config('services.alatpay.driver'),
-                    'subtitle' => 'Payments & BVN verification',
+                    'subtitle' => 'Collections & BVN verification',
                     'bvn_ready' => $this->settings->isBvnVerificationReady(),
+                ],
+                'paystack' => [
+                    'ready' => $this->settings->isIntegrationReady('paystack'),
+                    'driver' => config('services.paystack.driver'),
+                    'subtitle' => 'Bank withdrawals (Transfers)',
                 ],
                 'interswitch' => [
                     'ready' => $this->settings->isIntegrationReady('interswitch'),

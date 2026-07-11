@@ -156,7 +156,7 @@ it('renders each authenticated screen', function (string $path, string $componen
     'send' => ['/send', 'Send'],
     'add money' => ['/add-money', 'AddMoney'],
     'bills' => ['/bills', 'ComingSoon'],
-    'withdraw' => ['/withdraw', 'ComingSoon'],
+    'withdraw' => ['/withdraw', 'Withdraw'],
     'cards' => ['/cards', 'ComingSoon'],
     'receive' => ['/receive', 'Receive'],
     'activity' => ['/activity', 'Activity'],
@@ -177,7 +177,7 @@ it('shares the authenticated user and wallets with every page', function () {
             ->has('summary')
             ->has('activity')
             ->has('kycTier')
-            ->where('features.withdraw', false)
+            ->where('features.withdraw', true)
             ->where('features.bills', false)
             ->where('features.cards', false));
 });

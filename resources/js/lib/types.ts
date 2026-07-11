@@ -60,10 +60,12 @@ export type StatementEntry = {
   currency: string
   created_at: string
   transaction: {
+    id?: string
     reference: string
     type: string
     status: string
     description?: string
+    amount?: number
   } | null
 }
 

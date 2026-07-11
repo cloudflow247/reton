@@ -62,23 +62,26 @@ function nextTodo(needsPin: boolean, isNewUser: boolean) {
 }
 
 export default function Dashboard() {
-  const { auth, activity, summary, kycTier, features } = usePage<
+  const { auth, activity, activityFlow, summary, kycTier, features, depositAccount } = usePage<
     PageProps<{
       activity: StatementEntry[]
+      activityFlow?: { inflow: number; outflow: number; net: number; count: number }
       summary: DashboardSummary
       kycTier: number
+      depositAccount?: { account_number: string; account_name: string | null; bank_name: string | null } | null
     }>
   >().props
   const wallets = Array.isArray(auth?.wallets) ? auth.wallets : []
   const wallet = wallets[0]
   const [copied, setCopied] = useState(false)
+  const [depositCopied, setDepositCopied] = useState(false)
   const hidden = useUiStore((s) => s.balanceHidden)
   const toggleHidden = useUiStore((s) => s.toggleBalanceHidden)
   const totalBalance = wallet?.balance ?? 0
   const availableBalance = wallet?.available_balance ?? 0
   const pendingBalance = wallet?.held_balance ?? 0
   const animatedAvailable = useCountUp(availableBalance)
-  const recent = (Array.isArray(activity) ? activity : []).slice(0, 5)
+  const recent = Array.isArray(activity) ? activity : []
   const firstName = (auth?.user?.name ?? 'there').split(' ')[0]
   const needsPin = !auth?.user?.has_transaction_pin
   const isNewUser = recent.length === 0
@@ -106,11 +109,14 @@ export default function Dashboard() {
   const score = Number(trust.trust_score ?? 100)
 
   const flow = useMemo(() => {
-    const entries = Array.isArray(activity) ? activity : []
+    if (activityFlow) {
+      return { inflow: activityFlow.inflow, outflow: activityFlow.outflow }
+    }
+    const entries = recent
     const inflow = entries.filter((e) => e.direction === 'credit').reduce((s, e) => s + e.amount, 0)
     const outflow = entries.filter((e) => e.direction === 'debit').reduce((s, e) => s + e.amount, 0)
     return { inflow, outflow }
-  }, [activity])
+  }, [activityFlow, recent])
 
   return (
     <Page className="!pb-3">
@@ -170,11 +176,19 @@ export default function Dashboard() {
               pendingBalance={pendingBalance}
               hidden={hidden}
               copied={copied}
+              depositAccount={depositAccount}
+              depositCopied={depositCopied}
               onToggleHidden={toggleHidden}
               onCopyAccount={() => {
                 navigator.clipboard.writeText(copyAccount)
                 setCopied(true)
                 setTimeout(() => setCopied(false), 1500)
+              }}
+              onCopyDeposit={() => {
+                if (!depositAccount?.account_number) return
+                navigator.clipboard.writeText(depositAccount.account_number)
+                setDepositCopied(true)
+                setTimeout(() => setDepositCopied(false), 1500)
               }}
             />
           </motion.div>
@@ -227,7 +241,10 @@ export default function Dashboard() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.03 }}
                     >
-                      <div className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-surface-2/50">
+                      <Link
+                        href={`/activity/${e.id}`}
+                        className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-surface-2/50"
+                      >
                         <div className="flex min-w-0 items-center gap-3">
                           <span
                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
@@ -249,7 +266,7 @@ export default function Dashboard() {
                           {e.direction === 'credit' ? '+' : '−'}
                           {ngn(e.amount)}
                         </span>
-                      </div>
+                      </Link>
                     </motion.li>
                   ))}
                 </ul>
@@ -268,6 +285,7 @@ export default function Dashboard() {
 
             {(flow.inflow > 0 || flow.outflow > 0) && (
               <p className="mt-2 px-0.5 text-xs text-muted">
+                <span className="text-[10px] uppercase tracking-wide">Shown · </span>
                 <span className="font-num font-semibold text-mint">+{ngn(flow.inflow)}</span>
                 <span className="mx-1 text-line">·</span>
                 <span className="font-num font-semibold">−{ngn(flow.outflow)}</span>

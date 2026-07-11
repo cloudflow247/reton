@@ -9,7 +9,7 @@ use App\Domain\Fraud\Data\FraudContext;
 use App\Domain\Fraud\Exceptions\FraudBlockedException;
 use App\Domain\Fraud\Services\FraudService;
 use App\Domain\Kyc\Services\KycLimitService;
-use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
+use App\Domain\Payments\Contracts\PayoutGateway;
 use App\Domain\Payments\Models\Payout;
 use App\Domain\Payments\Services\PayoutService;
 use App\Domain\Wallet\Models\Wallet;
@@ -33,11 +33,11 @@ class WithdrawController extends Controller
     use RendersComingSoon;
     use VerifiesPin;
 
-    public function index(Request $request, AlatpayGateway $alatpay): Response
+    public function index(Request $request, PayoutGateway $payouts): Response
     {
         if ($soon = $this->comingSoonIfDisabled('withdraw', [
             'title' => 'Withdraw to bank',
-            'description' => 'Cash out to your own bank account is almost ready. We’re finishing Wema Debit Wallet payouts so every withdrawal is safe and same-name only.',
+            'description' => 'Cash out to your own bank account. Same-name only — we match the account name to your Reton profile for safety.',
         ])) {
             return $soon;
         }
@@ -49,7 +49,8 @@ class WithdrawController extends Controller
             'banks' => NigerianBanks::all(),
             'accountNameHint' => strtoupper((string) $user->name),
             'recentPayouts' => $this->recentPayoutsFor($user),
-            'payoutsAvailable' => $alatpay->supportsOutboundTransfers(),
+            'payoutsAvailable' => $payouts->supportsOutboundTransfers(),
+            'payoutProvider' => (string) config('reton.payouts.provider', 'paystack'),
         ]);
     }
 

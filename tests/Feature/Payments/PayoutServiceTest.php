@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use App\Domain\Ledger\Enums\SystemAccount;
 use App\Domain\Ledger\Services\SystemAccountResolver;
-use App\Domain\Payments\Alatpay\AlatpaySignatureVerifier;
-use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
-use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
+use App\Domain\Payments\Contracts\PayoutGateway;
 use App\Domain\Payments\Enums\PayoutStatus;
 use App\Domain\Payments\Exceptions\PayoutUnavailableException;
+use App\Domain\Payments\Paystack\Gateways\FakePaystackPayoutGateway;
+use App\Domain\Payments\Paystack\PaystackSignatureVerifier;
 use App\Domain\Payments\Services\PayoutService;
 use App\Domain\Wallet\Exceptions\InsufficientFundsException;
 use App\Domain\Wallet\Models\Wallet;
@@ -20,8 +20,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->gateway = new FakeAlatpayGateway;
-    $this->app->instance(AlatpayGateway::class, $this->gateway);
+    config([
+        'reton.payouts.provider' => 'paystack',
+        'reton.features.withdraw' => true,
+        'services.paystack.driver' => 'fake',
+    ]);
+
+    $this->gateway = new FakePaystackPayoutGateway;
+    $this->app->instance(PayoutGateway::class, $this->gateway);
 });
 
 function payouts(): PayoutService
@@ -53,14 +59,26 @@ function request_payout($user, $wallet, int $amount)
     return payouts()->request($user, $wallet, Money::of($amount, 'NGN'), '044', '0123456789', 'Ada Lovelace');
 }
 
-function transferWebhook(string $providerRef, string $status, string $eventId): void
+function paystackTransferWebhook(string $providerRef, string $merchantRef, string $status, string $eventId): void
 {
+    $event = match ($status) {
+        'completed' => 'transfer.success',
+        'failed' => 'transfer.failed',
+        default => 'transfer.pending',
+    };
+
     $payload = json_encode([
-        'id' => $eventId,
-        'type' => 'transfer.'.$status,
-        'data' => ['reference' => $providerRef, 'amount' => 0, 'status' => $status],
-    ]);
-    payouts()->handleWebhook($payload, app(AlatpaySignatureVerifier::class)->sign($payload));
+        'event' => $event,
+        'data' => [
+            'id' => $eventId,
+            'transfer_code' => $providerRef,
+            'reference' => $merchantRef,
+            'amount' => 40000,
+            'status' => $status === 'completed' ? 'success' : $status,
+        ],
+    ], JSON_THROW_ON_ERROR);
+
+    payouts()->handlePaystackWebhook($payload, app(PaystackSignatureVerifier::class)->sign($payload));
 }
 
 it('reserves funds when a payout is requested', function () {
@@ -69,10 +87,11 @@ it('reserves funds when a payout is requested', function () {
     $payout = request_payout($user, $wallet, 400_00);
 
     expect($payout->status)->toBe(PayoutStatus::Pending)
+        ->and($payout->provider)->toBe('paystack')
         ->and($payout->reservation_transaction_id)->not->toBeNull()
         ->and($payout->provider_reference)->not->toBeNull()
-        ->and($wallet->fresh()->balance)->toBe(60000)   // debited up front
-        ->and(settlementMinor())->toBe(40000);          // parked in settlement
+        ->and($wallet->fresh()->balance)->toBe(60000)
+        ->and(settlementMinor())->toBe(40000);
 });
 
 it('refuses a payout that exceeds the available balance', function () {
@@ -82,9 +101,9 @@ it('refuses a payout that exceeds the available balance', function () {
 })->throws(InsufficientFundsException::class);
 
 it('does not reserve funds when the gateway cannot disburse', function () {
-    $gateway = Mockery::mock(AlatpayGateway::class);
+    $gateway = Mockery::mock(PayoutGateway::class);
     $gateway->shouldReceive('supportsOutboundTransfers')->andReturn(false);
-    $this->app->instance(AlatpayGateway::class, $gateway);
+    $this->app->instance(PayoutGateway::class, $gateway);
 
     [$user, $wallet] = payee(1_000_00);
 
@@ -95,26 +114,26 @@ it('does not reserve funds when the gateway cannot disburse', function () {
         ->and(settlementMinor())->toBe(0);
 });
 
-it('settles the payout when AlatPay confirms the transfer', function () {
+it('settles the payout when Paystack confirms the transfer', function () {
     [$user, $wallet] = payee(1_000_00);
     $payout = request_payout($user, $wallet, 400_00);
 
-    transferWebhook($payout->provider_reference, 'completed', 'evt_done');
+    paystackTransferWebhook($payout->provider_reference, $payout->reference, 'completed', 'evt_done');
 
     expect($payout->fresh()->status)->toBe(PayoutStatus::Completed)
         ->and($payout->fresh()->settlement_transaction_id)->not->toBeNull()
-        ->and($wallet->fresh()->balance)->toBe(60000)   // money has left the wallet
-        ->and(settlementMinor())->toBe(0);              // settlement cleared
+        ->and($wallet->fresh()->balance)->toBe(60000)
+        ->and(settlementMinor())->toBe(0);
 });
 
 it('reverses the payout and restores the wallet when the transfer fails', function () {
     [$user, $wallet] = payee(1_000_00);
     $payout = request_payout($user, $wallet, 400_00);
 
-    transferWebhook($payout->provider_reference, 'failed', 'evt_fail');
+    paystackTransferWebhook($payout->provider_reference, $payout->reference, 'failed', 'evt_fail');
 
     expect($payout->fresh()->status)->toBe(PayoutStatus::Failed)
-        ->and($wallet->fresh()->balance)->toBe(100000)  // funds returned
+        ->and($wallet->fresh()->balance)->toBe(100000)
         ->and(settlementMinor())->toBe(0);
 });
 
@@ -122,14 +141,14 @@ it('processes a duplicate payout webhook only once', function () {
     [$user, $wallet] = payee(1_000_00);
     $payout = request_payout($user, $wallet, 400_00);
 
-    transferWebhook($payout->provider_reference, 'completed', 'evt_dup');
-    transferWebhook($payout->provider_reference, 'completed', 'evt_dup');
+    paystackTransferWebhook($payout->provider_reference, $payout->reference, 'completed', 'evt_dup');
+    paystackTransferWebhook($payout->provider_reference, $payout->reference, 'completed', 'evt_dup');
 
     expect($wallet->fresh()->balance)->toBe(60000)
         ->and(settlementMinor())->toBe(0);
 });
 
-it('reconciles a pending payout that AlatPay reports as completed', function () {
+it('reconciles a pending payout that Paystack reports as completed', function () {
     [$user, $wallet] = payee(1_000_00);
     $payout = request_payout($user, $wallet, 400_00);
 

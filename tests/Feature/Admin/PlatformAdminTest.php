@@ -333,3 +333,64 @@ it('stores dojah credentials encrypted in admin settings', function () {
     expect(config('services.dojah.secret_key'))->toBe('dojah_live_secret_key')
         ->and(app(PlatformSettingsService::class)->isDojahReady())->toBeTrue();
 });
+
+it('stores paystack credentials and marks withdrawals ready', function () {
+    $admin = adminUser();
+
+    $this->actingAs($admin)->post('/admin/integrations/save', [
+        'integration' => 'paystack',
+        'driver' => 'fake',
+        'base_url' => 'https://api.paystack.co',
+        'secret_key' => 'sk_test_reton_secret_key',
+        'public_key' => 'pk_test_reton',
+        'webhook_secret' => 'whsec_reton',
+        'timeout' => 15,
+    ])->assertRedirect();
+
+    $row = PlatformSetting::query()->find('paystack');
+    expect($row)->not->toBeNull()
+        ->and($row->payload_encrypted)->not->toContain('sk_test_reton_secret_key');
+
+    app(PlatformSettingsService::class)->bustCache();
+    app(PlatformSettingsService::class)->applyToConfig();
+
+    expect(config('services.paystack.secret_key'))->toBe('sk_test_reton_secret_key')
+        ->and(app(PlatformSettingsService::class)->isIntegrationReady('paystack'))->toBeTrue();
+
+    $this->actingAs($admin)->get('/admin/integrations')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Integrations')
+            ->where('integrations.paystack.ready', true)
+            ->where('webhookUrls.paystack', url('/api/v1/webhooks/paystack')));
+});
+
+it('allows admins to configure payout provider and feature flags', function () {
+    $admin = adminUser();
+
+    $this->actingAs($admin)->put('/admin/platform', [
+        'group' => 'payouts',
+        'provider' => 'paystack',
+    ])->assertRedirect();
+
+    expect(config('reton.payouts.provider'))->toBe('paystack');
+
+    $this->actingAs($admin)->put('/admin/platform', [
+        'group' => 'features',
+        'withdraw' => true,
+        'bills' => false,
+        'cards' => false,
+    ])->assertRedirect();
+
+    expect(config('reton.features.withdraw'))->toBeTrue()
+        ->and(config('reton.features.bills'))->toBeFalse();
+
+    $this->actingAs($admin)->get('/admin/platform')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Platform')
+            ->has('groups.payouts')
+            ->has('groups.features')
+            ->where('groups.payouts.provider', 'paystack')
+            ->where('groups.features.withdraw', true));
+});
