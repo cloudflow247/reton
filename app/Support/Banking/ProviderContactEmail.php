@@ -7,30 +7,42 @@ namespace App\Support\Banking;
 use App\Models\User;
 
 /**
- * Contact email registered with ALATPay/Wema for deposit accounts.
+ * Contact email registered with ALATPay/Wema for customer deposit accounts.
  *
- * Bank transaction alerts are emailed to whatever address the provider stores.
- * Reton therefore registers a Reton-owned address (not the customer's inbox)
- * so customers only receive Reton-branded alerts from our mailer.
+ * Wema bank alerts go to whatever address the provider stores. Those alerts are
+ * for Reton operations (CEO / merchant inbox) — never the end customer.
+ *
+ * Prefer a plus-alias of the ALATPay merchant email so every VA stays unique for
+ * duplicate-BVN recovery while all bank mail still lands in the CEO inbox.
  */
 final class ProviderContactEmail
 {
     public static function forUser(User $user): string
     {
+        $tag = 'va'.substr(hash('sha256', 'reton-va:'.$user->getKey()), 0, 12);
+        $merchant = strtolower(trim((string) config('services.alatpay.merchant_email', '')));
+
+        if ($merchant !== '' && str_contains($merchant, '@')) {
+            [$local, $domain] = explode('@', $merchant, 2);
+            $local = explode('+', $local, 2)[0];
+
+            if ($local !== '' && $domain !== '' && str_contains($domain, '.')) {
+                return $local.'+'.$tag.'@'.$domain;
+            }
+        }
+
         $domain = strtolower(trim((string) config('services.alatpay.provider_contact_domain', 'va.retonpay.com')));
 
         if ($domain === '' || ! str_contains($domain, '.')) {
             $domain = 'va.retonpay.com';
         }
 
-        $local = 'u'.substr(hash('sha256', 'reton-va:'.$user->getKey()), 0, 20);
-
-        return $local.'@'.$domain;
+        return 'u'.substr(hash('sha256', 'reton-va:'.$user->getKey()), 0, 20).'@'.$domain;
     }
 
     /**
      * Emails to try when recovering an existing ALATPay Individual wallet
-     * (new Reton contact address + legacy customer email on older accounts).
+     * (merchant plus-alias / Reton contact address + legacy customer email).
      *
      * @return list<string>
      */
