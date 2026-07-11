@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Domain\Ledger\Models\LedgerEntry;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Wallet\Models\Wallet;
+use App\Domain\Wallet\Services\ReceiptPartiesResolver;
 use App\Domain\Wallet\Support\StatementMoneyFlow;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\StatementEntryResource;
@@ -20,6 +21,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class ActivityController extends Controller
 {
     private const STATEMENT_LIMIT = 50;
+
+    public function __construct(
+        private readonly ReceiptPartiesResolver $receiptParties,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -130,9 +135,19 @@ class ActivityController extends Controller
             ];
         }
 
+        $parties = null;
+        if ($wallet instanceof Wallet) {
+            try {
+                $parties = $this->receiptParties->forEntry($ledgerEntry, $wallet);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         return Inertia::render('Activity/Show', [
             'entry' => $entryPayload,
             'transfer' => $transferPayload,
+            'parties' => $parties,
             'wallet' => $wallet instanceof Wallet
                 ? [
                     'id' => $wallet->id,

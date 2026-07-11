@@ -12,9 +12,16 @@ export async function paintReceiptPng(input: {
   customer: string
   retonId?: string | null
   transferRef?: string | null
+  channelLabel?: string | null
+  fromLines?: string[] | null
+  toLines?: string[] | null
 }): Promise<Blob> {
   const width = 720
-  const height = 980
+  const partyRows =
+    (input.fromLines?.length ? 1 : 0) +
+    (input.toLines?.length ? 1 : 0) +
+    (input.channelLabel ? 1 : 0)
+  const height = 980 + partyRows * 90
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
@@ -44,50 +51,57 @@ export async function paintReceiptPng(input: {
   drawWaves(ctx, pad, pad + headerH - 30, width - pad * 2, 90)
   ctx.restore()
 
-  ctx.fillStyle = 'rgba(255,255,255,0.7)'
-  ctx.font = '600 13px Inter, system-ui, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'
+  ctx.font = '700 13px Inter, system-ui, sans-serif'
   ctx.fillText(input.app.toUpperCase(), pad + 36, pad + 48)
 
   ctx.fillStyle = '#ffffff'
   ctx.font = '700 28px "Space Grotesk", Inter, sans-serif'
   ctx.fillText('Payment receipt', pad + 36, pad + 92)
 
-  ctx.fillStyle = 'rgba(255,255,255,0.85)'
-  ctx.font = '500 15px Inter, system-ui, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.92)'
+  ctx.font = '600 15px Inter, system-ui, sans-serif'
   wrapText(ctx, input.title, pad + 36, pad + 128, width - pad * 2 - 72, 22)
 
   ctx.fillStyle = input.isCredit ? '#0b7a57' : '#122a22'
   ctx.font = '700 48px "Space Grotesk", Inter, sans-serif'
   ctx.fillText(input.amountLabel, pad + 36, pad + headerH + 88)
 
-  ctx.fillStyle = '#5d726b'
-  ctx.font = '600 12px Inter, system-ui, sans-serif'
+  ctx.fillStyle = '#314940'
+  ctx.font = '700 12px Inter, system-ui, sans-serif'
   ctx.fillText(input.isCredit ? 'CREDIT' : 'DEBIT', pad + 36, pad + headerH + 118)
 
-  const rows: Array<[string, string]> = [
+  const rows: Array<[string, string]> = []
+  if (input.channelLabel) {
+    rows.push(['Channel', input.channelLabel])
+  }
+  if (input.fromLines?.length) {
+    rows.push(['From', input.fromLines.join(' · ')])
+  }
+  if (input.toLines?.length) {
+    rows.push(['To', input.toLines.join(' · ')])
+  }
+  rows.push(
     ['Reference', input.reference],
     ['Status', input.status],
     ['Type', input.type],
     ['Date', input.dateLabel],
-    ['Customer', input.customer],
-  ]
-  if (input.retonId) {
-    rows.push(['Reton ID', input.retonId])
-  }
+    ['Issued to', input.customer],
+  )
   if (input.transferRef) {
     rows.push(['Transfer', input.transferRef])
   }
 
   let y = pad + headerH + 170
   for (const [label, value] of rows) {
-    ctx.fillStyle = '#5d726b'
-    ctx.font = '600 11px Inter, system-ui, sans-serif'
+    ctx.fillStyle = '#314940'
+    ctx.font = '700 11px Inter, system-ui, sans-serif'
     ctx.fillText(label.toUpperCase(), pad + 36, y)
     ctx.fillStyle = '#122a22'
-    ctx.font = '600 16px "Space Grotesk", Inter, sans-serif'
+    ctx.font = '700 16px "Space Grotesk", Inter, sans-serif'
     wrapText(ctx, value, pad + 36, y + 24, width - pad * 2 - 72, 22)
-    y += 70
-    ctx.strokeStyle = '#e1eae5'
+    y += 72
+    ctx.strokeStyle = '#d7e4dd'
     ctx.beginPath()
     ctx.moveTo(pad + 36, y - 18)
     ctx.lineTo(width - pad - 36, y - 18)
@@ -101,8 +115,8 @@ export async function paintReceiptPng(input: {
   drawWaves(ctx, pad, height - pad - 70, width - pad * 2, 70, true)
   ctx.restore()
 
-  ctx.fillStyle = '#5d726b'
-  ctx.font = '500 12px Inter, system-ui, sans-serif'
+  ctx.fillStyle = '#314940'
+  ctx.font = '600 12px Inter, system-ui, sans-serif'
   ctx.textAlign = 'center'
   ctx.fillText('Trust-first payments · Reton', width / 2, height - pad - 28)
   ctx.textAlign = 'left'
