@@ -19,6 +19,11 @@ Build the MVP that wins the **ALATPay Buildathon**.
 - **Never generate demo code.** Production-ready code only.
 - Assume **real money** flows through this system.
 
+## Git attribution (required)
+
+- Never add `Co-authored-by: Cursor`, `Made-with: Cursor`, or any Cursor / cursoragent attribution to commits, PRs, or code comments.
+- Commit only as the repo git user (`user.name` / `user.email`). Do not pass `--trailer` for Cursor attribution.
+
 ---
 
 ## Stack
