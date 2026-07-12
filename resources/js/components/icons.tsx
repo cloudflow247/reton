@@ -305,3 +305,17 @@ export const MapPinIcon = (p: IconProps) => (
     <circle cx="12" cy="10.8" r="2.2" />
   </Svg>
 )
+
+/** Filled Apple mark for App Store badges. */
+export const AppleLogoIcon = ({ size = 20, ...props }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
+    <path d="M16.7 12.5c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.7-1.3-.1-2.5.8-3.1.8-.7 0-1.7-.7-2.8-.7-1.4 0-2.8.9-3.5 2.2-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.1 1.1-.1 1.5-.7 2.8-.7 1.3 0 1.6.7 2.8.7 1.2 0 1.9-1 2.6-2 .8-1.2 1.1-2.3 1.2-2.4-.1 0-2.2-.8-2.2-3.7zm-2-5.8c.6-.7 1-1.7.9-2.7-1 .1-2.1.6-2.7 1.4-.6.7-1.1 1.7-.9 2.7 1 .1 2-.5 2.7-1.4z" />
+  </svg>
+)
+
+/** Filled Google Play triangle mark for store badges. */
+export const GooglePlayLogoIcon = ({ size = 20, ...props }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
+    <path d="M3.6 2.3c-.3.2-.5.5-.5.9v17.6c0 .4.2.7.5.9l.1.1 9.8-9.8v-.2L3.7 2.2l-.1.1zm11.2 6.4L12.2 11l2.6 2.6 3.4-1.9c.9-.5.9-1.4 0-1.9l-3.4-2.1zM4.3 21.5l9-9 2.5 2.5-10.3 5.9c-.5.3-1 .1-1.2-.4zm9-11.7-9-9c.3-.4.8-.5 1.2-.2l10.3 5.9-2.5 3.3z" />
+  </svg>
+)

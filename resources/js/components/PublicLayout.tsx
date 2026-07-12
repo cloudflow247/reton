@@ -4,7 +4,7 @@ import { Link, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Wordmark } from './ui'
 import { PoweredByAlatInline } from './PoweredByAlat'
-import { ArrowRightIcon, LockIcon } from './icons'
+import { AppleLogoIcon, ArrowRightIcon, GooglePlayLogoIcon, LockIcon } from './icons'
 
 const nav: { label: string; to: string; soon?: boolean }[] = [
   { label: 'Business', to: '/business', soon: true },
@@ -157,6 +157,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
               <span className="inline-flex items-center gap-1.5 rounded-full bg-mint/10 px-3 py-1 text-xs font-medium text-mint">
                 <LockIcon size={13} /> Bank-grade security
               </span>
+              <AppDownloadBadges className="pt-2" />
             </div>
             <FooterCol
               title="Product"
@@ -193,5 +194,66 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
         ))}
       </ul>
     </div>
+  )
+}
+
+function AppDownloadBadges({ className = '' }: { className?: string }) {
+  return (
+    <div className={`space-y-2.5 ${className}`}>
+      <div className="flex items-center gap-2">
+        <h4 className="font-display text-sm font-semibold tracking-tight">Get the app</h4>
+        <span className="rounded-full bg-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber">
+          Coming soon
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2.5">
+        <StoreBadge
+          href="#"
+          label="Download on the App Store — Coming soon"
+          eyebrow="Download on the"
+          title="App Store"
+          icon={<AppleLogoIcon size={22} />}
+        />
+        <StoreBadge
+          href="#"
+          label="Get it on Google Play — Coming soon"
+          eyebrow="Get it on"
+          title="Google Play"
+          icon={<GooglePlayLogoIcon size={22} />}
+        />
+      </div>
+    </div>
+  )
+}
+
+function StoreBadge({
+  href,
+  label,
+  eyebrow,
+  title,
+  icon,
+}: {
+  href: string
+  label: string
+  eyebrow: string
+  title: string
+  icon: ReactNode
+}) {
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      title="Coming soon"
+      className="group inline-flex min-w-[148px] items-center gap-2.5 rounded-xl border border-white/10 bg-[#0b0d10] px-3.5 py-2.5 text-white shadow-sm transition hover:border-mint/40 hover:bg-[#12151a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint"
+      onClick={(e) => {
+        e.preventDefault()
+      }}
+    >
+      <span className="shrink-0 text-white">{icon}</span>
+      <span className="leading-none">
+        <span className="block text-[9px] font-medium uppercase tracking-[0.12em] text-white/70">{eyebrow}</span>
+        <span className="mt-0.5 block font-display text-[15px] font-semibold tracking-tight">{title}</span>
+      </span>
+    </a>
   )
 }
