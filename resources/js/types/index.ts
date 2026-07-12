@@ -28,6 +28,9 @@ export type FeatureFlags = {
   withdraw: boolean
   bills: boolean
   cards: boolean
+  checkout: boolean
+  card_pay: boolean
+  one_time: boolean
 }
 
 export type CountryDialCode = {

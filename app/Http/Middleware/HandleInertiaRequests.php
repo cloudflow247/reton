@@ -67,6 +67,9 @@ class HandleInertiaRequests extends Middleware
                 'withdraw' => (bool) config('reton.features.withdraw', true),
                 'bills' => (bool) config('reton.features.bills', false),
                 'cards' => (bool) config('reton.features.cards', false),
+                'checkout' => (bool) config('reton.features.checkout', false),
+                'card_pay' => (bool) config('reton.features.card_pay', false),
+                'one_time' => (bool) config('reton.features.one_time', false),
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

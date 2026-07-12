@@ -19,7 +19,7 @@ import {
 import { shortFundingAccountName } from '@/lib/funding-account-name'
 import { ngn, toMinor } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import type { Deposit, KycProfile, PageProps, StaticAccount } from '@/types'
+import type { Deposit, FeatureFlags, KycProfile, PageProps, StaticAccount } from '@/types'
 
 type DepositMethod = 'bank_transfer' | 'alatpay_checkout' | 'alatpay_card'
 
@@ -38,24 +38,28 @@ const methods: {
   id: DepositMethod
   title: string
   subtitle: string
+  feature: keyof FeatureFlags
   icon: typeof BankIcon
 }[] = [
   {
     id: 'alatpay_checkout',
     title: 'Checkout',
     subtitle: 'Card · transfer · USSD',
+    feature: 'checkout',
     icon: ShieldIcon,
   },
   {
     id: 'alatpay_card',
     title: 'Card',
     subtitle: 'Visa · Mastercard · Verve',
+    feature: 'card_pay',
     icon: CardIcon,
   },
   {
     id: 'bank_transfer',
     title: 'One-time',
     subtitle: 'Temporary account',
+    feature: 'one_time',
     icon: BankIcon,
   },
 ]
@@ -76,6 +80,7 @@ export default function AddMoney() {
   const {
     auth,
     flash,
+    features,
     pendingDeposit,
     openDeposits: openDepositsProp,
     kyc,
@@ -89,17 +94,30 @@ export default function AddMoney() {
   const wallet = auth.wallets[0]
   const profileName = auth.user?.name ?? null
 
+  const enabledMethods = methods.filter((option) => Boolean(features?.[option.feature]))
+  const amountMethodsLive = enabledMethods.length > 0
+  const defaultMethod = (enabledMethods[0]?.id ?? 'alatpay_checkout') as DepositMethod
+
   const [amount, setAmount] = useState('')
   const [dismissed, setDismissed] = useState(false)
   const form = useForm({
     wallet_id: wallet?.id ?? '',
     amount: 0,
-    method: 'alatpay_checkout' as DepositMethod,
+    method: defaultMethod,
   })
   const method = form.data.method
   const minor = toMinor(amount)
 
+  useEffect(() => {
+    if (!enabledMethods.some((option) => option.id === form.data.method) && enabledMethods[0]) {
+      form.setData('method', enabledMethods[0].id)
+    }
+  }, [enabledMethods, form.data.method])
+
   function selectMethod(next: DepositMethod) {
+    if (!enabledMethods.some((option) => option.id === next)) {
+      return
+    }
     form.setData('method', next)
   }
 
@@ -122,6 +140,9 @@ export default function AddMoney() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
+    if (!amountMethodsLive) {
+      return
+    }
     form.transform((data) => ({
       ...data,
       amount: toMinor(amount),
@@ -170,7 +191,7 @@ export default function AddMoney() {
 
         <PageHeader
           title="Add money"
-          subtitle="Bank transfer or checkout"
+          subtitle={amountMethodsLive ? 'Bank transfer or checkout' : 'Transfer to your deposit account'}
           balance={wallet?.available_balance}
         />
 
@@ -217,73 +238,124 @@ export default function AddMoney() {
             )}
 
             <Card className="overflow-hidden p-0">
-              <form onSubmit={submit} className="space-y-4 p-4">
-                <div>
-                  <p className="text-sm font-semibold text-text">Fund an amount</p>
-                  <p className="mt-0.5 text-xs text-muted">Checkout or one-time transfer</p>
-                </div>
+              {amountMethodsLive ? (
+                <form onSubmit={submit} className="space-y-4 p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-text">Fund an amount</p>
+                    <p className="mt-0.5 text-xs text-muted">Checkout or one-time transfer</p>
+                  </div>
 
-                <AmountField value={amount} onChange={setAmount} invalid={!!form.errors.amount} />
+                  <AmountField value={amount} onChange={setAmount} invalid={!!form.errors.amount} />
 
-                <fieldset className="relative z-10 space-y-2">
-                  <legend className="text-[10px] font-semibold uppercase tracking-wide text-muted">Method</legend>
+                  <fieldset className="relative z-10 space-y-2">
+                    <legend className="text-[10px] font-semibold uppercase tracking-wide text-muted">Method</legend>
+                    <div
+                      className="grid grid-cols-3 gap-1.5 rounded-xl bg-surface-2/70 p-1"
+                      role="radiogroup"
+                      aria-label="Funding method"
+                    >
+                      {methods.map((option) => {
+                        const Icon = option.icon
+                        const live = Boolean(features?.[option.feature])
+                        const selected = live && method === option.id
+                        return (
+                          <label
+                            key={option.id}
+                            className={cn(
+                              'relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2.5 text-center transition',
+                              live ? 'cursor-pointer active:scale-[0.98]' : 'cursor-not-allowed opacity-55',
+                              selected
+                                ? 'bg-surface text-mint shadow-sm ring-1 ring-mint/25'
+                                : live
+                                  ? 'text-muted hover:bg-surface/60 hover:text-text'
+                                  : 'text-muted',
+                            )}
+                          >
+                            <input
+                              type="radio"
+                              name="deposit_method"
+                              value={option.id}
+                              checked={selected}
+                              disabled={!live}
+                              onChange={() => selectMethod(option.id)}
+                              className="sr-only"
+                            />
+                            {!live && (
+                              <span className="absolute right-1 top-1 rounded-full bg-amber/15 px-1 py-px text-[8px] font-bold uppercase tracking-wide text-amber">
+                                Soon
+                              </span>
+                            )}
+                            <Icon size={16} className="pointer-events-none" />
+                            <span className="pointer-events-none text-[11px] font-semibold leading-tight">
+                              {option.title}
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <p className="text-center text-[11px] text-muted" aria-live="polite">
+                      {methods.find((m) => m.id === method)?.subtitle}
+                    </p>
+                  </fieldset>
+
+                  {form.errors.amount && <p className="text-sm text-danger">{form.errors.amount}</p>}
+                  {form.errors.method && <p className="text-sm text-danger">{form.errors.method}</p>}
+                  {flash.error && <p className="text-sm text-danger">{flash.error}</p>}
+
+                  <Button
+                    type="submit"
+                    loading={form.processing}
+                    disabled={minor < 100}
+                    className="flex w-full items-center justify-center gap-2"
+                  >
+                    {ctaLabel[method]}
+                  </Button>
+
+                  <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted">
+                    <LockIcon size={12} className="shrink-0 text-mint" />
+                    Encrypted · we never see your card details
+                  </p>
+                </form>
+              ) : (
+                <div className="space-y-4 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-text">Fund an amount</p>
+                      <p className="mt-0.5 text-xs text-muted">Checkout, card, and one-time transfer</p>
+                    </div>
+                    <Pill tone="amber">Coming soon</Pill>
+                  </div>
+
                   <div
                     className="grid grid-cols-3 gap-1.5 rounded-xl bg-surface-2/70 p-1"
-                    role="radiogroup"
-                    aria-label="Funding method"
+                    aria-hidden
                   >
                     {methods.map((option) => {
                       const Icon = option.icon
-                      const selected = method === option.id
                       return (
-                        <label
+                        <div
                           key={option.id}
-                          className={cn(
-                            'relative flex min-h-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2.5 text-center transition active:scale-[0.98]',
-                            selected
-                              ? 'bg-surface text-mint shadow-sm ring-1 ring-mint/25'
-                              : 'text-muted hover:bg-surface/60 hover:text-text',
-                          )}
+                          className="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2.5 text-center text-muted opacity-55"
                         >
-                          <input
-                            type="radio"
-                            name="deposit_method"
-                            value={option.id}
-                            checked={selected}
-                            onChange={() => selectMethod(option.id)}
-                            className="sr-only"
-                          />
-                          <Icon size={16} className="pointer-events-none" />
-                          <span className="pointer-events-none text-[11px] font-semibold leading-tight">
-                            {option.title}
+                          <span className="absolute right-1 top-1 rounded-full bg-amber/15 px-1 py-px text-[8px] font-bold uppercase tracking-wide text-amber">
+                            Soon
                           </span>
-                        </label>
+                          <Icon size={16} />
+                          <span className="text-[11px] font-semibold leading-tight">{option.title}</span>
+                        </div>
                       )
                     })}
                   </div>
-                  <p className="text-center text-[11px] text-muted" aria-live="polite">
-                    {methods.find((m) => m.id === method)?.subtitle}
+
+                  <p className="text-sm leading-relaxed text-muted">
+                    These options are not enabled on this merchant yet. Transfer to your{' '}
+                    <span className="font-medium text-text">permanent deposit account</span> above —
+                    funds credit automatically when they arrive.
                   </p>
-                </fieldset>
 
-                {form.errors.amount && <p className="text-sm text-danger">{form.errors.amount}</p>}
-                {form.errors.method && <p className="text-sm text-danger">{form.errors.method}</p>}
-                {flash.error && <p className="text-sm text-danger">{flash.error}</p>}
-
-                <Button
-                  type="submit"
-                  loading={form.processing}
-                  disabled={minor < 100}
-                  className="flex w-full items-center justify-center gap-2"
-                >
-                  {ctaLabel[method]}
-                </Button>
-
-                <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted">
-                  <LockIcon size={12} className="shrink-0 text-mint" />
-                  Encrypted · we never see your card details
-                </p>
-              </form>
+                  {flash.error && <p className="text-sm text-danger">{flash.error}</p>}
+                </div>
+              )}
             </Card>
 
             <ComplianceStrip compact />

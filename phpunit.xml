@@ -42,6 +42,9 @@
         <env name="PAYSTACK_WEBHOOK_SECRET" value="test-paystack-webhook"/>
         <env name="RETON_PAYOUT_PROVIDER" value="paystack"/>
         <env name="RETON_FEATURE_WITHDRAW" value="true"/>
+        <env name="RETON_FEATURE_CHECKOUT" value="true"/>
+        <env name="RETON_FEATURE_CARD_PAY" value="true"/>
+        <env name="RETON_FEATURE_ONE_TIME" value="true"/>
         <env name="RETON_BILL_PROVIDER" value="remita"/>
         <env name="REMITA_DRIVER" value="fake"/>
         <env name="INTERSWITCH_DRIVER" value="fake"/>

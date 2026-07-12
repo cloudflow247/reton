@@ -27,4 +27,30 @@ enum DepositMethod: string
             self::AlatpayCard => '1',
         };
     }
+
+    /** Platform feature flag key under `reton.features.*`. */
+    public function featureKey(): string
+    {
+        return match ($this) {
+            self::AlatpayCheckout => 'checkout',
+            self::AlatpayCard => 'card_pay',
+            self::BankTransfer => 'one_time',
+        };
+    }
+
+    public function isEnabled(): bool
+    {
+        return (bool) config('reton.features.'.$this->featureKey(), false);
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function enabledMethods(): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            static fn (self $method): bool => $method->isEnabled(),
+        ));
+    }
 }

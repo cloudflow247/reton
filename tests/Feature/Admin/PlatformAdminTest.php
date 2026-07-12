@@ -380,10 +380,15 @@ it('allows admins to configure payout provider and feature flags', function () {
         'withdraw' => true,
         'bills' => false,
         'cards' => false,
+        'checkout' => false,
+        'card_pay' => false,
+        'one_time' => false,
     ])->assertRedirect();
 
     expect(config('reton.features.withdraw'))->toBeTrue()
-        ->and(config('reton.features.bills'))->toBeFalse();
+        ->and(config('reton.features.bills'))->toBeFalse()
+        ->and(config('reton.features.checkout'))->toBeFalse()
+        ->and(config('reton.features.one_time'))->toBeFalse();
 
     $this->actingAs($admin)->get('/admin/platform')
         ->assertOk()

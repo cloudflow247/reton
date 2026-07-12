@@ -208,6 +208,9 @@ class PlatformSettingsService
             'withdraw' => true,
             'bills' => false,
             'cards' => false,
+            'checkout' => false,
+            'card_pay' => false,
+            'one_time' => false,
         ],
         'horizon' => [
             'allowed_emails' => '',
@@ -627,6 +630,9 @@ class PlatformSettingsService
                 'reton.features.withdraw' => filter_var($values['withdraw'] ?? true, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.bills' => filter_var($values['bills'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.cards' => filter_var($values['cards'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'reton.features.checkout' => filter_var($values['checkout'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'reton.features.card_pay' => filter_var($values['card_pay'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'reton.features.one_time' => filter_var($values['one_time'] ?? false, FILTER_VALIDATE_BOOLEAN),
             ]),
             'horizon' => config(['reton.horizon.allowed_emails' => (string) ($values['allowed_emails'] ?? '')]),
             'sms' => config(['reton.sms' => [
@@ -817,6 +823,9 @@ class PlatformSettingsService
                 'withdraw' => (bool) config('reton.features.withdraw', true),
                 'bills' => (bool) config('reton.features.bills', false),
                 'cards' => (bool) config('reton.features.cards', false),
+                'checkout' => (bool) config('reton.features.checkout', false),
+                'card_pay' => (bool) config('reton.features.card_pay', false),
+                'one_time' => (bool) config('reton.features.one_time', false),
             ],
             'horizon' => [
                 'allowed_emails' => (string) config('reton.horizon.allowed_emails'),

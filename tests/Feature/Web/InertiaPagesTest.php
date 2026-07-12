@@ -321,6 +321,42 @@ it('flashes a friendly error when card payment link fails instead of 500', funct
     expect(session('error'))->toContain('Card and checkout');
 });
 
+it('rejects checkout deposits when the feature is coming soon', function () {
+    config([
+        'reton.features.checkout' => false,
+        'reton.features.card_pay' => false,
+        'reton.features.one_time' => false,
+    ]);
+    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    [$user, $wallet] = webUser();
+
+    $this->actingAs($user)->from('/add-money')->post('/deposits', [
+        'wallet_id' => $wallet->id,
+        'amount' => 1000_00,
+        'method' => 'alatpay_checkout',
+    ])->assertRedirect('/add-money')
+        ->assertSessionHasErrors('method');
+
+    expect(Deposit::count())->toBe(0);
+});
+
+it('shares add-money feature flags as off by default on the page', function () {
+    config([
+        'reton.features.checkout' => false,
+        'reton.features.card_pay' => false,
+        'reton.features.one_time' => false,
+    ]);
+    [$user] = webUser();
+
+    $this->actingAs($user)->get('/add-money')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('AddMoney')
+            ->where('features.checkout', false)
+            ->where('features.card_pay', false)
+            ->where('features.one_time', false));
+});
+
 it('shows the local demo checkout when alatpay driver is fake', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     [$user, $wallet] = webUser();

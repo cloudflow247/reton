@@ -121,6 +121,9 @@ class AdminPlatformSettingsController extends Controller
                 'withdraw' => ['required', 'boolean'],
                 'bills' => ['required', 'boolean'],
                 'cards' => ['required', 'boolean'],
+                'checkout' => ['required', 'boolean'],
+                'card_pay' => ['required', 'boolean'],
+                'one_time' => ['required', 'boolean'],
             ],
             'horizon' => [
                 'allowed_emails' => ['nullable', 'string', 'max:2000'],
