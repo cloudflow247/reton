@@ -6,7 +6,7 @@ Reton is a trust-first digital banking platform for Africa. We help people send,
 
 Our flagship idea is **Callback Protection**: hold a payment until the sender is ready to release it, with a full timeline at every step.
 
-Built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji**) for the [ALATPay Buildathon](https://alatpay.ng/), on licensed rails (ALAT by Wema).
+Built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Founder: **Aina Christana Olajumoke**) for the [ALATPay Buildathon](https://alatpay.ng/), on licensed rails (ALAT by Wema).
 
 > This repository is proprietary. It is public so buildathon judges can review the code. See [LICENSE](LICENSE).
 
@@ -168,6 +168,7 @@ Treat every environment that can move real money as production.
 |--|--|
 | Legal entity | **RETON PTE LTD** |
 | Founder & CEO | **Gabriel Rotimi Mogaji** |
+| Co-Founder | **Aina Christana Olajumoke** |
 | Support | support@retonpay.com |
 | Office | 7, Greenland Estate, Ikorodu, Lagos State, Nigeria |
 

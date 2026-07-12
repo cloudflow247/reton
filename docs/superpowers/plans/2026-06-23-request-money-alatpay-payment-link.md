@@ -1,4 +1,4 @@
-> **Proprietary** — Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji. See [LICENSE](../../../LICENSE).
+> **Proprietary** — Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji · Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
 >
 > **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 

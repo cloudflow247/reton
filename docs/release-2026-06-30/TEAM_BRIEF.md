@@ -2,7 +2,7 @@
 
 A team walkthrough of what shipped that day: new pages, money flows, and how the pieces connect. Use this when onboarding someone to the product or rehearsing a demo.
 
-**Company:** RETON PTE LTD · **Founder & CEO:** Gabriel Rotimi Mogaji  
+**Company:** RETON PTE LTD · **Founder & CEO:** Gabriel Rotimi Mogaji · **Co-Founder:** Aina Christana Olajumoke  
 **Screenshots:** [`screenshots/`](screenshots/)  
 **Regenerate:** with the app running (`php artisan serve`), run `node scripts/capture-release-screenshots.mjs`
 

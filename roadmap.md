@@ -1,7 +1,7 @@
 # Reton product & compliance roadmap
 
 **Trust at the moment money moves.**  
-Last updated: July 2026 · Company: **RETON PTE LTD** · Founder & CEO: **Gabriel Rotimi Mogaji**
+Last updated: July 2026 · Company: **RETON PTE LTD** · Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Founder: **Aina Christana Olajumoke**
 
 Status: ALATPay Buildathon MVP → production hardening
 

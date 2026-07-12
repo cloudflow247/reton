@@ -2,7 +2,7 @@
 
 All notable changes to Reton are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-Product of **RETON PTE LTD** · Founder & CEO: **Gabriel Rotimi Mogaji**
+Product of **RETON PTE LTD** · Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Founder: **Aina Christana Olajumoke**
 
 ## [Unreleased]
 
