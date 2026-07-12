@@ -45,6 +45,7 @@
         <env name="RETON_FEATURE_CHECKOUT" value="true"/>
         <env name="RETON_FEATURE_CARD_PAY" value="true"/>
         <env name="RETON_FEATURE_ONE_TIME" value="true"/>
+        <env name="RETON_FEATURE_PHYSICAL_LISTINGS" value="true"/>
         <env name="RETON_BILL_PROVIDER" value="remita"/>
         <env name="REMITA_DRIVER" value="fake"/>
         <env name="INTERSWITCH_DRIVER" value="fake"/>

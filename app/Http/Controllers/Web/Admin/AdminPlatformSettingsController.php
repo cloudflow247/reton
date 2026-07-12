@@ -124,6 +124,7 @@ class AdminPlatformSettingsController extends Controller
                 'checkout' => ['required', 'boolean'],
                 'card_pay' => ['required', 'boolean'],
                 'one_time' => ['required', 'boolean'],
+                'physical_listings' => ['required', 'boolean'],
             ],
             'horizon' => [
                 'allowed_emails' => ['nullable', 'string', 'max:2000'],

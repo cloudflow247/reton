@@ -441,6 +441,7 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
               ['checkout', 'Add Money — Checkout', 'ALATPay hosted checkout (card · transfer · USSD). Requires Payment Link on the merchant.'],
               ['card_pay', 'Add Money — Card', 'Card-only ALATPay payment link. Requires Payment Link on the merchant.'],
               ['one_time', 'Add Money — One-time', 'Temporary virtual account for a single amount. Permanent deposit account stays available.'],
+              ['physical_listings', 'Shop — Physical listings', 'Hub-verified physical goods. Digital listings stay available when this is off.'],
             ] as const
           ).map(([key, label, hint]) => (
             <label key={key} className="flex items-start gap-3 rounded-xl border border-line bg-surface-2/40 px-4 py-3">

@@ -323,6 +323,8 @@ function EmptyBlock({
 Marketplace.layout = (page: ReactNode) => <AppShell>{page}</AppShell>
 
 function CreateListingModal({ onClose }: { onClose: () => void }) {
+  const { features } = usePage<MarketplaceProps>().props
+  const physicalLive = Boolean(features?.physical_listings)
   const [itemType, setItemType] = useState<'digital' | 'physical'>('digital')
 
   const {
@@ -343,6 +345,9 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
   })
 
   const switchType = (type: 'digital' | 'physical') => {
+    if (type === 'physical' && !physicalLive) {
+      return
+    }
     setItemType(type)
     reset(
       type === 'digital'
@@ -394,25 +399,39 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="Sell an item" onClose={onClose} wide>
       <div className="mb-4 flex gap-1.5 rounded-xl bg-surface-2 p-1">
-        {(['digital', 'physical'] as const).map((type) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => switchType(type)}
-            className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-semibold capitalize transition ${
-              itemType === type ? 'bg-surface text-mint shadow-sm' : 'text-muted hover:text-text'
-            }`}
-          >
-            {type === 'physical' ? (
-              <>
-                <BankIcon size={14} className="shrink-0" />
-                Physical
-              </>
-            ) : (
-              'Digital'
-            )}
-          </button>
-        ))}
+        {(['digital', 'physical'] as const).map((type) => {
+          const locked = type === 'physical' && !physicalLive
+          const selected = itemType === type
+          return (
+            <button
+              key={type}
+              type="button"
+              disabled={locked}
+              onClick={() => switchType(type)}
+              className={`relative flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-semibold capitalize transition ${
+                locked
+                  ? 'cursor-not-allowed text-muted opacity-60'
+                  : selected
+                    ? 'bg-surface text-mint shadow-sm'
+                    : 'text-muted hover:text-text'
+              }`}
+            >
+              {type === 'physical' ? (
+                <>
+                  <BankIcon size={14} className="shrink-0" />
+                  Physical
+                </>
+              ) : (
+                'Digital'
+              )}
+              {locked && (
+                <span className="absolute right-1.5 top-1 rounded-full bg-amber/15 px-1.5 py-px text-[8px] font-bold uppercase tracking-wide text-amber">
+                  Soon
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       <input type="hidden" value={itemType} {...register('item_type')} />

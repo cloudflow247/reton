@@ -6,6 +6,7 @@ namespace App\Http\Requests\Web\Marketplace;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreDigitalListingRequest extends FormRequest
 {
@@ -31,5 +32,20 @@ class StoreDigitalListingRequest extends FormRequest
             'spec_detail' => [Rule::requiredIf($isPhysical), 'nullable', 'string', 'max:120'],
             'handling_notes' => ['nullable', 'string', 'max:500'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if (
+                $this->string('item_type')->toString() === 'physical'
+                && ! (bool) config('reton.features.physical_listings', false)
+            ) {
+                $validator->errors()->add(
+                    'item_type',
+                    'Physical listings are coming soon. Publish a digital item for now.',
+                );
+            }
+        });
     }
 }

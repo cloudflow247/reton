@@ -664,3 +664,24 @@ it('rejects vague physical listings at publish', function () {
         ['brand' => '', 'detail' => ''],
     ))->toThrow(MarketplaceException::class);
 });
+
+it('rejects physical listing posts when the feature is coming soon', function () {
+    config(['reton.features.physical_listings' => false]);
+
+    $seller = User::factory()->create(['transaction_pin' => Hash::make('1234')]);
+    app(WalletService::class)->open($seller, 'NGN');
+
+    $this->actingAs($seller)->from('/marketplace')->post('/marketplace/listings', [
+        'item_type' => 'physical',
+        'title' => 'iPhone 13 Pro Max 128GB',
+        'description' => 'Clean device with original box and charger included.',
+        'price' => 350_000_00,
+        'condition' => 'good',
+        'weight_grams' => 400,
+        'spec_brand' => 'Apple',
+        'spec_detail' => '128GB Sierra Blue',
+    ])->assertRedirect('/marketplace')
+        ->assertSessionHasErrors('item_type');
+
+    expect(DigitalListing::query()->count())->toBe(0);
+});

@@ -435,6 +435,7 @@ return [
         'checkout' => (bool) env('RETON_FEATURE_CHECKOUT', false),
         'card_pay' => (bool) env('RETON_FEATURE_CARD_PAY', false),
         'one_time' => (bool) env('RETON_FEATURE_ONE_TIME', false),
+        'physical_listings' => (bool) env('RETON_FEATURE_PHYSICAL_LISTINGS', false),
     ],
 
 ];

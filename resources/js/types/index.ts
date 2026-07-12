@@ -31,6 +31,7 @@ export type FeatureFlags = {
   checkout: boolean
   card_pay: boolean
   one_time: boolean
+  physical_listings: boolean
 }
 
 export type CountryDialCode = {

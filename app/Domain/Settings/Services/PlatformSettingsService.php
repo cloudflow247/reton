@@ -211,6 +211,7 @@ class PlatformSettingsService
             'checkout' => false,
             'card_pay' => false,
             'one_time' => false,
+            'physical_listings' => false,
         ],
         'horizon' => [
             'allowed_emails' => '',
@@ -633,6 +634,7 @@ class PlatformSettingsService
                 'reton.features.checkout' => filter_var($values['checkout'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.card_pay' => filter_var($values['card_pay'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.one_time' => filter_var($values['one_time'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'reton.features.physical_listings' => filter_var($values['physical_listings'] ?? false, FILTER_VALIDATE_BOOLEAN),
             ]),
             'horizon' => config(['reton.horizon.allowed_emails' => (string) ($values['allowed_emails'] ?? '')]),
             'sms' => config(['reton.sms' => [
@@ -826,6 +828,7 @@ class PlatformSettingsService
                 'checkout' => (bool) config('reton.features.checkout', false),
                 'card_pay' => (bool) config('reton.features.card_pay', false),
                 'one_time' => (bool) config('reton.features.one_time', false),
+                'physical_listings' => (bool) config('reton.features.physical_listings', false),
             ],
             'horizon' => [
                 'allowed_emails' => (string) config('reton.horizon.allowed_emails'),
