@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Recovery\Services;
 
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Ledger\Data\PostingDraft;
 use App\Domain\Ledger\Enums\SystemAccount;
 use App\Domain\Ledger\Enums\TransactionType;
@@ -45,6 +47,7 @@ class RecoveryService
         private readonly SystemAccountResolver $system,
         private readonly RecoveryEligibilityEngine $eligibility,
         private readonly HeldBalanceReconciler $heldBalances,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     public function report(Transfer $transfer, User $reporter, string $reason): Recovery
@@ -104,7 +107,7 @@ class RecoveryService
             $this->assertOpen($locked);
 
             $amount = Money::of($locked->amount, $locked->currency);
-            $fee = $this->fee($locked->amount);
+            $fee = $this->fee($amount);
             $idempotencyKey = 'recovery-return:'.$locked->id;
 
             if ($this->ledger->findByIdempotencyKey($idempotencyKey) !== null) {
@@ -229,11 +232,9 @@ class RecoveryService
         return $this->log($recovery, $actor, RecoveryAction::EvidenceAdded, $note, $metadata);
     }
 
-    private function fee(int $amount): int
+    private function fee(Money $amount): int
     {
-        $bps = (int) config('reton.recovery.fee_bps', 0);
-
-        return intdiv($amount * $bps, 10_000);
+        return $this->fees->calculate(FeeRail::Recovery, $amount)->amount;
     }
 
     private function freeze(string $walletId, int $amount): void

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Ledger\Data\PostingDraft;
 use App\Domain\Ledger\Enums\SystemAccount;
 use App\Domain\Ledger\Enums\TransactionType;
@@ -39,6 +41,7 @@ class PayoutService
         private readonly SystemAccountResolver $system,
         private readonly AlatpayWebhookGuard $alatpayGuard,
         private readonly PaystackWebhookGuard $paystackGuard,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     public function provider(): string
@@ -95,6 +98,14 @@ class PayoutService
             }
 
             $payout->update(['provider_reference' => $transfer->providerReference]);
+
+            $this->fees->chargeWallet(
+                $wallet,
+                FeeRail::Withdraw,
+                $amount,
+                $reference.':fee',
+                'Withdrawal fee',
+            );
 
             if ($transfer->status === 'completed') {
                 $this->settle($payout->refresh());

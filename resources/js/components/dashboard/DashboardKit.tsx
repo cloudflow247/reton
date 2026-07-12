@@ -61,9 +61,9 @@ export function BalanceHeroCard({
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0a6a4d] via-[#0e7e5c] to-[#094f39] p-3.5 text-white shadow-[0_20px_40px_-22px_rgba(9,79,57,0.75)] sm:rounded-[28px] sm:p-6"
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-14 -top-16 h-44 w-44 rounded-full bg-white/12 blur-3xl" />
-        <div className="absolute -bottom-16 left-0 h-40 w-40 rounded-full bg-emerald-200/25 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-10 h-44 w-44 rounded-full bg-emerald-300/20 blur-3xl" />
       </div>
 
       <div className="relative flex items-center justify-between gap-2">

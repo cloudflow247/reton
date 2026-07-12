@@ -7,6 +7,8 @@ namespace App\Domain\Marketplace\Services;
 use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Services\CallbackService;
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Marketplace\Enums\DigitalDisputeCategory;
 use App\Domain\Marketplace\Enums\DigitalOrderStatus;
 use App\Domain\Marketplace\Enums\ItemCondition;
@@ -38,6 +40,7 @@ class DigitalMarketplaceService
         private readonly TransferService $transfers,
         private readonly DigitalEscrowJudgementService $escrow,
         private readonly ListingVerificationService $verification,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     public function createListing(
@@ -64,6 +67,8 @@ class DigitalMarketplaceService
             'verification_status' => $verified['status'],
             'verification_score' => $verified['score'],
         ]);
+
+        $this->chargeListingPublishFee($seller, $price, (string) $listing->id);
 
         return $listing->refresh();
     }
@@ -110,6 +115,8 @@ class DigitalMarketplaceService
             'verification_status' => $verified['status'],
             'verification_score' => $verified['score'],
         ]);
+
+        $this->chargeListingPublishFee($seller, $price, (string) $listing->id);
 
         return $listing->refresh();
     }
@@ -213,6 +220,13 @@ class DigitalMarketplaceService
 
             $order->update(['transfer_id' => $transfer->id]);
             $listing->update(['status' => ListingStatus::Sold]);
+
+            $this->fees->chargeWallet(
+                $buyerWallet->fresh(),
+                FeeRail::MarketplaceSale,
+                $amount,
+                'fee:marketplace_sale:'.$order->id,
+            );
 
             return $order->load(['listing', 'transfer.hold']);
         });
@@ -492,5 +506,25 @@ class DigitalMarketplaceService
             'delivered_at' => $order->delivered_at?->toIso8601String(),
             'integrity_verified' => $checksumMatches,
         ];
+    }
+
+    private function chargeListingPublishFee(User $seller, Money $price, string $listingId): void
+    {
+        $wallet = Wallet::query()
+            ->where('owner_type', User::class)
+            ->where('owner_id', $seller->getKey())
+            ->where('currency', $price->currency)
+            ->first();
+
+        if ($wallet === null) {
+            return;
+        }
+
+        $this->fees->chargeWallet(
+            $wallet,
+            FeeRail::ListingPublish,
+            $price,
+            'fee:listing_publish:'.$listingId,
+        );
     }
 }

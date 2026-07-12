@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Kyc\Services\KycLimitService;
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
@@ -41,6 +43,7 @@ class AlatpayDepositService
         private readonly AlatpayWebhookGuard $guard,
         private readonly KycLimitService $kycLimits,
         private readonly KycService $kyc,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     public function initiate(User $user, Wallet $wallet, Money $amount, DepositMethod $method = DepositMethod::BankTransfer): Deposit
@@ -277,12 +280,21 @@ class AlatpayDepositService
             $description = $remote?->fundingDescription()
                 ?? (isset($bankMeta['narration']) ? 'Bank transfer — '.$bankMeta['narration'] : 'Wallet funding via bank transfer');
 
+            $credited = Money::of($deposit->amount, $deposit->currency);
+
             $transaction = $this->wallets->fund(
                 $wallet,
-                Money::of($deposit->amount, $deposit->currency),
+                $credited,
                 $deposit->reference,
                 ['deposit_id' => $deposit->id, 'provider' => self::PROVIDER, 'bank_transfer' => $bankMeta],
                 $description,
+            );
+
+            $this->fees->chargeWallet(
+                $wallet->fresh(),
+                FeeRail::Deposit,
+                $credited,
+                'fee:deposit:'.$deposit->reference,
             );
 
             $deposit->update([

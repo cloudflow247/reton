@@ -213,7 +213,6 @@ export default function Login() {
               <div className="space-y-4">
                 <RhfField
                   label="Email"
-                  name="email"
                   type="email"
                   placeholder="you@example.com"
                   autoComplete="email"
@@ -235,7 +234,6 @@ export default function Login() {
               <div className="space-y-4">
                 <RhfPasswordField
                   label="Password"
-                  name="password"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   autoFocus={step === 1}

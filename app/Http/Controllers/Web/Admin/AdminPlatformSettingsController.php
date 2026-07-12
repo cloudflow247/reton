@@ -31,6 +31,7 @@ class AdminPlatformSettingsController extends Controller
                 'bills' => $this->settings->maskedGroup('bills'),
                 'payouts' => $this->settings->maskedGroup('payouts'),
                 'features' => $this->settings->maskedGroup('features'),
+                'fees' => $this->settings->maskedGroup('fees'),
                 'horizon' => $this->settings->maskedGroup('horizon'),
             ],
         ]);
@@ -39,10 +40,12 @@ class AdminPlatformSettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,payouts,features,horizon'],
+            'group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,payouts,features,fees,horizon'],
         ]);
 
         $group = (string) $request->input('group');
+
+        $feeField = fn (string $key): array => [$key => ['required', 'integer', 'min:0', 'max:10000000']];
 
         $rules = match ($group) {
             'kyc' => [
@@ -126,13 +129,33 @@ class AdminPlatformSettingsController extends Controller
                 'one_time' => ['required', 'boolean'],
                 'physical_listings' => ['required', 'boolean'],
             ],
+            'fees' => array_merge(
+                $feeField('transfer_instant_bps'),
+                $feeField('transfer_instant_flat_minor'),
+                $feeField('transfer_protected_bps'),
+                $feeField('transfer_protected_flat_minor'),
+                $feeField('withdraw_bps'),
+                $feeField('withdraw_flat_minor'),
+                $feeField('deposit_bps'),
+                $feeField('deposit_flat_minor'),
+                $feeField('callback_bps'),
+                $feeField('callback_flat_minor'),
+                $feeField('listing_publish_bps'),
+                $feeField('listing_publish_flat_minor'),
+                $feeField('marketplace_sale_bps'),
+                $feeField('marketplace_sale_flat_minor'),
+                $feeField('recovery_bps'),
+                $feeField('recovery_flat_minor'),
+                $feeField('sms_alert_bps'),
+                $feeField('sms_alert_flat_minor'),
+            ),
             'horizon' => [
                 'allowed_emails' => ['nullable', 'string', 'max:2000'],
             ],
         };
 
         $validated = $request->validate(array_merge(
-            ['group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,payouts,features,horizon']],
+            ['group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,payouts,features,fees,horizon']],
             $rules,
         ));
 

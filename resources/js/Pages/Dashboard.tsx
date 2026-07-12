@@ -331,8 +331,8 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        <aside className="space-y-4 lg:col-span-4">
-          <motion.div variants={item} className="lg:block">
+        <aside className="hidden space-y-4 lg:col-span-4 lg:block">
+          <motion.div variants={item}>
             <div className="overflow-hidden rounded-2xl border border-mint/15 bg-gradient-to-br from-mint/[0.06] to-transparent p-4 sm:p-5">
               <div className="flex items-center gap-3">
                 <TrustRing score={score} className={tone.ring} />
@@ -417,7 +417,9 @@ function QuickAction({
         className={`elevate relative flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2.5 text-center transition sm:min-h-[4.5rem] sm:gap-1.5 sm:px-2 sm:py-3 ${
           primary
             ? 'border-mint/30 bg-mint text-white shadow-[0_12px_28px_-16px_rgba(9,79,57,0.5)] hover:bg-mint-strong'
-            : 'border-line bg-surface hover:border-mint/30'
+            : soon
+              ? 'border-line/80 bg-surface text-muted opacity-90 hover:border-line'
+              : 'border-line bg-surface hover:border-mint/30'
         }`}
       >
         {soon && (
@@ -425,9 +427,9 @@ function QuickAction({
             Soon
           </span>
         )}
-        <Icon size={18} className={primary ? 'text-white' : 'text-mint'} />
+        <Icon size={18} className={primary ? 'text-white' : soon ? 'text-muted' : 'text-mint'} />
         <span
-          className={`max-w-full text-[10px] font-semibold leading-tight sm:text-[11px] ${primary ? 'text-white' : 'text-text'}`}
+          className={`max-w-full text-[10px] font-semibold leading-tight sm:text-[11px] ${primary ? 'text-white' : soon ? 'text-muted' : 'text-text'}`}
         >
           {display}
         </span>

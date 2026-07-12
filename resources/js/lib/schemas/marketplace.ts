@@ -3,9 +3,7 @@ import { z } from 'zod'
 const listingBase = {
   title: z.string().min(3, 'Title is too short').max(120),
   description: z.string().min(10, 'Add at least a sentence about what the buyer gets').max(2000),
-  price: z.coerce
-    .number({ invalid_type_error: 'Enter a price in Naira' })
-    .min(1, 'Minimum price is ₦1'),
+  price: z.number().min(1, 'Minimum price is ₦1'),
   listing_accurate: z
     .boolean()
     .refine((v) => v === true, { message: 'Confirm your listing is honest and complete' }),
@@ -25,7 +23,7 @@ export const createPhysicalListingSchema = z.object({
   ...listingBase,
   description: z.string().min(80, 'Physical items need a detailed description (80+ characters)').max(2000),
   condition: z.enum(['new', 'like_new', 'good', 'fair']),
-  weight_grams: z.coerce.number().min(100, 'Enter package weight in grams').max(50000),
+  weight_grams: z.number().min(100, 'Enter package weight in grams').max(50000),
   spec_brand: z.string().min(2, 'Brand or maker is required').max(80),
   spec_detail: z.string().min(2, 'Add size, colour, or model').max(120),
   handling_notes: z.string().max(500).optional(),
@@ -78,7 +76,7 @@ export type DisputeOrderValues = z.infer<typeof disputeOrderSchema>
 
 export const deliverOrderSchema = z.object({
   attest_matches_listing: z.literal(true, {
-    errorMap: () => ({ message: 'Confirm your delivery matches the listing' }),
+    message: 'Confirm your delivery matches the listing',
   }),
 })
 
@@ -90,7 +88,7 @@ export const shipOrderSchema = z.object({
   pickup_state: z.string().min(2, 'State is required').max(80),
   pickup_phone: z.string().min(10, 'Phone is required').max(20),
   attest_matches_listing: z.literal(true, {
-    errorMap: () => ({ message: 'Confirm the package matches your listing description' }),
+    message: 'Confirm the package matches your listing description',
   }),
 })
 

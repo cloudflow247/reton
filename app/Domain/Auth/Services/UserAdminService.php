@@ -167,6 +167,73 @@ class UserAdminService
         }
     }
 
+    /**
+     * @return array{user: array<string, mixed>, wallets: list<array<string, mixed>>, kyc: array<string, mixed>|null, recent_transfers: list<array<string, mixed>>}
+     */
+    public function deskProfile(User $target): array
+    {
+        $target->loadMissing(['kyc', 'wallets']);
+
+        $wallets = $target->wallets->map(fn (Wallet $wallet): array => [
+            'id' => $wallet->id,
+            'currency' => $wallet->currency,
+            'balance' => (int) $wallet->balance,
+            'held_balance' => (int) $wallet->held_balance,
+            'available' => $wallet->availableMinor(),
+            'status' => $wallet->status ?? 'active',
+        ])->values()->all();
+
+        $kyc = $target->kyc;
+
+        $walletIds = $target->wallets->pluck('id');
+        $transfers = \App\Domain\Transfers\Models\Transfer::query()
+            ->when($walletIds->isNotEmpty(), function ($query) use ($walletIds): void {
+                $query->where(function ($inner) use ($walletIds): void {
+                    $inner->whereIn('sender_wallet_id', $walletIds)
+                        ->orWhereIn('receiver_wallet_id', $walletIds);
+                });
+            }, fn ($query) => $query->whereRaw('1 = 0'))
+            ->latest()
+            ->limit(12)
+            ->get()
+            ->map(fn ($transfer): array => [
+                'id' => $transfer->id,
+                'reference' => $transfer->reference,
+                'type' => $transfer->type->value,
+                'status' => $transfer->status->value,
+                'amount' => (int) $transfer->amount,
+                'currency' => $transfer->currency,
+                'created_at' => $transfer->created_at?->toIso8601String(),
+            ])
+            ->all();
+
+        return [
+            'user' => [
+                'id' => $target->getKey(),
+                'name' => $target->name,
+                'email' => $target->email,
+                'phone' => $target->phone,
+                'status' => $target->status,
+                'is_admin' => $target->is_admin,
+                'email_verified' => $target->email_verified_at !== null,
+                'has_pin' => filled($target->transaction_pin),
+                'last_login_at' => $target->last_login_at?->toIso8601String(),
+                'created_at' => $target->created_at?->toIso8601String(),
+            ],
+            'wallets' => $wallets,
+            'kyc' => $kyc === null ? null : [
+                'tier' => $kyc->tier?->value ?? $kyc->tier,
+                'bvn_last4' => $kyc->bvn_last4,
+                'nin_last4' => $kyc->nin_last4,
+                'bvn_verified_at' => $kyc->bvn_verified_at?->toIso8601String(),
+                'nin_verified_at' => $kyc->nin_verified_at?->toIso8601String(),
+                'city' => $kyc->city,
+                'state' => $kyc->state,
+            ],
+            'recent_transfers' => $transfers,
+        ];
+    }
+
     private function assertSafeToRemove(User $target): void
     {
         $walletIds = $target->wallets()->pluck('id');

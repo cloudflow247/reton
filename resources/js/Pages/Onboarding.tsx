@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
+import { Head, Link, useForm, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AuthStepIndicator } from '@/components/AuthStepIndicator'
 import { AuthBrand } from '@/components/AuthBrand'

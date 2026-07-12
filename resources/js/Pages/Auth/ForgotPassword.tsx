@@ -79,7 +79,6 @@ export default function ForgotPassword() {
           <HoneypotFields websiteProps={register('website')} />
           <RhfField
             label="Email"
-            name="email"
             type="email"
             placeholder="you@example.com"
             autoComplete="email"

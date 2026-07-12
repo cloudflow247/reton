@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Notifications\Services;
 
-use App\Domain\Ledger\Enums\TransactionType;
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Ledger\Models\Transaction;
+use App\Domain\Ledger\Enums\TransactionType;
 use App\Domain\Wallet\Models\Wallet;
-use App\Domain\Wallet\Services\WalletService;
 use App\Events\Wallet\WalletFundsMoved;
 use App\Mail\WalletTransactionMail;
 use App\Models\User;
@@ -20,7 +21,7 @@ class TransactionAlertService
     public function __construct(
         private readonly PlatformMailService $mail,
         private readonly SmsNotificationService $sms,
-        private readonly WalletService $wallets,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     public function handle(WalletFundsMoved $event): void
@@ -34,7 +35,8 @@ class TransactionAlertService
 
         // Avoid recursive alerts when we debit the SMS fee itself.
         $idempotencyKey = (string) ($event->transaction->idempotency_key ?? '');
-        if (str_starts_with($idempotencyKey, 'sms-alert-fee:')) {
+        if (str_starts_with($idempotencyKey, 'sms-alert-fee:')
+            || str_starts_with($idempotencyKey, 'fee:sms_alert:')) {
             return;
         }
 
@@ -112,16 +114,15 @@ class TransactionAlertService
             return;
         }
 
-        $feeMinor = (int) config('reton.sms.alert_fee_minor', 600);
-        $fee = Money::of(max(0, $feeMinor), $wallet->currency);
+        $fee = $this->fees->calculate(FeeRail::SmsAlert, Money::zero($wallet->currency));
 
         if ($fee->isPositive()) {
             try {
-                $this->wallets->withdraw(
+                $this->fees->chargeWallet(
                     $wallet,
-                    $fee,
-                    'sms-alert-fee:'.$transaction->getKey(),
-                    ['reason' => 'sms_notification_fee', 'for_transaction_id' => $transaction->getKey()],
+                    FeeRail::SmsAlert,
+                    Money::zero($wallet->currency),
+                    'fee:sms_alert:'.$transaction->getKey(),
                 );
                 $balance = Money::of((int) $wallet->fresh()->balance, $wallet->currency);
             } catch (\Throwable $e) {

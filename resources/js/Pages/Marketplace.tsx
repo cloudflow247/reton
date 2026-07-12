@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Head, Link, router, usePage } from '@inertiajs/react'
@@ -301,7 +301,7 @@ function EmptyBlock({
   desc,
   action,
 }: {
-  icon: (p: { size?: number }) => JSX.Element
+  icon: (p: { size?: number }) => ReactElement
   title: string
   desc: string
   action: { label: string; onClick: () => void }
@@ -471,7 +471,14 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <RhfField label="Price (NGN)" type="number" step="0.01" min="1" error={errors.price?.message} {...register('price')} />
+            <RhfField
+              label="Price (NGN)"
+              type="number"
+              step="0.01"
+              min="1"
+              error={errors.price?.message}
+              {...register('price', { valueAsNumber: true })}
+            />
             <div className="rounded-xl border border-line bg-surface-2 px-3 py-2.5">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Buyer pays</p>
               <p className="mt-1 font-num text-lg font-bold text-mint">
@@ -490,7 +497,9 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
               placeholder="License key, download link, or access code"
               {...register('delivery_payload')}
             />
-            {errors.delivery_payload && <p className="text-sm text-danger">{errors.delivery_payload.message}</p>}
+            {itemType === 'digital' && 'delivery_payload' in errors && errors.delivery_payload && (
+              <p className="text-sm text-danger">{errors.delivery_payload.message}</p>
+            )}
           </fieldset>
         ) : (
           <fieldset className="space-y-3">
@@ -510,7 +519,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
                 type="number"
                 min="100"
                 error={'weight_grams' in errors ? errors.weight_grams?.message : undefined}
-                {...register('weight_grams')}
+                {...register('weight_grams', { valueAsNumber: true })}
               />
             </div>
             <RhfField label="Brand / maker" error={'spec_brand' in errors ? errors.spec_brand?.message : undefined} {...register('spec_brand')} />

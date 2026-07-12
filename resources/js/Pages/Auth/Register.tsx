@@ -194,7 +194,6 @@ export default function Register() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <RhfField
                     label="First name"
-                    name="first_name"
                     placeholder="Ada"
                     autoComplete="given-name"
                     autoFocus={step === 0}
@@ -204,7 +203,6 @@ export default function Register() {
                   />
                   <RhfField
                     label="Last name"
-                    name="last_name"
                     placeholder="Okafor"
                     autoComplete="family-name"
                     valid={!!lastName && !errors.last_name && !serverErrors.last_name}
@@ -214,7 +212,6 @@ export default function Register() {
                 </div>
                 <RhfField
                   label="Middle name"
-                  name="middle_name"
                   placeholder="Optional"
                   autoComplete="additional-name"
                   hint="Optional — include if it appears on your BVN or government ID."
@@ -223,7 +220,6 @@ export default function Register() {
                 />
                 <RhfField
                   label="Email"
-                  name="email"
                   type="email"
                   placeholder="you@example.com"
                   autoComplete="email"
@@ -281,7 +277,6 @@ export default function Register() {
               <div className="space-y-4">
                 <RhfPasswordField
                   label="Password"
-                  name="password"
                   placeholder="••••••••"
                   autoComplete="new-password"
                   autoFocus={step === 2}
@@ -292,7 +287,6 @@ export default function Register() {
                 <PasswordStrength password={password ?? ''} />
                 <RhfPasswordField
                   label="Confirm password"
-                  name="password_confirmation"
                   placeholder="••••••••"
                   autoComplete="new-password"
                   error={fieldErrorMessage(errors.password_confirmation, serverErrors.password_confirmation)}

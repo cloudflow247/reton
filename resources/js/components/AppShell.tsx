@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { Link, usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import type { SharedProps } from '@/types'
@@ -38,7 +38,7 @@ type NavItem = {
   to: string
   label: string
   end?: boolean
-  Icon: (p: { size?: number; className?: string }) => JSX.Element
+  Icon: (p: { size?: number; className?: string }) => ReactElement
   hint?: string
   feature?: keyof SharedProps['features']
 }
@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="mx-auto flex min-h-full max-w-6xl flex-col px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10">
-      <header className="dock sticky top-0 z-40 mt-2 flex items-center gap-2 rounded-2xl px-3 py-2.5 sm:mt-3 sm:gap-4 sm:px-4">
+      <header className="sticky top-0 z-40 -mx-4 flex items-center gap-2 border-b border-line/70 bg-bg/95 px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:gap-4 sm:px-6 sm:py-3">
         <Link href="/dashboard" className="relative z-20 shrink-0 transition-opacity hover:opacity-90">
           <Wordmark />
         </Link>
@@ -227,7 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="relative z-0 flex-1 pt-5 sm:pt-6">
+      <main className="relative z-0 flex-1 pt-4 sm:pt-5">
         <motion.div
           key={pathname}
           initial={{ opacity: 0, y: 4 }}
@@ -344,7 +344,7 @@ function DockItem({
   to: string
   label: string
   end?: boolean
-  Icon: (p: { size?: number; className?: string }) => JSX.Element
+  Icon: (p: { size?: number; className?: string }) => ReactElement
   on: boolean
   soon?: boolean
 }) {

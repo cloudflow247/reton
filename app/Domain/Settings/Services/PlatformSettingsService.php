@@ -213,6 +213,26 @@ class PlatformSettingsService
             'one_time' => false,
             'physical_listings' => false,
         ],
+        'fees' => [
+            'transfer_instant_bps' => 0,
+            'transfer_instant_flat_minor' => 0,
+            'transfer_protected_bps' => 0,
+            'transfer_protected_flat_minor' => 0,
+            'withdraw_bps' => 0,
+            'withdraw_flat_minor' => 0,
+            'deposit_bps' => 0,
+            'deposit_flat_minor' => 0,
+            'callback_bps' => 0,
+            'callback_flat_minor' => 0,
+            'listing_publish_bps' => 0,
+            'listing_publish_flat_minor' => 0,
+            'marketplace_sale_bps' => 0,
+            'marketplace_sale_flat_minor' => 0,
+            'recovery_bps' => 0,
+            'recovery_flat_minor' => 0,
+            'sms_alert_bps' => 0,
+            'sms_alert_flat_minor' => 600,
+        ],
         'horizon' => [
             'allowed_emails' => '',
         ],
@@ -636,6 +656,7 @@ class PlatformSettingsService
                 'reton.features.one_time' => filter_var($values['one_time'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.physical_listings' => filter_var($values['physical_listings'] ?? false, FILTER_VALIDATE_BOOLEAN),
             ]),
+            'fees' => $this->applyFeesConfig($values),
             'horizon' => config(['reton.horizon.allowed_emails' => (string) ($values['allowed_emails'] ?? '')]),
             'sms' => config(['reton.sms' => [
                 'notifications_enabled' => (bool) ($values['notifications_enabled'] ?? false),
@@ -830,6 +851,7 @@ class PlatformSettingsService
                 'one_time' => (bool) config('reton.features.one_time', false),
                 'physical_listings' => (bool) config('reton.features.physical_listings', false),
             ],
+            'fees' => (array) config('reton.fees', []),
             'horizon' => [
                 'allowed_emails' => (string) config('reton.horizon.allowed_emails'),
             ],
@@ -878,6 +900,26 @@ class PlatformSettingsService
         }
 
         return $tiers;
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     */
+    private function applyFeesConfig(array $values): void
+    {
+        $fees = [];
+
+        foreach (array_keys(self::DEFAULTS['fees']) as $key) {
+            $fees[$key] = max(0, (int) ($values[$key] ?? 0));
+        }
+
+        config(['reton.fees' => $fees]);
+
+        // Keep legacy recovery + SMS fee keys in sync for existing call sites.
+        config([
+            'reton.recovery.fee_bps' => $fees['recovery_bps'],
+            'reton.sms.alert_fee_minor' => $fees['sms_alert_flat_minor'],
+        ]);
     }
 
     /** @return array<string, mixed> */

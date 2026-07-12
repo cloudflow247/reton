@@ -1,4 +1,4 @@
-import type { FormEvent, ReactNode } from 'react'
+import type { FormEvent, ReactElement, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Head, useForm, usePage } from '@inertiajs/react'
@@ -686,7 +686,7 @@ function QuickAction({
   highlight,
   onClick,
 }: {
-  Icon: (p: { size?: number }) => JSX.Element
+  Icon: (p: { size?: number }) => ReactElement
   label: string
   active?: boolean
   highlight?: boolean

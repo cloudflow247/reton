@@ -11,7 +11,7 @@ const namePart = z
 export const loginSchema = z.object({
   email: trimmed('Email is required').email('Enter a valid email address'),
   password: trimmed('Password is required'),
-  remember: z.boolean().optional().default(false),
+  remember: z.boolean(),
   website: z.string().max(0).optional().or(z.literal('')),
 })
 

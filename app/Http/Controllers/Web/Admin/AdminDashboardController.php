@@ -9,6 +9,7 @@ use App\Domain\Fraud\Models\FraudAlert;
 use App\Domain\Payments\Models\Deposit;
 use App\Domain\Recovery\Models\Recovery;
 use App\Domain\Settings\Models\AdminAuditLog;
+use App\Domain\Settings\Models\PlatformSetting;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Domain\Support\Enums\SupportTicketStatus;
 use App\Domain\Support\Models\SupportTicket;
@@ -101,6 +102,68 @@ class AdminDashboardController extends Controller
                     'user_name' => $log->user?->name,
                     'created_at' => $log->created_at,
                 ]),
+            'goLive' => $this->goLiveChecklist(),
+            'queues' => [
+                'support' => SupportTicket::query()
+                    ->whereIn('status', [SupportTicketStatus::Open, SupportTicketStatus::Escalated])
+                    ->count(),
+                'fraud' => FraudAlert::query()->where('status', 'open')->count(),
+                'callbacks' => Callback::query()->where('status', 'pending')->count(),
+                'recoveries' => Recovery::query()->whereIn('status', ['held', 'escalated'])->count(),
+            ],
         ]);
+    }
+
+    /**
+     * @return list<array{id: string, label: string, ready: bool, href: string, detail: string}>
+     */
+    private function goLiveChecklist(): array
+    {
+        $adminPath = '/'.trim((string) config('reton.admin.path', 'admin'), '/');
+
+        return [
+            [
+                'id' => 'alatpay',
+                'label' => 'ALATPay collections',
+                'ready' => $this->settings->isIntegrationReady('alatpay'),
+                'href' => $adminPath.'/integrations',
+                'detail' => 'API key, merchant login, business ID',
+            ],
+            [
+                'id' => 'bvn',
+                'label' => 'BVN verification',
+                'ready' => $this->settings->isBvnVerificationReady(),
+                'href' => $adminPath.'/integrations',
+                'detail' => 'Required for permanent deposit accounts',
+            ],
+            [
+                'id' => 'paystack',
+                'label' => 'Paystack withdrawals',
+                'ready' => $this->settings->isIntegrationReady('paystack'),
+                'href' => $adminPath.'/integrations',
+                'detail' => 'Secret key + Transfers enabled',
+            ],
+            [
+                'id' => 'termii',
+                'label' => 'Termii SMS',
+                'ready' => $this->settings->isTermiiReady(),
+                'href' => $adminPath.'/integrations',
+                'detail' => 'OTP + transaction alerts',
+            ],
+            [
+                'id' => 'https',
+                'label' => 'Force HTTPS',
+                'ready' => (bool) config('reton.security.force_https', false),
+                'href' => $adminPath.'/site',
+                'detail' => 'Site → Security before production traffic',
+            ],
+            [
+                'id' => 'fees',
+                'label' => 'Platform fees configured',
+                'ready' => PlatformSetting::query()->whereKey('fees')->exists(),
+                'href' => $adminPath.'/platform',
+                'detail' => 'Save Admin → Platform → Fees at least once (defaults stay free until you set rates)',
+            ],
+        ];
     }
 }

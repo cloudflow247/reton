@@ -3,8 +3,6 @@ import { motion } from 'framer-motion'
 import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
-const ease = [0.22, 1, 0.36, 1] as const
-
 function ShieldMark({ size = 40, className }: { size?: number; className?: string }) {
   const uid = useId().replace(/:/g, '')
   const gradId = `reton-logo-${uid}`

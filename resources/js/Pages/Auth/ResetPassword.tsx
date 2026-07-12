@@ -71,7 +71,6 @@ export default function ResetPassword() {
 
         <RhfPasswordField
           label="New password"
-          name="password"
           placeholder="••••••••"
           autoComplete="new-password"
           autoFocus
@@ -82,7 +81,6 @@ export default function ResetPassword() {
         <PasswordStrength password={password ?? ''} />
         <RhfPasswordField
           label="Confirm new password"
-          name="password_confirmation"
           placeholder="••••••••"
           autoComplete="new-password"
           error={fieldErrorMessage(errors.password_confirmation, serverErrors.password_confirmation)}

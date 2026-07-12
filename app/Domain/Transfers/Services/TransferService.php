@@ -7,6 +7,8 @@ namespace App\Domain\Transfers\Services;
 use App\Domain\Callback\Enums\CallbackStatus;
 use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Services\ProtectionFairnessService;
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Ledger\Data\PostingDraft;
 use App\Domain\Ledger\Enums\TransactionType;
 use App\Domain\Ledger\Models\Transaction;
@@ -39,6 +41,7 @@ class TransferService
         private readonly WalletService $wallets,
         private readonly ProtectionFairnessService $fairness,
         private readonly HeldBalanceReconciler $heldBalances,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     /**
@@ -61,7 +64,7 @@ class TransferService
                 'channel' => 'transfer',
             ]);
 
-            return $this->record(
+            $transfer = $this->record(
                 $sender,
                 $from,
                 $to,
@@ -73,6 +76,16 @@ class TransferService
                 $idempotencyKey,
                 completed: true,
             );
+
+            $this->fees->chargeWallet(
+                $from,
+                FeeRail::TransferInstant,
+                $amount,
+                ($idempotencyKey ?? $transfer->reference).':fee',
+                'Instant transfer fee',
+            );
+
+            return $transfer;
         });
     }
 
@@ -138,6 +151,14 @@ class TransferService
             ]);
 
             $this->heldBalances->sync($to->fresh());
+
+            $this->fees->chargeWallet(
+                $from->refresh(),
+                FeeRail::TransferProtected,
+                $amount,
+                ($idempotencyKey ?? $transfer->reference).':fee',
+                'Protected transfer fee',
+            );
 
             return $transfer->load('hold');
         });

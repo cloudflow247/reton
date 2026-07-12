@@ -8,7 +8,6 @@ import { ShieldIcon } from '@/components/icons'
 import { shortDate } from '@/lib/format'
 import {
   confirmOrderSchema,
-  createListingSchema,
   deliverOrderSchema,
   disputeOrderSchema,
   shipOrderSchema,
@@ -197,7 +196,7 @@ function EscrowStepper({
         )
       })}
       {disputed && (
-        <Pill tone="amber" className="ml-1 shrink-0">
+        <Pill tone="amber">
           Dispute
         </Pill>
       )}
@@ -234,7 +233,7 @@ function HubDropoffPanel({
         <div className="rounded-lg border border-line/80 bg-surface-2 px-3 py-2 text-[11px] text-muted">
           <p className="font-semibold text-text">Hub will verify against</p>
           <p className="mt-1 line-clamp-3">{String(snapshot.description ?? '')}</p>
-          {snapshot.specs && typeof snapshot.specs === 'object' && (
+          {typeof snapshot.specs === 'object' && snapshot.specs !== null ? (
             <ul className="mt-1 space-y-0.5">
               {Object.entries(snapshot.specs as Record<string, string>).map(([k, v]) => (
                 <li key={k}>
@@ -242,7 +241,7 @@ function HubDropoffPanel({
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </div>
       )}
     </div>
@@ -342,7 +341,10 @@ function ShipModal({ order, onClose }: { order: DigitalOrder; onClose: () => voi
       </p>
       <form
         onSubmit={handleSubmit((values) => {
-          router.post(`/marketplace/orders/${order.id}/ship`, values, {
+          router.post(`/marketplace/orders/${order.id}/ship`, {
+            ...values,
+            attest_matches_listing: true,
+          }, {
             preserveScroll: true,
             onSuccess: () => onClose(),
           })

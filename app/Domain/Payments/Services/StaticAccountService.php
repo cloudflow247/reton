@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Kyc\Services\KycLimitService;
 use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
@@ -49,6 +51,7 @@ class StaticAccountService
         private readonly WalletService $wallets,
         private readonly KycService $kyc,
         private readonly KycLimitService $kycLimits,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     /**
@@ -492,6 +495,13 @@ class StaticAccountService
                     ],
                 ],
                 $description,
+            );
+
+            $this->fees->chargeWallet(
+                $wallet->fresh(),
+                FeeRail::Deposit,
+                $amount,
+                'fee:deposit:'.$deposit->reference,
             );
 
             $deposit->update([

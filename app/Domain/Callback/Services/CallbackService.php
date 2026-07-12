@@ -12,13 +12,17 @@ use App\Domain\Callback\Exceptions\CallbackNotOpenException;
 use App\Domain\Callback\Exceptions\CannotInitiateCallbackException;
 use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Models\CallbackEvent;
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Marketplace\Services\DigitalMarketplaceService;
 use App\Domain\Transfers\Enums\HoldStatus;
 use App\Domain\Transfers\Enums\TransferStatus;
 use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Transfers\Services\TransferService;
+use App\Domain\Wallet\Models\Wallet;
 use App\Models\User;
 use App\Support\Broadcasting\TrustProtectionBroadcaster;
+use App\Support\Money\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -39,6 +43,7 @@ class CallbackService
         private readonly CallbackDecisionEngine $engine,
         private readonly DigitalMarketplaceService $marketplace,
         private readonly ProtectionFairnessService $fairness,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     public function initiate(Transfer $transfer, User $sender, string $reason): Callback
@@ -75,6 +80,16 @@ class CallbackService
                 'category' => $snapshot->category,
                 'fairness' => $snapshot->toArray(),
             ]);
+
+            $senderWallet = Wallet::query()->find($transfer->sender_wallet_id);
+            if ($senderWallet !== null) {
+                $this->fees->chargeWallet(
+                    $senderWallet,
+                    FeeRail::Callback,
+                    Money::of((int) $transfer->amount, (string) $transfer->currency),
+                    'fee:callback:'.$callback->reference,
+                );
+            }
 
             TrustProtectionBroadcaster::callbackChanged($callback, 'callback.initiated');
 

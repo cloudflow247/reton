@@ -41,6 +41,9 @@ class NotificationPreferenceService
 
     public function smsAlertFeeMinor(): int
     {
-        return max(0, (int) config('reton.sms.alert_fee_minor', 600));
+        return max(0, (int) config(
+            'reton.fees.sms_alert_flat_minor',
+            config('reton.sms.alert_fee_minor', 600),
+        ));
     }
 }

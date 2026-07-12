@@ -24,14 +24,7 @@ function renderWithLayout(
   }).layout
 
   if (typeof layout === 'function') {
-    return layout(page)
-  }
-
-  if (Array.isArray(layout)) {
-    return layout
-      .concat(page as never)
-      .reverse()
-      .reduce((children, Layout) => createElement(Layout as never, { children, ...pageProps }))
+    return (layout as (node: ReactNode) => ReactNode)(page)
   }
 
   return page

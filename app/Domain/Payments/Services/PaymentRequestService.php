@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Fees\Enums\FeeRail;
+use App\Domain\Fees\Services\PlatformFeeService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
 use App\Domain\Payments\Enums\PaymentRequestStatus;
@@ -34,6 +36,7 @@ class PaymentRequestService
         private readonly AlatpayGateway $gateway,
         private readonly WalletService $wallets,
         private readonly AlatpayWebhookGuard $guard,
+        private readonly PlatformFeeService $fees,
     ) {}
 
     public function create(User $user, Wallet $wallet, Money $amount, string $title, ?string $description = null): PaymentRequest
@@ -162,11 +165,20 @@ class PaymentRequestService
         DB::transaction(function () use ($request, $customer): void {
             $wallet = Wallet::findOrFail($request->wallet_id);
 
+            $credited = Money::of($request->amount, $request->currency);
+
             $transaction = $this->wallets->fund(
                 $wallet,
-                Money::of($request->amount, $request->currency),
+                $credited,
                 $request->reference, // ledger idempotency key
                 ['payment_request_id' => $request->id, 'provider' => self::PROVIDER],
+            );
+
+            $this->fees->chargeWallet(
+                $wallet->fresh(),
+                FeeRail::Deposit,
+                $credited,
+                'fee:deposit:'.$request->reference,
             );
 
             $request->update([

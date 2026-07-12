@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { Head, Link } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
@@ -16,7 +16,7 @@ type Props = PageProps<{
   ctaHref: string
 }>
 
-const icons: Record<Feature, (p: { size?: number; className?: string }) => JSX.Element> = {
+const icons: Record<Feature, (p: { size?: number; className?: string }) => ReactElement> = {
   withdraw: BankIcon,
   bills: BillIcon,
   cards: CardIcon,

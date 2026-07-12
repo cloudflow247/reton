@@ -438,4 +438,35 @@ return [
         'physical_listings' => (bool) env('RETON_FEATURE_PHYSICAL_LISTINGS', false),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Platform fees (bps + flat minor units)
+    |--------------------------------------------------------------------------
+    |
+    | Managed from Admin → Platform → Fees. Defaults are zero so go-live can
+    | start free; SMS alert flat fee mirrors the existing SMS setting.
+    |
+    */
+
+    'fees' => [
+        'transfer_instant_bps' => (int) env('RETON_FEE_TRANSFER_INSTANT_BPS', 0),
+        'transfer_instant_flat_minor' => (int) env('RETON_FEE_TRANSFER_INSTANT_FLAT', 0),
+        'transfer_protected_bps' => (int) env('RETON_FEE_TRANSFER_PROTECTED_BPS', 0),
+        'transfer_protected_flat_minor' => (int) env('RETON_FEE_TRANSFER_PROTECTED_FLAT', 0),
+        'withdraw_bps' => (int) env('RETON_FEE_WITHDRAW_BPS', 0),
+        'withdraw_flat_minor' => (int) env('RETON_FEE_WITHDRAW_FLAT', 0),
+        'deposit_bps' => (int) env('RETON_FEE_DEPOSIT_BPS', 0),
+        'deposit_flat_minor' => (int) env('RETON_FEE_DEPOSIT_FLAT', 0),
+        'callback_bps' => (int) env('RETON_FEE_CALLBACK_BPS', 0),
+        'callback_flat_minor' => (int) env('RETON_FEE_CALLBACK_FLAT', 0),
+        'listing_publish_bps' => (int) env('RETON_FEE_LISTING_PUBLISH_BPS', 0),
+        'listing_publish_flat_minor' => (int) env('RETON_FEE_LISTING_PUBLISH_FLAT', 0),
+        'marketplace_sale_bps' => (int) env('RETON_FEE_MARKETPLACE_SALE_BPS', 0),
+        'marketplace_sale_flat_minor' => (int) env('RETON_FEE_MARKETPLACE_SALE_FLAT', 0),
+        'recovery_bps' => (int) env('RETON_FEE_RECOVERY_BPS', env('RETON_RECOVERY_FEE_BPS', 0)),
+        'recovery_flat_minor' => (int) env('RETON_FEE_RECOVERY_FLAT', 0),
+        'sms_alert_bps' => (int) env('RETON_FEE_SMS_ALERT_BPS', 0),
+        'sms_alert_flat_minor' => (int) env('RETON_FEE_SMS_ALERT_FLAT', env('RETON_SMS_ALERT_FEE_MINOR', 600)),
+    ],
+
 ];

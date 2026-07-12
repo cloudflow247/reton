@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react'
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import { useState } from 'react'
 import { AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, Field, Pill } from '@/components/ui'
@@ -252,6 +252,12 @@ export default function Users() {
                     <td className="px-4 py-3 text-muted">{user.created_at ? shortDate(user.created_at) : '—'}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
+                        <Link
+                          href={buildAdminUrl(adminBase, `users/${user.id}`)}
+                          className="text-xs font-semibold text-mint hover:underline"
+                        >
+                          Desk
+                        </Link>
                         <button type="button" className="text-xs font-semibold text-mint hover:underline" onClick={() => openEdit(user)}>
                           Edit
                         </button>

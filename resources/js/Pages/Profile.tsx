@@ -59,7 +59,8 @@ export default function Profile() {
     notifications.transform(() => ({
       notify_email: next,
       notify_sms: notifications.data.notify_sms,
-    })).put('/profile/notifications', {
+    }))
+    notifications.put('/profile/notifications', {
       preserveScroll: true,
       onSuccess: () => notifications.setData('notify_email', next),
     })
@@ -76,7 +77,8 @@ export default function Profile() {
     notifications.transform(() => ({
       notify_email: notifications.data.notify_email,
       notify_sms: next,
-    })).put('/profile/notifications', {
+    }))
+    notifications.put('/profile/notifications', {
       preserveScroll: true,
       onSuccess: () => notifications.setData('notify_sms', next),
     })

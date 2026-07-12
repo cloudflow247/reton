@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactElement } from 'react'
 import { Link, router } from '@inertiajs/react'
 import { UserAvatar } from '@/components/UserAvatar'
 import { ChevronDownIcon, LockIcon, UndoIcon, UserIcon } from '@/components/icons'
@@ -131,7 +131,7 @@ function MenuLink({
   onClick,
 }: {
   href: string
-  Icon: (p: { size?: number; className?: string }) => JSX.Element
+  Icon: (p: { size?: number; className?: string }) => ReactElement
   label: string
   hint: string
   active?: boolean

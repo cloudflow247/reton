@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Domain\Payments\Alatpay\AlatpaySignatureVerifier;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
+use App\Domain\Payments\Contracts\PayoutGateway;
 use App\Domain\Payments\Enums\PaymentRequestStatus;
 use App\Domain\Payments\Enums\PayoutStatus;
+use App\Domain\Payments\Gateways\AlatpayPayoutGateway;
 use App\Domain\Payments\Services\AlatpayDepositService;
 use App\Domain\Payments\Services\AlatpayWebhookRouter;
 use App\Domain\Payments\Services\PaymentRequestService;
@@ -81,6 +83,12 @@ function signedTransferWebhookPayload(string $providerRef, string $status, strin
 }
 
 it('routes a transfer.* event to the payout handler and settles the payout', function () {
+    config(['reton.payouts.provider' => 'alatpay']);
+    $this->app->instance(
+        PayoutGateway::class,
+        new AlatpayPayoutGateway(app(AlatpayGateway::class)),
+    );
+
     // Inline setup: funded wallet + payout request, mirroring PayoutServiceTest helpers.
     $user = User::factory()->create();
     $wallet = app(WalletService::class)->open($user, 'NGN');
@@ -95,6 +103,9 @@ it('routes a transfer.* event to the payout handler and settles the payout', fun
         '0123456789',
         'Ada Lovelace',
     );
+
+    expect($payout->provider)->toBe('alatpay')
+        ->and($payout->status)->toBe(PayoutStatus::Pending);
 
     [$payload, $signature] = signedTransferWebhookPayload(
         $payout->provider_reference,

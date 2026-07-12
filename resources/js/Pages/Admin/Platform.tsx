@@ -20,6 +20,7 @@ type PlatformGroup =
   | 'bills'
   | 'payouts'
   | 'features'
+  | 'fees'
   | 'horizon'
 
 type GroupValues = Record<string, string | number | boolean>
@@ -41,6 +42,7 @@ const tabs: { id: PlatformGroup; label: string }[] = [
   { id: 'bills', label: 'Bill payments' },
   { id: 'payouts', label: 'Withdrawals' },
   { id: 'features', label: 'Features' },
+  { id: 'fees', label: 'Fees' },
   { id: 'horizon', label: 'Operations' },
 ]
 
@@ -435,7 +437,7 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
         <div className="space-y-4">
           {(
             [
-              ['withdraw', 'Bank withdrawals', 'Cash-out to Nigerian bank accounts via the payout provider.'],
+              ['withdraw', 'Bank withdrawals (Cash)', 'Cash-out to Nigerian bank accounts via Paystack (or configured payout provider).'],
               ['bills', 'Bill payments', 'Airtime, data, power, TV, and betting.'],
               ['cards', 'Virtual cards', 'Bridgecard NGN / USD virtual cards.'],
               ['checkout', 'Add Money — Checkout', 'ALATPay hosted checkout (card · transfer · USSD). Requires Payment Link on the merchant.'],
@@ -458,6 +460,48 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
             </label>
           ))}
           <p className="text-xs text-muted">Off = Coming Soon page for customers. Credentials still live under Integrations.</p>
+        </div>
+      )}
+
+      {group === 'fees' && (
+        <div className="space-y-5">
+          <p className="text-sm text-muted">
+            Basis points (bps) are percent of the principal (100 bps = 1%). Flat amounts are in kobo. Leave at 0 for free rails.
+          </p>
+          {(
+            [
+              ['transfer_instant', 'Instant transfer'],
+              ['transfer_protected', 'Protected transfer'],
+              ['withdraw', 'Bank withdrawal'],
+              ['deposit', 'Wallet deposit'],
+              ['callback', 'Callback protection'],
+              ['listing_publish', 'Listing publish'],
+              ['marketplace_sale', 'Marketplace sale'],
+              ['recovery', 'Wrong-transfer recovery'],
+              ['sms_alert', 'SMS alert'],
+            ] as const
+          ).map(([rail, label]) => (
+            <div key={rail} className="rounded-xl border border-line bg-surface-2/40 p-4">
+              <p className="text-sm font-semibold text-text">{label}</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Field
+                  label="BPS"
+                  type="number"
+                  min={0}
+                  value={String(form.data[`${rail}_bps`] ?? 0)}
+                  onChange={(e) => form.setData(`${rail}_bps`, Number(e.target.value))}
+                />
+                <Field
+                  label="Flat (kobo)"
+                  type="number"
+                  min={0}
+                  value={String(form.data[`${rail}_flat_minor`] ?? 0)}
+                  onChange={(e) => form.setData(`${rail}_flat_minor`, Number(e.target.value))}
+                  hint={rail === 'sms_alert' ? `≈ ${ngn(Number(form.data.sms_alert_flat_minor ?? 0))}` : undefined}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

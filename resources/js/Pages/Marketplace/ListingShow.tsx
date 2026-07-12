@@ -13,6 +13,8 @@ import { ngn } from '@/lib/format'
 import {
   purchaseDigitalListingSchema,
   purchasePhysicalListingSchema,
+  type PurchaseListingValues,
+  type PurchasePhysicalListingValues,
 } from '@/lib/schemas/marketplace'
 import type { DigitalListing, PageProps } from '@/types'
 
@@ -174,7 +176,7 @@ function PurchaseForm({ listing, className }: { listing: DigitalListing; classNa
       : { pin: '' },
   })
 
-  const submit = (values: Record<string, unknown>) => {
+  const submit = (values: PurchasePhysicalListingValues | PurchaseListingValues) => {
     router.post(`/marketplace/listings/${listing.id}/purchase`, values, {
       headers: deviceHeaders(),
     })

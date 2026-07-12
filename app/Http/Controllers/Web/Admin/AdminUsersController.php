@@ -55,6 +55,15 @@ class AdminUsersController extends Controller
         ]);
     }
 
+    public function show(string $adminPrefix, User $user): Response
+    {
+        unset($adminPrefix);
+
+        $this->authorize('view', $user);
+
+        return Inertia::render('Admin/UserShow', $this->users->deskProfile($user));
+    }
+
     public function store(AdminStoreUserRequest $request): RedirectResponse
     {
         $this->authorize('create', User::class);
