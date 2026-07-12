@@ -2,10 +2,11 @@
 
 A team walkthrough of what shipped that day: new pages, money flows, and how the pieces connect. Use this when onboarding someone to the product or rehearsing a demo.
 
-**Screenshots:** [`screenshots/`](screenshots/) (9 captures, 1280×900 @2x)  
+**Company:** RETON PTE LTD · **Founder & CEO:** Gabriel Rotimi Mogaji  
+**Screenshots:** [`screenshots/`](screenshots/)  
 **Regenerate:** with the app running (`php artisan serve`), run `node scripts/capture-release-screenshots.mjs`
 
-Demo logins (when `RETON_DEMO_MODE=true`): `ada@demo.retonpay.com` / `bola@demo.retonpay.com` — password `demo1234`, PIN `1234`.
+Sandbox logins only when `RETON_DEMO_MODE=true` on a private environment. Credentials live in your local / Cloud secrets (`RETON_DEMO_*`) — never commit them and never enable demo mode on public production.
 
 ---
 
@@ -197,7 +198,7 @@ Web and mobile share the **same path** (`/l/*`). When apps ship, set `RETON_APPL
 ## 5. Suggested demo script (5 minutes)
 
 1. **Bola** — Marketplace → Your listings → Copy link (show QR). Paste link narrative for WhatsApp.
-2. **Ada** (guest/incognito) — open `/l/…` → Sign in → Pay with protection (PIN `1234`).
+2. **Ada** (guest/incognito) — open `/l/…` → Sign in → Pay with protection (enter transaction PIN).
 3. **Bola** — Marketplace → Active order → Mark delivered.
 4. **Ada** — open delivery content → Confirm (or show dispute options).
 5. **Optional:** Protection center → show pending transfer; Dashboard → available vs pending.

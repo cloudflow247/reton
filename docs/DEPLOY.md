@@ -1,6 +1,8 @@
 # Deploying Reton to Laravel Cloud
 
-This guide walks through a production-ready deploy of Reton on [Laravel Cloud](https://cloud.laravel.com/). Reton is a Laravel 12 + Inertia (React 19 / Vite) app. You will need PostgreSQL, Redis, the scheduler, a Vite asset build, and — for live payments — ALATPay credentials.
+A practical production deploy guide for Reton on [Laravel Cloud](https://cloud.laravel.com/).
+
+Reton is a Laravel 12 + Inertia (React 19 / Vite) product from **RETON PTE LTD**. You will need PostgreSQL, Redis, the scheduler, a Vite asset build, and — for live payments — production rail credentials stored in environment variables or Admin → Integrations (never in git).
 
 ---
 
@@ -11,11 +13,11 @@ In your Laravel Cloud environment, attach:
 | Resource | Why |
 |----------|-----|
 | **PostgreSQL** | Primary database (`DB_CONNECTION=pgsql`) |
-| **Redis** | Cache, queues, and scheduler locks (`CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`) |
+| **Redis** | Cache, queues, and scheduler locks |
 
-Laravel Cloud injects `DB_*` and `REDIS_*` for attached resources. Do not set those by hand unless you know you are overriding them on purpose.
+Laravel Cloud injects `DB_*` and `REDIS_*` for attached resources. Do not override them unless you intend to.
 
-Enable a **queue worker** (Horizon or `queue:work`) so webhooks, notifications, and async side effects can run. Enable the **scheduler** so funding polls and marketplace expiry commands keep running.
+Enable a **queue worker** (Horizon or `queue:work`) so webhooks, notifications, and async work can run. Enable the **scheduler** so funding polls and marketplace expiry commands keep running.
 
 ---
 
@@ -27,39 +29,37 @@ Set these in the environment **Variables** tab. Start from `.env.example`. Produ
 APP_NAME=Reton
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://<your-domain>
+APP_URL=https://your-domain.example
 APP_KEY=                      # Generate in the dashboard, or: php artisan key:generate --show
 
 SESSION_DRIVER=database
 QUEUE_CONNECTION=redis
 CACHE_STORE=redis
 
-# ── ALATPay (Wema) — required for live payments & BVN OTP ──
+# Payment rail — live only; paste real secrets in the Cloud UI, never commit them
 ALATPAY_DRIVER=http
 ALATPAY_BASE_URL=https://api.alatpay.ng
-ALATPAY_API_KEY=<secret>
-ALATPAY_BUSINESS_ID=<secret>
-ALATPAY_BUSINESS_BVN=<secret>
-ALATPAY_WEBHOOK_SECRET=<secret>
+ALATPAY_API_KEY=
+ALATPAY_BUSINESS_ID=
+ALATPAY_BUSINESS_BVN=
+ALATPAY_WEBHOOK_SECRET=
 ALATPAY_TIMEOUT=12
 
-# ── KYC ──
-KYC_BVN_PROVIDER=alatpay      # alatpay (default) or dojah
+KYC_BVN_PROVIDER=alatpay
 
-# ── Reton ──
 RETON_DEFAULT_CURRENCY=NGN
-RETON_DEMO_MODE=false         # keep OFF on public production
+RETON_DEMO_MODE=false         # must stay OFF on public production
 ```
 
-You can also store ALATPay and other integration secrets in **Admin → Integrations** after the first deploy. Env values remain fallbacks until admin settings are saved.
+You can also store integration secrets in **Admin → Integrations** after the first deploy. Env values remain fallbacks until admin settings are saved.
 
-Configure real mail (SMTP or a provider) before sending verification and support email. The default `log` mailer is fine only for staging.
+Configure real mail before sending verification and support email. The `log` mailer is fine only for staging.
 
 ---
 
 ## 3. Deploy command
 
-Laravel Cloud typically runs `composer install` and the Vite build (`npm ci && npm run build`) from `package.json`. Set the **Deploy Command** to:
+Laravel Cloud typically runs `composer install` and the Vite build from `package.json`. Set the **Deploy Command** to:
 
 ```bash
 php artisan migrate --force
@@ -76,7 +76,7 @@ php artisan event:cache
 
 Turn on the **Scheduler** toggle. It runs `schedule:run` every minute and drives jobs such as:
 
-- `static-accounts:poll` — credits inbound ALATPay static-account funding (idempotent, overlap-safe)
+- Static-account funding polls (idempotent, overlap-safe)
 - Marketplace and protection expiry commands
 
 Without the scheduler, deposits and time-based trust flows will stall.
@@ -85,31 +85,19 @@ Without the scheduler, deposits and time-based trust flows will stall.
 
 ## 5. Health check
 
-Point the Cloud health check at `/up` (registered in `bootstrap/app.php`).
+Point the Cloud health check at `/up`.
 
 ---
 
-## 6. Demo mode (staging only)
+## 6. Demo mode (private staging only)
 
-Demo mode shows one-click logins so reviewers can try the product quickly. It needs **both** the env flag and seeded accounts. **Never enable this on a public production site** — demo credentials are well known.
+Demo mode shows one-click logins for reviewers. It needs the env flag **and** seeded accounts.
 
-1. Set:
+**Never enable this on a public production site.** Sandbox passwords live only in your private environment variables (`RETON_DEMO_*` in `.env.example` as placeholders).
 
-   ```ini
-   RETON_DEMO_MODE=true
-   RETON_DEMO_PASSWORD=demo1234
-   RETON_DEMO_PIN=1234
-   ```
-
-2. Seed once from the Commands runner:
-
-   ```bash
-   php artisan db:seed --class=DemoSeeder --force
-   ```
-
-3. Sign-in shows demo buttons. Password `demo1234`, PIN `1234`.
-
-To disable, set `RETON_DEMO_MODE=false` and redeploy. Seeded users remain in the database but are no longer offered on the login screen.
+1. Set `RETON_DEMO_MODE=true` and the matching `RETON_DEMO_*` values in Cloud Variables (not in git).
+2. Seed once: `php artisan db:seed --class=DemoSeeder --force`
+3. Disable with `RETON_DEMO_MODE=false` and redeploy when you go live.
 
 ---
 
@@ -117,28 +105,24 @@ To disable, set `RETON_DEMO_MODE=false` and redeploy. Seeded users remain in the
 
 ### Composer install fails with HTTP 400/403 from GitHub
 
-Often rate-limiting on unauthenticated dist downloads. Redeploy first. If it keeps happening, add a GitHub PAT (classic, no scopes required for public packages):
+Often rate-limiting on unauthenticated downloads. Redeploy first. If it continues, add a GitHub token as a Cloud secret via Composer’s auth config — do not paste tokens into this repo.
 
-```ini
-COMPOSER_AUTH={"github-oauth":{"github.com":"ghp_yourtokenhere"}}
-```
+### 500 on first database query
 
-### 500 on first database query (SQLite fallback)
-
-If Postgres is not attached, Laravel may fall back to SQLite and look for a missing `database.sqlite` file. Attach PostgreSQL, remove any leftover `DB_CONNECTION=sqlite`, redeploy, then `php artisan migrate --force`.
+If Postgres is not attached, Laravel may fall back to SQLite. Attach PostgreSQL, remove any leftover `DB_CONNECTION=sqlite`, redeploy, then `php artisan migrate --force`.
 
 ### “Something went wrong” or blank dashboard after login
 
 1. Hard-refresh after a deploy so the browser picks up the new Vite manifest.
 2. Check the browser console for React errors.
 3. Confirm Postgres is healthy and migrations have run.
-4. Reverb is optional: without `VITE_REVERB_*` at build time, live trust reloads are off, but Dashboard and Protection should still render.
+4. Reverb is optional: without `VITE_REVERB_*` at build time, live trust reloads are off, but pages should still render.
 
 ### BVN OTP not arriving
 
-- ALATPay driver must be `http` with a valid API key and Business ID (env or Admin → Integrations).
-- ALATPay sends the BVN OTP SMS — Termii is not involved in that path.
-- If the driver is `fake`, no SMS is sent; use the demo code shown in the UI (`123456`).
+- Payment driver must be `http` with valid credentials (env or Admin → Integrations).
+- The payment rail sends the BVN OTP SMS — Reton’s own SMS stack is not involved in that path.
+- If the driver is `fake`, no SMS is sent; use the on-screen sandbox code in local/demo only.
 
 ---
 
@@ -148,9 +132,14 @@ If Postgres is not attached, Laravel may fall back to SQLite and look for a miss
 - [ ] Queue worker / Horizon running
 - [ ] `APP_KEY` set, `APP_ENV=production`, `APP_DEBUG=false`
 - [ ] `RETON_DEMO_MODE=false`
-- [ ] ALATPay live credentials configured
+- [ ] Live payment credentials configured (Cloud Variables or Admin)
 - [ ] Deploy command includes `migrate --force` and cache warmers
 - [ ] Scheduler enabled
 - [ ] Health check → `/up`
 - [ ] Custom domain + TLS; `APP_URL` matches the public URL
 - [ ] Mail transport configured for verification emails
+- [ ] No secrets committed to git
+
+---
+
+© 2026 RETON PTE LTD. All rights reserved.

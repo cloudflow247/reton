@@ -1,24 +1,28 @@
 # Reton
 
-**Payments you can trust.**
+**Payments you can take back.**
 
-Reton is Africa’s trust-first payment platform. We help people send, receive, and recover money with clarity — not just speed. Our flagship idea is **Callback Protection**: hold a payment until the sender is ready to release it, with a full timeline every step of the way.
+Reton is a trust-first digital banking platform for Africa. We help people send, receive, and recover money with clarity — not just speed.
 
-Built for the [ALATPay Buildathon](https://alatpay.ng/) as a production-minded MVP on licensed rails (ALAT by Wema).
+Our flagship idea is **Callback Protection**: hold a payment until the sender is ready to release it, with a full timeline at every step.
+
+Built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji**) for the [ALATPay Buildathon](https://alatpay.ng/), on licensed rails (ALAT by Wema).
+
+> This repository is proprietary. It is public so buildathon judges can review the code. See [LICENSE](LICENSE).
 
 ---
 
 ## Why Reton
 
-Most wallets optimise for “send and forget.” Reton optimises for the moment something goes wrong:
+Most wallets optimise for “send and forget.” We optimise for the moment something goes wrong:
 
 - **Callback Protection** — protected transfers stay pending until release or recall
 - **Wrong-transfer recovery** — report a mistake, hold funds when eligible, track the case
 - **Fraud signals** — rule-based scoring with admin visibility
-- **KYC tiers** — CBN-aligned limits; BVN verification via ALATPay OTP (NIN via Dojah when needed)
-- **Double-entry wallet** — every movement is ledger-backed, never a silent balance tweak
+- **KYC tiers** — CBN-aligned limits; BVN verification for funding unlocks
+- **Double-entry wallet** — every movement is ledger-backed
 
-We are not cloning Opay, Kuda, or Moniepoint. The product should feel like a funded fintech — calm, clear, and serious about real money.
+We are not cloning Opay, Kuda, or Moniepoint. The product should feel like a serious fintech — calm, clear, and careful with real money.
 
 ---
 
@@ -45,7 +49,7 @@ app/                 Domain services, HTTP, providers
 resources/js/        Inertia React pages and UI
 routes/              Web and API routes
 infra/               Docker Compose and container definitions
-docs/                Deploy guide, release notes, historical specs
+docs/                Deploy guide and release notes
 tests/               Pest feature and unit tests
 ```
 
@@ -53,23 +57,19 @@ tests/               Pest feature and unit tests
 
 ## Getting started
 
-### Fastest path — local demo
+### Local demo (fastest)
 
 ```bash
 composer install
 npm install
 cp .env.example .env && php artisan key:generate
-# Enable the Windows/SQLite block in .env if you are on Windows without Docker
-composer demo          # fresh migrate + Ada/Bola demo accounts
+composer demo          # migrate + seed sandbox accounts
 composer dev           # app, queue, Reverb, Vite
 ```
 
-Open [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login). Use one-click demo accounts when `RETON_DEMO_MODE=true`, or sign in with:
+Open [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login).
 
-| | |
-|--|--|
-| Password | `demo1234` |
-| Transaction PIN | `1234` |
+Sandbox credentials are defined only in your local `.env` (see `.env.example` for `RETON_DEMO_*`). **Never enable demo mode on a public production site.**
 
 ### Standard setup
 
@@ -88,28 +88,17 @@ php artisan serve
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-App: [http://localhost:8080](http://localhost:8080) · Horizon: `/horizon` (after sign-in) · Reverb: `ws://localhost:8081`
+App: [http://localhost:8080](http://localhost:8080)
 
 ### Windows (native PHP, no Docker)
 
-Horizon needs `pcntl` / `posix`, so Windows uses `queue:work` with the database queue driver instead of Redis/Horizon.
+Horizon needs `pcntl` / `posix`, so Windows uses `queue:work` with the database queue driver:
 
 ```bash
-cp .env.example .env   # enable the Windows block
+cp .env.example .env   # enable the Windows block if needed
 php artisan migrate
 composer dev
 ```
-
-Or run terminals separately:
-
-```bash
-php artisan serve
-php artisan queue:work database --tries=3
-php artisan reverb:start
-npm run dev
-```
-
-Set `BROADCAST_CONNECTION=reverb` and the `REVERB_*` / `VITE_REVERB_*` variables from `.env.example` for live trust updates on Dashboard and Protection.
 
 ### Linux / macOS (without Docker)
 
@@ -124,18 +113,18 @@ Use `QUEUE_CONNECTION=redis`, `BROADCAST_CONNECTION=reverb`, and the Reverb vari
 
 ---
 
-## Configuration highlights
+## Configuration
 
-Integration credentials and business rules can be managed from the **admin dashboard** (Integrations, Platform, Site). Environment variables remain fallbacks until values are saved.
+Integration credentials and business rules can be managed from the **admin dashboard** (Integrations, Platform, Site). Environment variables remain fallbacks until values are saved in admin.
 
 | Concern | Notes |
 |---------|--------|
-| ALATPay | Live driver `http` for production payments and BVN OTP; `fake` for local/demo |
-| KYC BVN | Default provider `alatpay` (`KYC_BVN_PROVIDER`); Dojah remains available for NIN / alternate BVN |
-| Demo mode | `RETON_DEMO_MODE=false` in production — never expose demo logins publicly |
-| Termii | Reton’s own SMS/WhatsApp (auth, alerts). **Not** used for ALATPay BVN OTP — ALATPay sends that SMS |
+| Payment rails | Live HTTP driver for production; fake drivers for local/demo |
+| KYC / BVN | Configured via admin Integrations and `KYC_BVN_PROVIDER` |
+| Demo mode | Keep `RETON_DEMO_MODE=false` in production |
+| SMS / alerts | Reton’s own messaging stack for auth and alerts |
 
-See `.env.example` and [docs/DEPLOY.md](docs/DEPLOY.md) for production variables.
+See `.env.example` and [docs/DEPLOY.md](docs/DEPLOY.md). **Never commit real API keys, webhook secrets, or `.env` files.**
 
 ---
 
@@ -145,19 +134,18 @@ See `.env.example` and [docs/DEPLOY.md](docs/DEPLOY.md) for production variables
 php artisan test
 ```
 
-We aim for solid coverage on money paths: happy path, auth denial, validation, idempotency, webhook replay, and state transitions. Helpers like `ensureVerifiedBvn()` and `readyUserWithWallet()` live in `tests/Pest.php`.
+We focus coverage on money paths: happy path, auth denial, validation, idempotency, webhook replay, and state transitions.
 
 ---
 
 ## Documentation
 
-| Doc | What it’s for |
-|-----|----------------|
-| [docs/DEPLOY.md](docs/DEPLOY.md) | Laravel Cloud deploy, env, scheduler, troubleshooting |
+| Doc | Purpose |
+|-----|---------|
+| [LICENSE](LICENSE) | Proprietary copyright notice |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Laravel Cloud deploy guide |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 | [roadmap.md](roadmap.md) | Product & compliance roadmap |
-| [docs/release-2026-06-30/TEAM_BRIEF.md](docs/release-2026-06-30/TEAM_BRIEF.md) | June 2026 release walkthrough + screenshots |
-| [docs/superpowers/](docs/superpowers/) | Historical design specs and build plans |
 
 ---
 
@@ -167,15 +155,20 @@ We aim for solid coverage on money paths: happy path, auth denial, validation, i
 - Rate limits on auth and payment endpoints
 - Idempotency keys on payment APIs
 - Webhook signature validation
-- Encrypted sensitive fields (BVN, API secrets)
+- Encrypted sensitive fields at rest
 - Audit logs for financial state changes
 
 Treat every environment that can move real money as production.
 
 ---
 
-## Licence & contact
+## Company & contact
 
-Proprietary — Reton / RetonPay. For partnership or support: **support@retonpay.com**.
+| | |
+|--|--|
+| Legal entity | **RETON PTE LTD** |
+| Founder & CEO | **Gabriel Rotimi Mogaji** |
+| Support | support@retonpay.com |
+| Office | 7, Greenland Estate, Ikorodu, Lagos State, Nigeria |
 
-Office: 7, Greenland Estate, Ikorodu, Lagos State, Nigeria.
+© 2026 RETON PTE LTD. All rights reserved.

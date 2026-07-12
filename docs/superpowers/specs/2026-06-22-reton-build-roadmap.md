@@ -1,10 +1,12 @@
-> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../README.md), [roadmap](../../roadmap.md), and [deploy guide](../DEPLOY.md).
+> **Proprietary** — Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji. See [LICENSE](../../../LICENSE).
+>
+> **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
-# Reton V1.0 â€” build roadmap
+# Reton V1.0 — build roadmap
 
 **Date:** 22 June 2026  
 **Status:** Historical (shape approved)  
-**Audience:** Small team (2â€“4 engineers) + compliance  
+**Audience:** Small team (2–4 engineers) + compliance  
 
 ---
 

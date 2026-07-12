@@ -1,4 +1,6 @@
-> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
+> **Proprietary** — Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji. See [LICENSE](../../../LICENSE).
+>
+> **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
 # Request Money (AlatPay Payment Link) Implementation Plan
 

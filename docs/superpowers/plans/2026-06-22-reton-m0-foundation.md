@@ -1,6 +1,8 @@
-> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
+> **Proprietary** — Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji. See [LICENSE](../../../LICENSE).
+>
+> **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
-# Reton M0 â€” Foundation Implementation Plan
+# Reton M0 — Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

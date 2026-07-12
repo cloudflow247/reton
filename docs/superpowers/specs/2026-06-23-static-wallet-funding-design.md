@@ -1,9 +1,11 @@
-> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../README.md), [roadmap](../../roadmap.md), and [deploy guide](../DEPLOY.md).
+> **Proprietary** ? Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji. See [LICENSE](../../../LICENSE).
+>
+> **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
-# Static Wallet Funding (AlatPay) — Design Spec
+# Static Wallet Funding (AlatPay) ? Design Spec
 
 **Date:** 2026-06-23
-**Milestone:** M4 (Surround) — AlatPay-native depth
+**Milestone:** M4 (Surround) ? AlatPay-native depth
 **Status:** Approved for planning
 
 ## 1. Goal & non-goals

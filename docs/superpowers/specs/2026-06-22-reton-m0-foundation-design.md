@@ -1,10 +1,12 @@
-> **Historical document.** Captures early design and planning decisions. For current product setup, start with the [README](../../README.md), [roadmap](../../roadmap.md), and [deploy guide](../DEPLOY.md).
+> **Proprietary** ? Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji. See [LICENSE](../../../LICENSE).
+>
+> **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
-# Reton M0 — Foundation (Design Spec)
+# Reton M0 ? Foundation (Design Spec)
 
 **Date:** 2026-06-22
-**Status:** Approved (shape) — pending user review
-**Parent:** `2026-06-22-reton-build-roadmap.md` → Milestone M0
+**Status:** Approved (shape) ? pending user review
+**Parent:** `2026-06-22-reton-build-roadmap.md` ? Milestone M0
 **Scope:** Project skeleton only. **No business logic.** A runnable, CI-green,
 contract-first foundation that every later milestone inherits.
 

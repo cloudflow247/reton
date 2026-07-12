@@ -3,7 +3,7 @@
 
 ## Reton — trust-first fintech
 
-Reton is Africa’s trust-first payment platform (ALATPay Buildathon MVP). Real money can flow through this system — never ship demo or placeholder payment code for live rails.
+Reton is Africa’s trust-first payment platform, built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji**) for the ALATPay Buildathon MVP and beyond. Real money can flow through this system — never ship demo or placeholder payment code for live rails.
 
 ### Architecture (required)
 
