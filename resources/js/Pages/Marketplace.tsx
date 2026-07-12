@@ -48,10 +48,10 @@ export default function Marketplace() {
   const activeOrders = orders.filter((o) => o.status !== 'completed' && o.status !== 'refunded')
   const pastOrders = orders.filter((o) => o.status === 'completed' || o.status === 'refunded')
 
-  const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: 'open', label: 'Open item' },
-    { id: 'orders', label: 'Orders', count: activeOrders.length || undefined },
-    { id: 'listings', label: 'My listings', count: myListings.length || undefined },
+  const tabs: { id: Tab; label: string; short: string; count?: number }[] = [
+    { id: 'open', label: 'Open item', short: 'Open' },
+    { id: 'orders', label: 'Orders', short: 'Orders', count: activeOrders.length || undefined },
+    { id: 'listings', label: 'My listings', short: 'Listings', count: myListings.length || undefined },
   ]
 
   function openItem() {
@@ -68,21 +68,21 @@ export default function Marketplace() {
     <motion.div variants={list} initial="hidden" animate="show" className="space-y-4 pb-6">
       <Head title="Shop" />
 
-      <motion.header variants={fadeUp} className="flex items-end justify-between gap-3 px-0.5">
+      <motion.header variants={fadeUp} className="flex items-center justify-between gap-3 px-0.5 pt-0.5">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-text">Shop</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight text-text sm:text-2xl">Shop</h1>
           <p className="mt-0.5 text-sm text-muted">Escrow-protected marketplace</p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="shrink-0 gap-1.5 px-3 py-2 text-xs">
+        <Button onClick={() => setShowCreate(true)} className="shrink-0 gap-1.5 px-3 py-2 text-xs sm:px-4">
           <SparkleIcon size={14} /> Sell
         </Button>
       </motion.header>
 
-      <motion.div variants={fadeUp} className="flex flex-wrap gap-1.5">
+      <motion.div variants={fadeUp} className="-mx-0.5 flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {flowSteps.map((s) => (
           <span
             key={s.n}
-            className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-[10px] font-semibold text-muted"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-[10px] font-semibold text-muted"
           >
             <span className="text-mint">{s.n}</span> {s.title}
           </span>
@@ -109,12 +109,15 @@ export default function Marketplace() {
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              className="relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition"
+              className="relative flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-sm font-semibold transition sm:gap-1.5 sm:px-3"
             >
               {on && (
                 <motion.span layoutId="shop-tab" className="absolute inset-0 rounded-xl bg-surface shadow-sm" transition={tabSpring} />
               )}
-              <span className={`relative z-10 ${on ? 'text-mint' : 'text-muted'}`}>{t.label}</span>
+              <span className={`relative z-10 truncate ${on ? 'text-mint' : 'text-muted'}`}>
+                <span className="sm:hidden">{t.short}</span>
+                <span className="hidden sm:inline">{t.label}</span>
+              </span>
               {t.count !== undefined && t.count > 0 && (
                 <span
                   className={`relative z-10 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
@@ -165,8 +168,8 @@ export default function Marketplace() {
                     if (openError) setOpenError(null)
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && openItem()}
-                  placeholder="https://retonpay.com/l/RTN-7K3M9P or RTN-7K3M9P"
-                  className="field w-full px-4 py-3 text-sm"
+                  placeholder="RTN-7K3M9P or paste link"
+                  className="field w-full px-3 py-3 text-sm sm:px-4"
                   autoComplete="off"
                 />
                 {openError && <p className="text-sm text-danger">{openError}</p>}
@@ -177,7 +180,7 @@ export default function Marketplace() {
               </Button>
             </Card>
 
-            <Card className="flex flex-col items-center gap-3 p-10 text-center">
+            <Card className="flex flex-col items-center gap-3 p-6 text-center sm:p-10">
               <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 text-muted">
                 <GiftIcon size={28} />
               </span>
@@ -185,7 +188,7 @@ export default function Marketplace() {
               <p className="max-w-sm text-sm text-muted">
                 Publish a listing, then share the link or code with your buyer on WhatsApp, Instagram, or in person.
               </p>
-              <Button onClick={() => setShowCreate(true)} className="mt-1">
+              <Button onClick={() => setShowCreate(true)} className="mt-1 w-full sm:w-auto">
                 Sell an item
               </Button>
             </Card>
@@ -304,13 +307,13 @@ function EmptyBlock({
   action: { label: string; onClick: () => void }
 }) {
   return (
-    <Card className="flex flex-col items-center gap-3 p-12 text-center">
+    <Card className="flex flex-col items-center gap-3 p-8 text-center sm:p-12">
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 text-muted">
         <Icon size={28} />
       </span>
       <p className="font-semibold">{title}</p>
       <p className="max-w-sm text-sm text-muted">{desc}</p>
-      <Button variant="secondary" onClick={action.onClick}>
+      <Button variant="secondary" onClick={action.onClick} className="w-full sm:w-auto">
         {action.label}
       </Button>
     </Card>
@@ -390,20 +393,21 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title="Sell an item" onClose={onClose} wide>
-      <div className="mb-4 flex gap-2 rounded-xl bg-surface-2 p-1">
+      <div className="mb-4 flex gap-1.5 rounded-xl bg-surface-2 p-1">
         {(['digital', 'physical'] as const).map((type) => (
           <button
             key={type}
             type="button"
             onClick={() => switchType(type)}
-            className={`flex-1 rounded-lg py-2 text-xs font-semibold capitalize transition ${
+            className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-semibold capitalize transition ${
               itemType === type ? 'bg-surface text-mint shadow-sm' : 'text-muted hover:text-text'
             }`}
           >
             {type === 'physical' ? (
-              <span className="inline-flex items-center justify-center gap-1">
-                <BankIcon size={14} /> Physical
-              </span>
+              <>
+                <BankIcon size={14} className="shrink-0" />
+                Physical
+              </>
             ) : (
               'Digital'
             )}
@@ -413,10 +417,10 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
 
       <input type="hidden" value={itemType} {...register('item_type')} />
 
-      <div className="mb-4 rounded-xl border border-mint/25 bg-mint/[0.06] p-3">
-        <p className="flex items-center gap-2 text-sm font-semibold text-text">
-          <ShieldIcon size={16} className="shrink-0 text-mint" />
-          {itemType === 'physical' ? 'Hub-verified physical sale' : 'Instant digital delivery'}
+      <div className="mb-4 rounded-xl border border-mint/25 bg-mint/5 p-3.5">
+        <p className="flex items-start gap-2 text-sm font-semibold text-text">
+          <ShieldIcon size={16} className="mt-0.5 shrink-0 text-mint" />
+          <span>{itemType === 'physical' ? 'Hub-verified physical sale' : 'Instant digital delivery'}</span>
         </p>
         <p className="mt-2 text-xs leading-relaxed text-muted">
           {itemType === 'physical'
@@ -431,7 +435,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
 
           <RhfField
             label="Title"
-            placeholder="e.g. Lightroom preset pack — 50 filters"
+            placeholder={itemType === 'physical' ? 'e.g. iPhone 13 — 128GB blue' : 'e.g. Lightroom presets (50)'}
             error={errors.title?.message}
             {...register('title')}
           />
@@ -439,7 +443,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Description</span>
             <textarea
-              className="field w-full px-4 py-3 text-sm"
+              className="field w-full px-3 py-3 text-sm sm:px-4"
               rows={3}
               placeholder="What the buyer gets — be specific and honest."
               {...register('description')}
@@ -462,7 +466,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
           <fieldset className="space-y-3">
             <legend className="text-xs font-semibold uppercase tracking-wide text-mint">Delivery (private)</legend>
             <textarea
-              className="field w-full px-4 py-3 font-mono text-sm"
+              className="field w-full px-3 py-3 font-mono text-sm sm:px-4"
               rows={4}
               placeholder="License key, download link, or access code"
               {...register('delivery_payload')}
@@ -475,7 +479,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Condition</span>
-                <select className="field w-full px-4 py-3 text-sm" {...register('condition')}>
+                <select className="field w-full px-3 py-3 text-sm sm:px-4" {...register('condition')}>
                   <option value="new">Brand new</option>
                   <option value="like_new">Like new</option>
                   <option value="good">Good</option>
@@ -492,12 +496,12 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
             </div>
             <RhfField label="Brand / maker" error={'spec_brand' in errors ? errors.spec_brand?.message : undefined} {...register('spec_brand')} />
             <RhfField label="Size, colour, or model" error={'spec_detail' in errors ? errors.spec_detail?.message : undefined} {...register('spec_detail')} />
-            <textarea className="field w-full px-4 py-3 text-sm" rows={2} placeholder="Handling notes (optional)" {...register('handling_notes')} />
+            <textarea className="field w-full px-3 py-3 text-sm sm:px-4" rows={2} placeholder="Handling notes (optional)" {...register('handling_notes')} />
           </fieldset>
         )}
 
         <label className="flex items-start gap-2.5 rounded-xl border border-line bg-surface px-3 py-3 text-sm">
-          <input type="checkbox" className="mt-0.5" {...register('listing_accurate')} />
+          <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[var(--mint)]" {...register('listing_accurate')} />
           <span>
             <span className="font-medium text-text">My listing is accurate</span>
             <span className="mt-0.5 block text-xs text-muted">Honest description, ready to fulfil after purchase.</span>

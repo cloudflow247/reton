@@ -1,6 +1,7 @@
-import { useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { CheckIcon, CopyIcon } from './icons'
+import { cn } from '@/lib/utils'
 
 export { Logo, Wordmark } from './AuthBrand'
 
@@ -15,29 +16,62 @@ export function Modal({
   children: ReactNode
   wide?: boolean
 }) {
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-        className={`card shield-glow max-h-[min(92vh,820px)] w-full overflow-y-auto p-6 ${wide ? 'max-w-lg' : 'max-w-md'}`}
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 360, damping: 32 }}
+        className={cn(
+          'card flex w-full flex-col overflow-hidden rounded-t-[1.4rem] shadow-[0_-8px_40px_-18px_rgba(16,40,33,0.35)] sm:rounded-[var(--radius)] sm:shadow-[0_22px_54px_-26px_rgba(11,122,87,0.28)]',
+          'max-h-[min(92dvh,820px)] pb-[max(0.25rem,env(safe-area-inset-bottom))]',
+          wide ? 'sm:max-w-lg' : 'sm:max-w-md',
+        )}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="reton-modal-title"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-display text-lg font-bold tracking-tight">{title}</h3>
-          <button onClick={onClose} className="text-muted hover:text-text" aria-label="Close">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line/70 bg-surface px-4 py-3.5 sm:px-6 sm:py-4">
+          <h3 id="reton-modal-title" className="min-w-0 truncate font-display text-lg font-bold tracking-tight text-text">
+            {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-surface-2 hover:text-text"
+            aria-label="Close"
+          >
             ✕
           </button>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:pb-6">
+          {children}
+        </div>
       </motion.div>
     </motion.div>
   )
