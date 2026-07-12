@@ -4,9 +4,7 @@ import { AdminLayout } from '@/components/AdminLayout'
 import {
   BoltIcon,
   ChatIcon,
-  CheckIcon,
   ChevronRightIcon,
-  ClockIcon,
   ShieldIcon,
   UndoIcon,
   UserIcon,
