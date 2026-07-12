@@ -428,7 +428,7 @@ return [
     */
 
     'features' => [
-        'withdraw' => (bool) env('RETON_FEATURE_WITHDRAW', true),
+        'withdraw' => (bool) env('RETON_FEATURE_WITHDRAW', false),
         'bills' => (bool) env('RETON_FEATURE_BILLS', false),
         'cards' => (bool) env('RETON_FEATURE_CARDS', false),
         // Add Money amount methods (permanent static VA stays available regardless).

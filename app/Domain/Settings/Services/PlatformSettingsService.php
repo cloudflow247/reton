@@ -205,7 +205,7 @@ class PlatformSettingsService
             'provider' => 'paystack',
         ],
         'features' => [
-            'withdraw' => true,
+            'withdraw' => false,
             'bills' => false,
             'cards' => false,
             'checkout' => false,
@@ -648,7 +648,7 @@ class PlatformSettingsService
             'bills' => config(['reton.bills.provider' => (string) ($values['provider'] ?? 'interswitch')]),
             'payouts' => config(['reton.payouts.provider' => (string) ($values['provider'] ?? 'paystack')]),
             'features' => config([
-                'reton.features.withdraw' => filter_var($values['withdraw'] ?? true, FILTER_VALIDATE_BOOLEAN),
+                'reton.features.withdraw' => filter_var($values['withdraw'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.bills' => filter_var($values['bills'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.cards' => filter_var($values['cards'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'reton.features.checkout' => filter_var($values['checkout'] ?? false, FILTER_VALIDATE_BOOLEAN),

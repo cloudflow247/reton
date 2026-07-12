@@ -64,7 +64,7 @@ class HandleInertiaRequests extends Middleware
             'adminPath' => ($user !== null && $user->is_admin) ? AdminPath::url() : null,
             // Product surfaces gated behind Coming Soon until live providers are ready.
             'features' => [
-                'withdraw' => (bool) config('reton.features.withdraw', true),
+                'withdraw' => (bool) config('reton.features.withdraw', false),
                 'bills' => (bool) config('reton.features.bills', false),
                 'cards' => (bool) config('reton.features.cards', false),
                 'checkout' => (bool) config('reton.features.checkout', false),

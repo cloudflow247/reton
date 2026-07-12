@@ -41,8 +41,10 @@ class AdminAppSettingsController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, string $adminPrefix): RedirectResponse
     {
+        unset($adminPrefix);
+
         $validated = $request->validate([
             'demo_enabled' => ['required', 'boolean'],
             'demo_password' => ['nullable', 'string', 'min:4', 'max:64'],

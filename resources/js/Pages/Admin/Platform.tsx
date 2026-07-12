@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Head, useForm, usePage } from '@inertiajs/react'
-import { AdminLayout } from '@/components/AdminLayout'
+import { AdminFormErrors, AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, Field } from '@/components/ui'
 import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import { ngn } from '@/lib/format'
@@ -110,20 +110,52 @@ function KycTierFields({
 
 function PlatformForm({ group, initial }: { group: PlatformGroup; initial: GroupValues }) {
   const form = useForm(cleanInitial(initial, group))
-  const { flash } = usePage<PlatformProps>().props
   const adminBase = useAdminBase()
+
+  const errorMessages = Object.keys(form.errors).length > 0
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.transform((data) => ({ ...data, group }))
-    form.put(`${buildAdminUrl(adminBase)}/platform`, { preserveScroll: true })
+
+    form.transform((data) => {
+      const payload: GroupValues = { ...data, group }
+
+      if (group === 'features') {
+        for (const key of [
+          'withdraw',
+          'bills',
+          'cards',
+          'checkout',
+          'card_pay',
+          'one_time',
+          'physical_listings',
+        ] as const) {
+          payload[key] = Boolean(payload[key])
+        }
+      }
+
+      if (group === 'fees' || group === 'kyc' || group === 'pin' || group === 'fraud' || group === 'fx' || group === 'cards') {
+        for (const [key, val] of Object.entries(payload)) {
+          if (key === 'group' || typeof val === 'boolean' || typeof val === 'string') continue
+          const n = Number(val)
+          payload[key] = Number.isFinite(n) ? n : 0
+        }
+      }
+
+      return payload
+    })
+
+    form.put(buildAdminUrl(adminBase, 'platform'), {
+      preserveScroll: true,
+      onSuccess: () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      },
+    })
   }
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      {flash.success && (
-        <p className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
-      )}
+      {errorMessages && <AdminFormErrors errors={form.errors} />}
 
       {group === 'kyc' && (
         <div className="space-y-4">
@@ -437,7 +469,7 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
         <div className="space-y-4">
           {(
             [
-              ['withdraw', 'Bank withdrawals (Cash)', 'Cash-out to Nigerian bank accounts via Paystack (or configured payout provider).'],
+              ['withdraw', 'Bank withdrawals (Cash)', 'Cash-out to Nigerian bank accounts. Off shows Coming Soon until Paystack (or ALATPay) is ready.'],
               ['bills', 'Bill payments', 'Airtime, data, power, TV, and betting.'],
               ['cards', 'Virtual cards', 'Bridgecard NGN / USD virtual cards.'],
               ['checkout', 'Add Money — Checkout', 'ALATPay hosted checkout (card · transfer · USSD). Requires Payment Link on the merchant.'],
@@ -553,7 +585,7 @@ export default function Platform() {
         </div>
 
         <Card className="shield-glow">
-          <PlatformForm group={tab} initial={groups[tab]} />
+          <PlatformForm key={tab} group={tab} initial={groups[tab]} />
         </Card>
       </div>
     </AdminLayout>

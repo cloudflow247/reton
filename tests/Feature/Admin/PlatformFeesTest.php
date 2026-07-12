@@ -49,12 +49,24 @@ it('renders platform fees settings and saves fee rails', function () {
         'sms_alert_flat_minor' => 600,
     ];
 
-    $this->actingAs($admin)->put('/admin/platform', $payload)->assertRedirect();
+    $this->actingAs($admin)->put('/admin/platform', $payload)
+        ->assertRedirect()
+        ->assertSessionHas('success');
 
     expect(config('reton.fees.withdraw_flat_minor'))->toBe(100_00)
         ->and(config('reton.fees.recovery_bps'))->toBe(25)
         ->and(config('reton.recovery.fee_bps'))->toBe(25)
         ->and(config('reton.sms.alert_fee_minor'))->toBe(600);
+});
+
+it('rejects invalid platform fee payloads with validation errors', function () {
+    $admin = feesAdmin();
+
+    $this->actingAs($admin)->from('/admin/platform')->put('/admin/platform', [
+        'group' => 'fees',
+        'transfer_instant_bps' => -1,
+    ])->assertRedirect('/admin/platform')
+        ->assertSessionHasErrors(['transfer_instant_bps']);
 });
 
 it('calculates platform fees from bps and flat amounts', function () {

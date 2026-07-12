@@ -37,8 +37,10 @@ class AdminPlatformSettingsController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, string $adminPrefix): RedirectResponse
     {
+        unset($adminPrefix);
+
         $request->validate([
             'group' => ['required', 'in:kyc,pin,callback,recovery,digital,physical,fraud,fx,cards,bills,payouts,features,fees,horizon'],
         ]);

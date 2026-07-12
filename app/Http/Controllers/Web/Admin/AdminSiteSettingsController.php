@@ -31,8 +31,10 @@ class AdminSiteSettingsController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, string $adminPrefix): RedirectResponse
     {
+        unset($adminPrefix);
+
         $request->validate([
             'group' => ['required', 'in:mail,sms,seo,security'],
         ]);

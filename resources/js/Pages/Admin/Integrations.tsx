@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Head, router, useForm, usePage } from '@inertiajs/react'
-import { AdminLayout } from '@/components/AdminLayout'
+import { AdminFormErrors, AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, CopyRow, Field, Pill } from '@/components/ui'
 import { CheckIcon } from '@/components/icons'
 import { buildAdminUrl, useAdminBase } from '@/lib/admin'
@@ -95,23 +95,27 @@ function IntegrationForm({
   webhookUrl?: string
 }) {
   const form = useForm(cleanInitial(initial, group))
-  const { flash } = usePage<IntegrationsProps>().props
   const adminBase = useAdminBase()
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.post(`${buildAdminUrl(adminBase)}/integrations/save`, { preserveScroll: true })
+    form.transform((data) => ({ ...data, integration: group }))
+    form.post(buildAdminUrl(adminBase, 'integrations/save'), {
+      preserveScroll: true,
+      onSuccess: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    })
   }
 
   function testConnection() {
-    router.post(`${buildAdminUrl(adminBase)}/integrations/${group}/test`, {}, { preserveScroll: true })
+    router.post(buildAdminUrl(adminBase, `integrations/${group}/test`), {}, { preserveScroll: true })
   }
 
   function syncVaDeposits() {
-    router.post(`${buildAdminUrl(adminBase)}/integrations/alatpay/sync-deposits`, {}, { preserveScroll: true })
+    router.post(buildAdminUrl(adminBase, 'integrations/alatpay/sync-deposits'), {}, { preserveScroll: true })
   }
 
   const driver = String(form.data.driver ?? 'http')
+  const hasErrors = Object.keys(form.errors).length > 0
 
   return (
     <form onSubmit={submit} className="space-y-5">
@@ -126,12 +130,7 @@ function IntegrationForm({
         <Pill tone="muted">{driver} driver</Pill>
       </div>
 
-      {flash.success && (
-        <p className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
-      )}
-      {flash.error && (
-        <p className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
-      )}
+      {hasErrors && <AdminFormErrors errors={form.errors} />}
 
       <label className="block">
         <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Driver</span>
@@ -613,6 +612,7 @@ export default function Integrations() {
 
         <Card className="shield-glow">
           <IntegrationForm
+            key={tab}
             group={tab}
             initial={integrations[tab]}
             webhookUrl={webhookUrls[tab]}

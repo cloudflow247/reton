@@ -16,7 +16,7 @@ trait RendersComingSoon
      * @var array<string, bool>
      */
     private const FEATURE_DEFAULTS = [
-        'withdraw' => true,
+        'withdraw' => false,
         'bills' => false,
         'cards' => false,
     ];

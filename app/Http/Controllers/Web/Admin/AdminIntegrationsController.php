@@ -84,8 +84,10 @@ class AdminIntegrationsController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, string $adminPrefix): RedirectResponse
     {
+        unset($adminPrefix);
+
         $request->validate([
             'integration' => ['required', 'in:alatpay,paystack,interswitch,bridgecard,giglogistics,dojah,remita,termii'],
         ]);

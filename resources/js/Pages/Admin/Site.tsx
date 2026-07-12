@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Head, router, useForm, usePage } from '@inertiajs/react'
-import { AdminLayout } from '@/components/AdminLayout'
+import { AdminFormErrors, AdminLayout } from '@/components/AdminLayout'
 import { Button, Card, Field } from '@/components/ui'
 import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import type { PageProps } from '@/types'
@@ -98,16 +98,12 @@ function Toggle({
 }
 
 export default function Site() {
-  const { groups, flash } = usePage<SiteProps>().props
+  const { groups } = usePage<SiteProps>().props
   const adminBase = useAdminBase()
   const [tab, setTab] = useState<SiteGroup>('mail')
   const form = useForm(cleanInitial(groups[tab], tab))
 
-  const formErrors = Object.entries(form.errors).flatMap(([key, message]) => {
-    if (!message) return []
-    const text = Array.isArray(message) ? message[0] : message
-    return [`${key.replace(/_/g, ' ')}: ${text}`]
-  })
+  const formErrors = Object.keys(form.errors)
 
   function switchTab(next: SiteGroup) {
     setTab(next)
@@ -118,11 +114,14 @@ export default function Site() {
   function submit(e: FormEvent) {
     e.preventDefault()
     form.transform((data) => ({ ...data, group: tab }))
-    form.put(`${buildAdminUrl(adminBase)}/site`, { preserveScroll: true })
+    form.put(buildAdminUrl(adminBase, 'site'), {
+      preserveScroll: true,
+      onSuccess: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    })
   }
 
   function sendTestMail() {
-    router.post(`${buildAdminUrl(adminBase)}/site/test-mail`, {}, { preserveScroll: true })
+    router.post(buildAdminUrl(adminBase, 'site/test-mail'), {}, { preserveScroll: true })
   }
 
   const ogPreview =
@@ -144,19 +143,7 @@ export default function Site() {
           </p>
         </div>
 
-        {flash.success && (
-          <p className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
-        )}
-        {flash.error && (
-          <p className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">{flash.error}</p>
-        )}
-        {formErrors.length > 0 && (
-          <div className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-sm text-danger">
-            {formErrors.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-          </div>
-        )}
+        {formErrors.length > 0 && <AdminFormErrors errors={form.errors} />}
 
         <div className="flex flex-wrap gap-2">
           {tabs.map(({ id, label }) => (

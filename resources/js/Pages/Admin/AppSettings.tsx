@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Head, Link, useForm, usePage } from '@inertiajs/react'
-import { AdminLayout } from '@/components/AdminLayout'
+import { AdminFormErrors, AdminLayout } from '@/components/AdminLayout'
 import { Button, Card } from '@/components/ui'
 import { buildAdminUrl, useAdminBase } from '@/lib/admin'
 import type { PageProps } from '@/types'
@@ -64,7 +64,7 @@ function SecretField({
 }
 
 export default function AppSettings() {
-  const { app, reservedAdminPaths, flash } = usePage<AppSettingsProps>().props
+  const { app, reservedAdminPaths } = usePage<AppSettingsProps>().props
   const adminBase = useAdminBase()
   const form = useForm({
     demo_enabled: app.demo_enabled,
@@ -88,7 +88,14 @@ export default function AppSettings() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    form.put(`${buildAdminUrl(adminBase)}/app-settings`)
+    form.transform((data) => ({
+      ...data,
+      demo_enabled: Boolean(data.demo_enabled),
+    }))
+    form.put(buildAdminUrl(adminBase, 'app-settings'), {
+      preserveScroll: true,
+      onSuccess: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    })
   }
 
   return (
@@ -103,9 +110,7 @@ export default function AppSettings() {
           </p>
         </div>
 
-        {flash.success && (
-          <p className="rounded-xl border border-mint/25 bg-mint/5 px-4 py-2.5 text-sm text-mint">{flash.success}</p>
-        )}
+        {Object.keys(form.errors).length > 0 && <AdminFormErrors errors={form.errors} />}
 
         <Card className="shield-glow">
           <h2 className="font-display text-lg font-semibold">Admin panel URL</h2>

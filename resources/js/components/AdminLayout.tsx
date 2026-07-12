@@ -146,6 +146,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </header>
 
           <main className="flex-1 px-4 py-5 sm:px-6 lg:px-2 lg:py-2">
+            <AdminGlobalFlash />
             <motion.div
               key={pathname}
               initial={{ opacity: 0, y: 8 }}
@@ -167,6 +168,59 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 }
 
 /** Shared rugged panel for ops tables. */
+export function AdminGlobalFlash() {
+  const { flash } = usePage<SharedProps>().props
+
+  if (!flash.success && !flash.error) {
+    return null
+  }
+
+  return (
+    <div className="mb-4 space-y-2 px-0 sm:px-0 lg:px-2">
+      {flash.success && (
+        <p
+          role="status"
+          className="rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-200 shadow-lg shadow-black/20"
+        >
+          {flash.success}
+        </p>
+      )}
+      {flash.error && (
+        <p
+          role="alert"
+          className="rounded-xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm font-semibold text-rose-200 shadow-lg shadow-black/20"
+        >
+          {flash.error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+export function AdminFormErrors({ errors }: { errors: Record<string, string | string[] | undefined> }) {
+  const messages = Object.entries(errors).flatMap(([key, message]) => {
+    if (!message) return []
+    const text = Array.isArray(message) ? message[0] : message
+    if (!text) return []
+    return [`${key.replace(/_/g, ' ')}: ${text}`]
+  })
+
+  if (messages.length === 0) {
+    return null
+  }
+
+  return (
+    <div role="alert" className="space-y-1 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+      <p className="font-semibold">Could not save — fix the following:</p>
+      <ul className="list-inside list-disc space-y-0.5 text-xs">
+        {messages.map((m) => (
+          <li key={m}>{m}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function AdminPanel({
   title,
   subtitle,
@@ -182,8 +236,8 @@ export function AdminPanel({
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-zinc-50">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>}
+          <h1 className="font-display text-2xl font-bold tracking-tight text-text">{title}</h1>
+          {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
         </div>
         {actions}
       </div>
