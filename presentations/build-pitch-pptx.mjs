@@ -90,6 +90,38 @@ function addShot(s, file, x, y, w, h) {
   ])
 }
 
+// 2b Real Nigeria story
+{
+  const s = darkSlide()
+  eyebrow(s, 'Why this is real')
+  title(s, 'When money leaves…\ngetting it back is a war.', 0.85, { fontSize: 30, h: 1.3 })
+  body(s, 'In 2024, about ₦95 million was pulled from a company’s account without permission. Banks rushed “block and recall.” Freezes often last only 72 hours. A court later ordered the money returned — and reversing it still became a legal fight.', 2.3, { h: 1.6, fontSize: 16 })
+  s.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 0.7, y: 4.1, w: 5.7, h: 2.3, fill: { color: CARD }, rectRadius: 0.2 })
+  s.addText('How it works today', { x: 1.0, y: 4.35, w: 5.1, h: 0.4, bold: true, color: TEXT, fontSize: 15 })
+  s.addText('Money flies out → hope a freeze works → race the clock → maybe a court → maybe nothing comes back.', {
+    x: 1.0, y: 4.85, w: 5.1, h: 1.2, color: MUTED, fontSize: 14,
+  })
+  s.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.7, y: 4.1, w: 5.7, h: 2.3, fill: { color: CARD }, rectRadius: 0.2 })
+  s.addText('What a baby can understand', { x: 7.0, y: 4.35, w: 5.1, h: 0.4, bold: true, color: TEXT, fontSize: 15 })
+  s.addText('If you give away a toy and it leaves the room, chasing it is hard. Reton keeps a string on the toy until you say “okay.”', {
+    x: 7.0, y: 4.85, w: 5.1, h: 1.2, color: MUTED, fontSize: 14,
+  })
+}
+
+// 2c Reton answer bridge
+{
+  const s = darkSlide()
+  eyebrow(s, 'Reton’s answer')
+  title(s, 'Don’t wait for a chase.\nBuild the undo first.')
+  bullets(s, [
+    'Callback Protection — hold the payment before it becomes final.',
+    'Wrong-transfer recovery — freeze eligible funds and open a case.',
+    'Fraud signals — watch risky moves while money is still in motion.',
+    'A clear timeline — so everyone can see what happened, step by step.',
+  ])
+  body(s, 'Courts and bank recalls still matter. Reton adds something they can’t: protection inside the payment itself.', 5.5, { fontSize: 16, color: MINT })
+}
+
 // 3 Insight
 {
   const s = darkSlide()

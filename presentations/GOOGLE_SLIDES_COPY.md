@@ -30,7 +30,32 @@ RETON PTE LTD · retonpay.com · Licensed rails via ALAT by Wema
 
 ---
 
-## Slide 3 — Insight
+## Slide 3 — Why this is real (Nigeria)
+**When money leaves… getting it back is a war.**
+
+In 2024, about **₦95 million** was pulled from a company’s account without permission. Banks rushed “block and recall.” Freezes often last only **72 hours**. A court later ordered the money returned — and reversing it still became a legal fight.
+
+| Today | Baby-simple |
+|-------|-------------|
+| Money flies out → hope a freeze works → race the clock → maybe a court → maybe nothing comes back | If you give away a toy and it leaves the room, chasing it is hard. Reton keeps a string on the toy until you say “okay.” |
+
+*(Public reporting e.g. [GWG, May 2025](https://gwg.ng/2025/05/22/kuda-opay-fairmoney-moniepoint-bosses-may-be-jailed/) — the pain is real; the product gap is still open.)*
+
+---
+
+## Slide 4 — Reton’s answer
+**Don’t wait for a chase. Build the undo first.**
+
+- **Callback Protection** — hold the payment before it becomes final
+- **Wrong-transfer recovery** — freeze eligible funds and open a case
+- **Fraud signals** — watch risky moves while money is still in motion
+- **A clear timeline** — so everyone can see what happened
+
+Courts and bank recalls still matter. Reton adds something they can’t: **protection inside the payment itself**.
+
+---
+
+## Slide 5 — Insight
 Trust isn’t a badge on the login screen.  
 It’s what happens **after** the money moves.
 
