@@ -93,12 +93,25 @@ Wrong-transfer recovery · Fraud signals · Double-entry wallet · KYC tiers · 
 
 ---
 
-## Slide 8 — Screenshots: Security + Business
+## Slide 8 — Shop & listings
+**Sell something. Get paid — safely.**
+
+List an item. Share the link on WhatsApp. The buyer’s money stays protected until you deliver and they confirm.
+
+1. Create a listing & share your link  
+2. Buyer pays with Callback Protection  
+3. You deliver · they confirm · money releases  
+
+Same undo button for money — now for real sales. No public mall browse — buyers need your link.
+
+---
+
+## Slide 9 — Screenshots: Security + Business
 Insert `screenshots/03-security.png` and `04-business.png` side by side.
 
 ---
 
-## Slide 9 — ALATPay
+## Slide 10 — ALATPay
 **What we use:** Collections, payment links, static accounts, BVN OTP, signed webhooks, verification  
 **Where money enters:** Fund wallet on ALATPay → verify → credit Reton ledger  
 **Why:** Licensed ALAT by Wema rail under the trust layer

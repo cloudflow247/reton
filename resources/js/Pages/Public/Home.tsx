@@ -10,6 +10,7 @@ import {
   CheckIcon,
   LockIcon,
   ScanIcon,
+  ShareIcon,
   ShieldIcon,
   SparkleIcon,
   UndoIcon,
@@ -179,6 +180,72 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
               </motion.div>
             ))}
+          </div>
+        </section>
+
+        {/* Sell with protection — light marketplace teaser */}
+        <section className="py-16 sm:py-20">
+          <div className="card elevate relative overflow-hidden p-8 sm:p-10">
+            <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-mint/10 blur-3xl" />
+            <div className="relative grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-mint">Shop &amp; listings</span>
+                <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                  Sell something. Get paid — <span className="gradient-text">safely</span>.
+                </h2>
+                <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">
+                  List an item, share the link on WhatsApp, and let Callback Protection hold the buyer’s money until you
+                  deliver. Same undo button for money — now for real sales.
+                </p>
+                <ul className="mt-6 space-y-2.5 text-sm text-muted">
+                  {[
+                    'Buyer pays → funds stay protected',
+                    'You deliver → they confirm',
+                    'Money releases — or a dispute opens with a full timeline',
+                  ].map((line) => (
+                    <li key={line} className="flex items-start gap-2.5">
+                      <CheckIcon size={16} className="mt-0.5 shrink-0 text-mint" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/register"
+                    className="btn inline-flex items-center gap-1.5 bg-mint px-6 py-3.5 text-white shadow-sm hover:bg-mint-strong"
+                  >
+                    Start selling <ArrowRightIcon size={17} />
+                  </Link>
+                  <Link href="/how-it-works" className="btn border border-line bg-surface px-6 py-3.5 hover:border-mint/40">
+                    See the flow
+                  </Link>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-line bg-surface-2/60 p-5 sm:p-6">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                  <ShareIcon size={14} className="text-mint" /> Listing share
+                </div>
+                <p className="mt-3 font-display text-lg font-semibold tracking-tight">Lightroom presets · ₦12,500</p>
+                <p className="mt-1 text-sm text-muted">Protected checkout · delivery held until confirm</p>
+                <div className="mt-5 space-y-2">
+                  {[
+                    ['1', 'Buyer opens your link'],
+                    ['2', 'Pays with protection'],
+                    ['3', 'You deliver · they confirm'],
+                  ].map(([n, label]) => (
+                    <div key={n} className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mint/10 font-num text-xs font-bold text-mint">
+                        {n}
+                      </span>
+                      <span className="text-sm font-medium text-text">{label}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-xs leading-relaxed text-muted">
+                  Share one link. No public shop browse — buyers need your listing to find you.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 

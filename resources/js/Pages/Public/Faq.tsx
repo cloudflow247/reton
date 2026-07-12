@@ -11,7 +11,8 @@ const faqs: [string, string][] = [
   ['Is my money safe? Who holds it?', 'Funding, payouts and settlement run on ALAT by Wema, a licensed bank platform. Inside Reton, every naira is tracked in an immutable double-entry ledger, so balances are always provably correct.'],
   ['How do I fund my wallet?', 'Add money by transferring to a one-time virtual account, or use your dedicated static account number. Your wallet is credited automatically once the bank confirms the transfer.'],
   ['What can I pay for?', 'Send money to any Reton account with instant or protected transfers. Bill payments and bank withdrawals are rolling out next — Coming Soon in the app until they go live.'],
-  ['What about Reton Business?', 'Merchant tools — payment links, business dashboards, and collection desks — are Coming Soon. Join the waitlist on the Business page; personal wallets are live today.'],
+  ['Can I sell things on Reton?', 'Yes. Create a listing, share the link, and get paid with Callback Protection — the buyer’s money stays held until you deliver and they confirm. It’s the same undo button for money, built for sales.'],
+  ['What about Reton Business?', 'Merchant tools — payment links, business dashboards, and collection desks — are Coming Soon. Join the waitlist on the Business page; personal wallets and protected listings are live today.'],
   ['What is the transaction PIN for?', 'Your PIN is a second factor that authorises every payment. It locks temporarily after repeated wrong attempts, and it’s never stored in plain text.'],
   ['Does Reton charge fees?', 'Opening a wallet is free. Any applicable fees are always shown before you confirm — no surprises.'],
 ]

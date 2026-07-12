@@ -192,6 +192,20 @@ function addShot(s, file, x, y, w, h) {
   })
 }
 
+// 7b Shop & listings
+{
+  const s = darkSlide()
+  eyebrow(s, 'Shop & listings')
+  title(s, 'Sell something.\nGet paid — safely.')
+  body(s, 'List an item. Share the link on WhatsApp. The buyer’s money stays protected until you deliver and they confirm.', 2.3, { h: 1.1 })
+  bullets(s, [
+    'Create a listing & share your link',
+    'Buyer pays with Callback Protection',
+    'You deliver · they confirm · money releases',
+    'Same undo button for money — now for real sales. No public mall browse.',
+  ], 3.5)
+}
+
 // 8 Security + Business shots
 {
   const s = darkSlide()

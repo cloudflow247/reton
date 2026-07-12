@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { PublicLayout } from '@/components/PublicLayout'
 import { PoweredByAlat } from '@/components/PoweredByAlat'
-import { ArrowRightIcon, ScanIcon, ShieldIcon, UndoIcon } from '@/components/icons'
+import { ArrowRightIcon, ScanIcon, ShareIcon, ShieldIcon, UndoIcon } from '@/components/icons'
 
 const flows = [
   {
@@ -22,6 +22,15 @@ const flows = [
       'Sent a normal transfer to the wrong account? Report it from the Protection tab.',
       'If eligible, we freeze that amount in the recipient’s wallet and notify them.',
       'They return it, or dispute — and if they go quiet, it escalates for review.',
+    ],
+  },
+  {
+    Icon: ShareIcon,
+    name: 'Sell with protection (listings)',
+    steps: [
+      'Create a listing and share the link — WhatsApp, Instagram, or in person. Buyers don’t browse a public mall; they need your link.',
+      'They pay with Callback Protection. Funds stay held until you deliver and they confirm.',
+      'If something’s off, they can dispute. Every step sits on the same protection timeline as a normal transfer.',
     ],
   },
   {

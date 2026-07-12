@@ -166,6 +166,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
               links={[
                 ['How it works', '/how-it-works'],
                 ['Security', '/security'],
+                ['Sell with protection', '/how-it-works'],
                 ['For business', '/business'],
               ]}
             />
