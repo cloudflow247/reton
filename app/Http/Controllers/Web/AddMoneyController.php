@@ -114,7 +114,7 @@ class AddMoneyController extends Controller
                 report($e);
                 $request->session()->flash(
                     'error',
-                    'Could not check ALATPay for new deposits. Please refresh in a moment.',
+                    'Could not refresh deposits. Please try again in a moment.',
                 );
             }
         }
@@ -141,7 +141,7 @@ class AddMoneyController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return back()->with('error', 'Could not check ALATPay for deposits: '.$e->getMessage());
+            return back()->with('error', 'Could not refresh deposits. Please try again in a moment.');
         }
 
         if ($credited > 0) {

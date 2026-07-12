@@ -49,7 +49,7 @@ it('renders the withdraw page with banks', function () {
             ->has('banks')
             ->where('accountNameHint', 'ADA LOVELACE')
             ->where('payoutsAvailable', true)
-            ->where('payoutProvider', 'paystack')
+            ->missing('payoutProvider')
             ->has('recentPayouts', 0));
 });
 
@@ -183,7 +183,10 @@ it('shows coming soon when withdraw is disabled', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('ComingSoon')
-            ->where('feature', 'withdraw'));
+            ->where('feature', 'withdraw')
+            ->where('title', 'Withdraw to bank')
+            ->where('description', fn (string $text) => ! str_contains(strtolower($text), 'alatpay')
+                && ! str_contains(strtolower($text), 'paystack')));
 });
 
 it('rejects withdraw posts when the feature is disabled', function () {

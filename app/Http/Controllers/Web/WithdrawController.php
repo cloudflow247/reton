@@ -37,7 +37,7 @@ class WithdrawController extends Controller
     {
         if ($soon = $this->comingSoonIfDisabled('withdraw', [
             'title' => 'Withdraw to bank',
-            'description' => 'Cash out to your own bank account. Same-name only — we match the account name to your Reton profile for safety.',
+            'description' => 'Cash out to your own Nigerian bank account is almost ready. Your balance stays safe — send money and Callback Protection work today.',
         ])) {
             return $soon;
         }
@@ -50,7 +50,6 @@ class WithdrawController extends Controller
             'accountNameHint' => strtoupper((string) $user->name),
             'recentPayouts' => $this->recentPayoutsFor($user),
             'payoutsAvailable' => $payouts->supportsOutboundTransfers(),
-            'payoutProvider' => (string) config('reton.payouts.provider', 'paystack'),
         ]);
     }
 

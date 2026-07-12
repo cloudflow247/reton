@@ -77,7 +77,7 @@ const ctaLabel: Record<DepositMethod, string> = {
 }
 
 const trustPoints = [
-  { title: 'Bank-grade rails', detail: 'Settled through licensed ALATPay / Wema collection' },
+  { title: 'Bank-grade rails', detail: 'Settled through licensed Nigerian collection partners' },
   { title: 'Encrypted identity', detail: 'BVN verified once — never stored in plain text' },
   { title: 'Ledger-backed credit', detail: 'Every naira posts to an immutable double-entry ledger' },
   { title: 'PIN on spend', detail: 'Outbound payments always require your transaction PIN' },
@@ -387,8 +387,8 @@ function ComingSoonFundingPanel({ flashError }: { flashError?: string | null }) 
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">More ways to fund</p>
             <h2 className="mt-1 font-display text-lg font-bold tracking-tight text-text">Checkout & card</h2>
             <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted">
-              Instant checkout, card, and one-time accounts are rolling out once ALATPay enables them on this
-              merchant.
+              Instant checkout, card, and one-time accounts are rolling out next. Your dedicated deposit account works
+              today.
             </p>
           </div>
           <Pill tone="amber">Coming soon</Pill>

@@ -42,7 +42,7 @@ class DashboardController extends Controller
             report($e);
             $request->session()->flash(
                 'error',
-                'Could not check ALATPay for new deposits. Open Add Money and try again in a moment.',
+                'Could not refresh pending deposits. Open Add Money and try again in a moment.',
             );
         }
 

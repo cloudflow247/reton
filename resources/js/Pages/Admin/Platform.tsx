@@ -469,11 +469,11 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
         <div className="space-y-4">
           {(
             [
-              ['withdraw', 'Bank withdrawals (Cash)', 'Cash-out to Nigerian bank accounts. Off shows Coming Soon until Paystack (or ALATPay) is ready.'],
+              ['withdraw', 'Bank withdrawals (Cash)', 'Cash-out to Nigerian banks. Off = Coming Soon for customers until Debit Wallet / payout access is live.'],
               ['bills', 'Bill payments', 'Airtime, data, power, TV, and betting.'],
               ['cards', 'Virtual cards', 'Bridgecard NGN / USD virtual cards.'],
-              ['checkout', 'Add Money — Checkout', 'ALATPay hosted checkout (card · transfer · USSD). Requires Payment Link on the merchant.'],
-              ['card_pay', 'Add Money — Card', 'Card-only ALATPay payment link. Requires Payment Link on the merchant.'],
+              ['checkout', 'Add Money — Checkout', 'Hosted checkout (card · transfer · USSD). Requires Payment Link on the merchant.'],
+              ['card_pay', 'Add Money — Card', 'Card-only payment link. Requires Payment Link on the merchant.'],
               ['one_time', 'Add Money — One-time', 'Temporary virtual account for a single amount. Permanent deposit account stays available.'],
               ['physical_listings', 'Shop — Physical listings', 'Hub-verified physical goods. Digital listings stay available when this is off.'],
             ] as const
