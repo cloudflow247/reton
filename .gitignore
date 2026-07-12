@@ -29,11 +29,9 @@
 docker-compose.override.yml
 /infra/docker-compose.override.yml
 
-# Tooling
-/.cursor/*
-!/.cursor/mcp.json
-!/.cursor/skills/
-!/.cursor/rules/
+# Tooling (local only — do not publish)
+.cursor/
+.githooks/
 /CLAUDE.md
 .claude
 /.fleet

@@ -1,7 +1,0 @@
-#!/bin/sh
-# Strip Cursor attribution trailers so they never land on GitHub.
-msg_file="$1"
-tmp_file="${msg_file}.tmp"
-# Portable filter without relying on GNU sed -i
-grep -v -E -i '^[[:space:]]*(Co-authored-by:[[:space:]]*Cursor[[:space:]]*<cursoragent@cursor\.com>|Made-with:[[:space:]]*Cursor|Made with Cursor)' "$msg_file" > "$tmp_file" || true
-mv "$tmp_file" "$msg_file"
