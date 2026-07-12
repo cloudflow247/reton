@@ -10,7 +10,7 @@ const OFFICE_ADDRESS = '7, Greenland Estate, Ikorodu, Lagos State, Nigeria'
 
 const channels = [
   { Icon: MailIcon, label: 'Email us', value: 'support@retonpay.com', href: 'mailto:support@retonpay.com' },
-  { Icon: PhoneIcon, label: 'Call us', value: '+234 700 000 0000', href: 'tel:+2347000000000' },
+  { Icon: PhoneIcon, label: 'Call us', value: '+234 902 826 0661', href: 'tel:+2349028260661' },
   { Icon: MapPinIcon, label: 'Visit us', value: OFFICE_ADDRESS, href: null },
   { Icon: ChatIcon, label: 'In-app chat', value: 'Mon–Sat, 8am–8pm WAT', href: null },
 ]
