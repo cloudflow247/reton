@@ -26,11 +26,11 @@ const flows = [
   },
   {
     Icon: ScanIcon,
-    name: 'Adding & withdrawing money',
+    name: 'Adding money & cash out',
     steps: [
-      'Add money by transferring to a one-time virtual account; your wallet credits on confirmation.',
-      'Withdraw to any bank — funds are reserved, then settle once the bank confirms.',
-      'Missed a webhook? Automatic reconciliation settles or reverses it safely.',
+      'Fund your wallet with a dedicated deposit account — credits land when the bank confirms.',
+      'Send protected or instant transfers to any Reton user with a full timeline on every move.',
+      'Bank withdrawals are coming soon. Until then, your balance stays safe inside Reton.',
     ],
   },
 ]
@@ -48,11 +48,11 @@ export default function HowItWorks() {
             How it works
           </span>
           <h1 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
-            How <span className="gradient-text">Reton</span> works
+            Clear flows. <span className="gradient-text">Safer money.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            Three flows do the heavy lifting. Each one is fully logged, reversible where it should be, and final
-            where it must be.
+            Reton protects transfers before they finalize, helps recover mistakes, and watches every payment for fraud —
+            so speed never costs you your money.
           </p>
         </div>
       </section>

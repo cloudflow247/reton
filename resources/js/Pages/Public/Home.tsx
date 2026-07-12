@@ -81,6 +81,15 @@ export default function Home() {
               >
                 See how it works
               </Link>
+              <Link
+                href="/business"
+                className="btn inline-flex items-center gap-2 border border-transparent px-4 py-3.5 text-sm font-semibold text-muted hover:text-text"
+              >
+                For business
+                <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber">
+                  Soon
+                </span>
+              </Link>
             </div>
             <div className="mt-10 grid max-w-md grid-cols-3 gap-3">
               <Stat value="100%" label="ledger-backed" />

@@ -10,9 +10,10 @@ const faqs: [string, string][] = [
   ['How does a protected transfer work?', 'When you send protected, the money moves into escrow instead of straight to the recipient. You can release it, or raise a callback to pull it back. If there’s a dispute, our decision engine reviews it — and every step is logged.'],
   ['Is my money safe? Who holds it?', 'Funding, payouts and settlement run on ALAT by Wema, a licensed bank platform. Inside Reton, every naira is tracked in an immutable double-entry ledger, so balances are always provably correct.'],
   ['How do I fund my wallet?', 'Add money by transferring to a one-time virtual account, or use your dedicated static account number. Your wallet is credited automatically once the bank confirms the transfer.'],
-  ['What can I pay for?', 'Send money to any Reton account, withdraw to any bank, and pay bills — airtime, data, electricity, cable TV (DStv, GOtv, StarTimes) and Remita (RRR) — straight from your wallet.'],
+  ['What can I pay for?', 'Send money to any Reton account with instant or protected transfers. Bill payments and bank withdrawals are rolling out next — Coming Soon in the app until they go live.'],
+  ['What about Reton Business?', 'Merchant tools — payment links, business dashboards, and collection desks — are Coming Soon. Join the waitlist on the Business page; personal wallets are live today.'],
   ['What is the transaction PIN for?', 'Your PIN is a second factor that authorises every payment. It locks temporarily after repeated wrong attempts, and it’s never stored in plain text.'],
-  ['Does Reton charge fees?', 'Opening a wallet is free. Any applicable transfer or bill fees are always shown before you confirm — no surprises.'],
+  ['Does Reton charge fees?', 'Opening a wallet is free. Any applicable fees are always shown before you confirm — no surprises.'],
 ]
 
 function Item({ q, a }: { q: string; a: string }) {

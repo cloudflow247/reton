@@ -39,8 +39,8 @@ export default function Security() {
             Built like money <span className="gradient-text">depends on it</span>. Because it does.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            Reton is engineered for regulatory scrutiny from day one — financial consistency first, throughput
-            second.
+            Every payment is ledger-backed, PIN-authorised, fraud-scored, and fully audited. Reton is engineered so
+            regulators — and you — can trust what the balance says.
           </p>
         </div>
       </section>

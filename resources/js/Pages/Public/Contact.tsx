@@ -41,11 +41,11 @@ export default function Contact() {
             Contact
           </span>
           <h1 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
-            We’re <span className="gradient-text">here to help</span>.
+            Talk to <span className="gradient-text">Reton</span>.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-            Questions about protection, recovery or your account? Reach us any way you like — a real person will get
-            back to you.
+            Questions about Callback Protection, recovery, your wallet, or the Business waitlist? Reach a real person —
+            we reply within one business day.
           </p>
         </div>
       </section>

@@ -29,8 +29,8 @@ export default function About() {
             We’re building the wallet Africa can <span className="gradient-text">actually trust</span>.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            Reton is a trust-first digital wallet. While others compete on speed, we compete on something harder and
-            more valuable — making sure your money is safe, and recoverable when something goes wrong.
+            Reton is a trust-first digital wallet for Nigeria. While others compete on speed alone, we compete on
+            something harder — making money safe, recoverable, and easy to understand when something goes wrong.
           </p>
         </div>
       </section>
