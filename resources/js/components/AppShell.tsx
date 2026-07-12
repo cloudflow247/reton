@@ -239,7 +239,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:hidden"
+        data-reton-dock
+        className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 transition-opacity sm:hidden"
         aria-label="Main"
       >
         <div className="dock relative mx-auto flex max-w-[22rem] items-end justify-between rounded-[1.35rem] px-1.5 py-1.5 shadow-[0_12px_40px_-18px_rgba(16,40,33,0.55)]">

@@ -93,6 +93,13 @@ input[type='number'] {
     0 10px 30px -20px rgba(16, 40, 33, 0.16);
 }
 
+/* Hide the mobile dock while a portaled Modal is open so actions stay tappable. */
+body[data-reton-modal-open] [data-reton-dock] {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
 /* Form & content panel — softer than .card, used by PageKit. */
 .panel {
   background: var(--color-surface);

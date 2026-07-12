@@ -1,5 +1,6 @@
 import type { FormEvent, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Head, useForm, usePage } from '@inertiajs/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AppShell } from '@/components/AppShell'
@@ -760,23 +761,48 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function Modal({ children, onClose }: { children: ReactNode; onClose: () => void }) {
-  return (
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const previousOverflow = document.body.style.overflow
+    const previousCount = Number(document.body.getAttribute('data-reton-modal-open') ?? '0')
+    document.body.style.overflow = 'hidden'
+    document.body.setAttribute('data-reton-modal-open', String(previousCount + 1))
+
+    return () => {
+      const next = Math.max(0, Number(document.body.getAttribute('data-reton-modal-open') ?? '1') - 1)
+      if (next === 0) {
+        document.body.removeAttribute('data-reton-modal-open')
+        document.body.style.overflow = previousOverflow
+      } else {
+        document.body.setAttribute('data-reton-modal-open', String(next))
+      }
+    }
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:items-center"
+      className="fixed inset-0 z-[200] flex items-end justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:items-center"
       onClick={onClose}
     >
       <motion.div
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 16, opacity: 0 }}
-        className="card w-full max-w-sm space-y-4 p-5"
+        className="card w-full max-w-sm space-y-4 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   )
 }
