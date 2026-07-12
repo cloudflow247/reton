@@ -128,12 +128,30 @@ class AlatpayDepositService
     /** @return Collection<int, Deposit> */
     public function openDepositsFor(User $user, int $limit = 5): Collection
     {
-        return Deposit::query()
-            ->where('user_id', $user->getKey())
-            ->where('status', DepositStatus::Pending)
-            ->latest()
-            ->limit($limit)
-            ->get();
+        $enabled = array_map(
+            static fn (DepositMethod $method): string => $method->value,
+            DepositMethod::enabledMethods(),
+        );
+
+        if ($enabled === []) {
+            return new Collection;
+        }
+
+        return new Collection(
+            Deposit::query()
+                ->where('user_id', $user->getKey())
+                ->where('status', DepositStatus::Pending)
+                ->latest()
+                ->limit(20)
+                ->get()
+                ->filter(function (Deposit $deposit) use ($enabled): bool {
+                    $method = (string) ($deposit->metadata['method'] ?? DepositMethod::BankTransfer->value);
+
+                    return in_array($method, $enabled, true);
+                })
+                ->take($limit)
+                ->all(),
+        );
     }
 
     public function handleWebhook(string $rawPayload, ?string $signature): WebhookEvent

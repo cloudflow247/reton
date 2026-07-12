@@ -357,6 +357,48 @@ it('shares add-money feature flags as off by default on the page', function () {
             ->where('features.one_time', false));
 });
 
+it('hides pending checkout deposits when checkout is coming soon', function () {
+    config([
+        'reton.features.checkout' => false,
+        'reton.features.card_pay' => false,
+        'reton.features.one_time' => false,
+    ]);
+    $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
+    [$user, $wallet] = webUser();
+
+    config([
+        'reton.features.checkout' => true,
+        'reton.features.card_pay' => true,
+        'reton.features.one_time' => true,
+    ]);
+
+    $deposit = app(AlatpayDepositService::class)->initiate(
+        $user,
+        $wallet,
+        Money::of(1000_00, 'NGN'),
+        DepositMethod::AlatpayCheckout,
+    );
+
+    config([
+        'reton.features.checkout' => false,
+        'reton.features.card_pay' => false,
+        'reton.features.one_time' => false,
+    ]);
+
+    $this->actingAs($user)->get('/add-money')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('AddMoney')
+            ->where('pendingDeposit', null)
+            ->where('openDeposits', []));
+
+    $this->actingAs($user)->get('/add-money?reference='.$deposit->reference)
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('AddMoney')
+            ->where('pendingDeposit', null));
+});
+
 it('shows the local demo checkout when alatpay driver is fake', function () {
     $this->app->instance(AlatpayGateway::class, new FakeAlatpayGateway);
     [$user, $wallet] = webUser();

@@ -51,7 +51,7 @@ class AddMoneyController extends Controller
         if ($reference !== '') {
             $deposit = $this->deposits->findForUser($user, $reference);
 
-            if ($deposit !== null) {
+            if ($deposit !== null && $this->depositMaySurface($deposit)) {
                 $pendingDeposit = (new DepositResource($deposit))->resolve();
             }
         } elseif (! $request->boolean('fresh') && count($openDeposits) === 1) {
@@ -245,5 +245,24 @@ class AddMoneyController extends Controller
     public function returnFromAlatpay(Request $request, string $reference): RedirectResponse
     {
         return redirect()->route('add-money', ['reference' => $reference]);
+    }
+
+    /**
+     * Completed deposits always surface. Pending ones only when their funding rail is live —
+     * otherwise users get stuck on a dead Checkout "Continue" after Coming Soon is flipped on.
+     */
+    private function depositMaySurface(Deposit $deposit): bool
+    {
+        if ($deposit->status->value === 'completed') {
+            return true;
+        }
+
+        if ($deposit->status->value !== 'pending') {
+            return false;
+        }
+
+        $method = DepositMethod::tryFrom((string) ($deposit->metadata['method'] ?? DepositMethod::BankTransfer->value));
+
+        return $method?->isEnabled() ?? false;
     }
 }

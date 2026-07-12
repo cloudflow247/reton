@@ -76,6 +76,13 @@ const ctaLabel: Record<DepositMethod, string> = {
   alatpay_card: 'Continue to card',
 }
 
+const trustPoints = [
+  { title: 'Bank-grade rails', detail: 'Settled through licensed ALATPay / Wema collection' },
+  { title: 'Encrypted identity', detail: 'BVN verified once — never stored in plain text' },
+  { title: 'Ledger-backed credit', detail: 'Every naira posts to an immutable double-entry ledger' },
+  { title: 'PIN on spend', detail: 'Outbound payments always require your transaction PIN' },
+] as const
+
 export default function AddMoney() {
   const {
     auth,
@@ -90,13 +97,15 @@ export default function AddMoney() {
     bvnProvider,
     bvnDemoMode,
   } = usePage<AddMoneyProps>().props
-  const openDeposits = Array.isArray(openDepositsProp) ? openDepositsProp : []
   const wallet = auth.wallets[0]
   const profileName = auth.user?.name ?? null
 
   const enabledMethods = methods.filter((option) => Boolean(features?.[option.feature]))
   const amountMethodsLive = enabledMethods.length > 0
   const defaultMethod = (enabledMethods[0]?.id ?? 'alatpay_checkout') as DepositMethod
+  const openDeposits = (Array.isArray(openDepositsProp) ? openDepositsProp : []).filter((deposit) =>
+    enabledMethods.some((option) => option.id === (deposit.method ?? 'bank_transfer')),
+  )
 
   const [amount, setAmount] = useState('')
   const [dismissed, setDismissed] = useState(false)
@@ -107,6 +116,7 @@ export default function AddMoney() {
   })
   const method = form.data.method
   const minor = toMinor(amount)
+  const hasActiveStatic = Boolean(staticAccount?.status === 'active' && staticAccount.account_number)
 
   useEffect(() => {
     if (!enabledMethods.some((option) => option.id === form.data.method) && enabledMethods[0]) {
@@ -122,7 +132,10 @@ export default function AddMoney() {
   }
 
   const activeDeposit =
-    pendingDeposit && (pendingDeposit.status === 'pending' || pendingDeposit.status === 'completed')
+    pendingDeposit &&
+    (pendingDeposit.status === 'pending' || pendingDeposit.status === 'completed') &&
+    (pendingDeposit.status === 'completed' ||
+      enabledMethods.some((option) => option.id === (pendingDeposit.method ?? 'bank_transfer')))
       ? pendingDeposit
       : null
 
@@ -191,17 +204,18 @@ export default function AddMoney() {
 
         <PageHeader
           title="Add money"
-          subtitle={amountMethodsLive ? 'Bank transfer or checkout' : 'Transfer to your deposit account'}
+          subtitle={
+            amountMethodsLive
+              ? 'Fund safely — bank transfer or checkout'
+              : 'Transfer to your protected deposit account'
+          }
           balance={wallet?.available_balance}
         />
 
-        {kyc?.bvn_verified && (
-          <StaticWalletCard
-            kyc={kyc}
-            staticAccount={staticAccount}
-            wallet={wallet}
-            profileName={profileName}
-          />
+        {flash.success && (
+          <p className="rounded-2xl border border-mint/25 bg-mint/5 px-4 py-3 text-sm text-mint">
+            {flash.success}
+          </p>
         )}
 
         {!kyc?.bvn_verified ? (
@@ -213,6 +227,30 @@ export default function AddMoney() {
           />
         ) : (
           <>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-3"
+            >
+              {!amountMethodsLive && hasActiveStatic && (
+                <div className="flex items-center gap-2 px-0.5">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-mint/10 px-2.5 py-1 text-[11px] font-semibold text-mint">
+                    <ShieldIcon size={12} />
+                    Recommended
+                  </span>
+                  <p className="text-xs text-muted">Same account every time · auto-credits</p>
+                </div>
+              )}
+
+              <StaticWalletCard
+                kyc={kyc}
+                staticAccount={staticAccount}
+                wallet={wallet}
+                profileName={profileName}
+              />
+            </motion.div>
+
             {openDeposits.length > 0 && (
               <Card className="space-y-2.5 p-3.5">
                 <p className="text-xs font-semibold text-text">Resume payment</p>
@@ -237,12 +275,18 @@ export default function AddMoney() {
               </Card>
             )}
 
-            <Card className="overflow-hidden p-0">
-              {amountMethodsLive ? (
+            {amountMethodsLive ? (
+              <Card className="overflow-hidden p-0">
                 <form onSubmit={submit} className="space-y-4 p-4">
-                  <div>
-                    <p className="text-sm font-semibold text-text">Fund an amount</p>
-                    <p className="mt-0.5 text-xs text-muted">Checkout or one-time transfer</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-text">Fund an amount</p>
+                      <p className="mt-0.5 text-xs text-muted">Checkout or one-time transfer</p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-mint/10 px-2 py-1 text-[10px] font-semibold text-mint">
+                      <LockIcon size={11} />
+                      Secure
+                    </span>
                   </div>
 
                   <AmountField value={amount} onChange={setAmount} invalid={!!form.errors.amount} />
@@ -263,7 +307,7 @@ export default function AddMoney() {
                             key={option.id}
                             className={cn(
                               'relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2.5 text-center transition',
-                              live ? 'cursor-pointer active:scale-[0.98]' : 'cursor-not-allowed opacity-55',
+                              live ? 'cursor-pointer active:scale-[0.98]' : 'cursor-not-allowed opacity-45',
                               selected
                                 ? 'bg-surface text-mint shadow-sm ring-1 ring-mint/25'
                                 : live
@@ -280,15 +324,13 @@ export default function AddMoney() {
                               onChange={() => selectMethod(option.id)}
                               className="sr-only"
                             />
-                            {!live && (
-                              <span className="absolute right-1 top-1 rounded-full bg-amber/15 px-1 py-px text-[8px] font-bold uppercase tracking-wide text-amber">
-                                Soon
-                              </span>
-                            )}
                             <Icon size={16} className="pointer-events-none" />
                             <span className="pointer-events-none text-[11px] font-semibold leading-tight">
                               {option.title}
                             </span>
+                            {!live && (
+                              <span className="pointer-events-none text-[9px] font-medium text-muted">Soon</span>
+                            )}
                           </label>
                         )
                       })}
@@ -316,53 +358,113 @@ export default function AddMoney() {
                     Encrypted · we never see your card details
                   </p>
                 </form>
-              ) : (
-                <div className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-text">Fund an amount</p>
-                      <p className="mt-0.5 text-xs text-muted">Checkout, card, and one-time transfer</p>
-                    </div>
-                    <Pill tone="amber">Coming soon</Pill>
-                  </div>
+              </Card>
+            ) : (
+              <ComingSoonFundingPanel flashError={flash.error} />
+            )}
 
-                  <div
-                    className="grid grid-cols-3 gap-1.5 rounded-xl bg-surface-2/70 p-1"
-                    aria-hidden
-                  >
-                    {methods.map((option) => {
-                      const Icon = option.icon
-                      return (
-                        <div
-                          key={option.id}
-                          className="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2.5 text-center text-muted opacity-55"
-                        >
-                          <span className="absolute right-1 top-1 rounded-full bg-amber/15 px-1 py-px text-[8px] font-bold uppercase tracking-wide text-amber">
-                            Soon
-                          </span>
-                          <Icon size={16} />
-                          <span className="text-[11px] font-semibold leading-tight">{option.title}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <p className="text-sm leading-relaxed text-muted">
-                    These options are not enabled on this merchant yet. Transfer to your{' '}
-                    <span className="font-medium text-text">permanent deposit account</span> above —
-                    funds credit automatically when they arrive.
-                  </p>
-
-                  {flash.error && <p className="text-sm text-danger">{flash.error}</p>}
-                </div>
-              )}
-            </Card>
-
+            <FundingSafetyPanel />
             <ComplianceStrip compact />
           </>
         )}
       </Page>
     </AppShell>
+  )
+}
+
+function ComingSoonFundingPanel({ flashError }: { flashError?: string | null }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: 0.04 }}
+      className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_12px_28px_-22px_rgba(9,79,57,0.28)]"
+      aria-label="More funding options coming soon"
+    >
+      <div className="relative border-b border-line/70 bg-[linear-gradient(135deg,rgba(9,79,57,0.08),transparent_55%)] px-4 pb-4 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">More ways to fund</p>
+            <h2 className="mt-1 font-display text-lg font-bold tracking-tight text-text">Checkout & card</h2>
+            <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted">
+              Instant checkout, card, and one-time accounts are rolling out once ALATPay enables them on this
+              merchant.
+            </p>
+          </div>
+          <Pill tone="amber">Coming soon</Pill>
+        </div>
+      </div>
+
+      <ul className="divide-y divide-line/70">
+        {methods.map((option) => {
+          const Icon = option.icon
+          return (
+            <li key={option.id} className="flex items-center gap-3 px-4 py-3.5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-muted">
+                <Icon size={18} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-text">{option.title}</span>
+                <span className="mt-0.5 block text-xs text-muted">{option.subtitle}</span>
+              </span>
+              <span className="shrink-0 rounded-full border border-line bg-surface-2/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                Soon
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="space-y-3 border-t border-line/70 bg-surface-2/35 px-4 py-4">
+        <p className="flex items-start gap-2 text-sm leading-relaxed text-muted">
+          <BoltIcon size={16} className="mt-0.5 shrink-0 text-mint" />
+          <span>
+            For now, use your <span className="font-semibold text-text">permanent deposit account</span> above.
+            Send from any Nigerian bank — Reton credits you automatically when the transfer settles.
+          </span>
+        </p>
+        {flashError && <p className="text-sm text-danger">{flashError}</p>}
+      </div>
+    </motion.section>
+  )
+}
+
+function FundingSafetyPanel() {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
+      className="rounded-2xl border border-mint/20 bg-mint/5 p-4"
+      aria-label="Funding safety"
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mint text-white">
+          <ShieldIcon size={18} />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-text">Built for safe deposits</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted">
+            Trust-first funding — verify once, transfer with confidence, recover when something goes wrong.
+          </p>
+        </div>
+      </div>
+
+      <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {trustPoints.map((point) => (
+          <li
+            key={point.title}
+            className="rounded-xl border border-line/80 bg-surface/90 px-3 py-2.5"
+          >
+            <p className="flex items-center gap-1.5 text-[12px] font-semibold text-text">
+              <CheckIcon size={12} className="shrink-0 text-mint" />
+              {point.title}
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted">{point.detail}</p>
+          </li>
+        ))}
+      </ul>
+    </motion.section>
   )
 }
 
