@@ -57,8 +57,8 @@ class DashboardController extends Controller
             $request->session()->flash(
                 'success',
                 $credited === 1
-                    ? 'Deposit received — your balance is updated.'
-                    : "{$credited} deposits received — your balance is updated.",
+                    ? 'Deposit received - your balance is updated.'
+                    : "{$credited} deposits received - your balance is updated.",
             );
         }
 

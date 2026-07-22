@@ -60,7 +60,7 @@ function SecretField({
         name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={isSet && !show ? '•••••••• (saved — type to replace)' : 'Enter secret'}
+        placeholder={isSet && !show ? '•••••••• (saved - type to replace)' : 'Enter secret'}
         className="field w-full px-4 py-3 font-mono text-sm"
         autoComplete="off"
       />
@@ -150,7 +150,7 @@ function IntegrationForm({
         onChange={(e) => form.setData('base_url', e.target.value)}
         hint={
           group === 'alatpay'
-            ? 'Official host: https://apibox.alatpay.ng — do not use api.alatpay.ng'
+            ? 'Official host: https://apibox.alatpay.ng - do not use api.alatpay.ng'
             : undefined
         }
       />
@@ -192,7 +192,7 @@ function IntegrationForm({
             value={String(form.data.business_bvn ?? '')}
             isSet={!!form.data.business_bvn_set}
             onChange={(v) => form.setData('business_bvn', v)}
-            hint="Director / shareholder BVN for Collection wallets only — not used for customer Tier-2 BVN OTP."
+            hint="Director / shareholder BVN for Collection wallets only - not used for customer Tier-2 BVN OTP."
           />
           <SecretField
             label="Webhook secret"
@@ -244,7 +244,7 @@ function IntegrationForm({
             value={String(form.data.webhook_secret ?? '')}
             isSet={!!form.data.webhook_secret_set}
             onChange={(v) => form.setData('webhook_secret', v)}
-            hint="Optional. Defaults to the secret key when empty — HMAC SHA512 on x-paystack-signature."
+            hint="Optional. Defaults to the secret key when empty - HMAC SHA512 on x-paystack-signature."
           />
           <Field
             label="Timeout (seconds)"
@@ -315,7 +315,7 @@ function IntegrationForm({
               onChange={(e) => form.setData('timeout', Number(e.target.value))}
             />
             <p className="text-xs text-muted">
-              Bill payments only — airtime, data, power, TV & betting via{' '}
+              Bill payments only - airtime, data, power, TV & betting via{' '}
               <a
                 href="https://docs.interswitchgroup.com/docs/bills-payment-1"
                 target="_blank"
@@ -350,7 +350,7 @@ function IntegrationForm({
               value={String(form.data.secret_key ?? '')}
               isSet={!!form.data.secret_key_set}
               onChange={(v) => form.setData('secret_key', v)}
-              hint="Test keys start with test — used to AES-encrypt card PINs."
+              hint="Test keys start with test - used to AES-encrypt card PINs."
             />
             <Field
               label="Timeout (seconds)"
@@ -361,7 +361,7 @@ function IntegrationForm({
               onChange={(e) => form.setData('timeout', Number(e.target.value))}
             />
             <p className="text-xs text-muted">
-              NGN & USD virtual cards, FX wallet funding, freeze/unfreeze —{' '}
+              NGN & USD virtual cards, FX wallet funding, freeze/unfreeze -{' '}
               <a href="https://docs.bridgecard.co/" target="_blank" rel="noreferrer" className="text-mint hover:underline">
                 Bridgecard Issuing API
               </a>
@@ -393,7 +393,7 @@ function IntegrationForm({
             max={1440}
             value={String(form.data.fake_advance_minutes ?? 1)}
             onChange={(e) => form.setData('fake_advance_minutes', Number(e.target.value))}
-            hint="Only used when driver is fake — simulates shipment stages."
+            hint="Only used when driver is fake - simulates shipment stages."
           />
           {webhookUrl && (
             <div className="rounded-xl border border-line bg-surface-2/50 px-4">
@@ -409,7 +409,7 @@ function IntegrationForm({
               label="API base URL"
               value={String(form.data.base_url ?? '')}
               onChange={(e) => form.setData('base_url', e.target.value)}
-              hint="Sandbox: https://sandbox.dojah.io — Production: https://api.dojah.io"
+              hint="Sandbox: https://sandbox.dojah.io - Production: https://api.dojah.io"
             />
             <SecretField
               label="App ID"
@@ -434,7 +434,7 @@ function IntegrationForm({
               onChange={(e) => form.setData('timeout', Number(e.target.value))}
             />
             <p className="text-xs text-muted">
-              Optional Tier 3 NIN verification — BVN for funding is handled by ALATPay.{' '}
+              Optional Tier 3 NIN verification - BVN for funding is handled by ALATPay.{' '}
               <a href="https://docs.dojah.io" target="_blank" rel="noreferrer" className="text-mint hover:underline">
                 Dojah API
               </a>
@@ -478,7 +478,7 @@ function IntegrationForm({
               onChange={(e) => form.setData('timeout', Number(e.target.value))}
             />
             <p className="text-xs text-muted">
-              Remita RRR bill payments — select Remita under Platform → Bill payments when live.
+              Remita RRR bill payments - select Remita under Platform → Bill payments when live.
             </p>
           </>
         )}
@@ -540,7 +540,7 @@ function IntegrationForm({
         )}
         {group === 'alatpay' && driver === 'fake' && (
           <p className="w-full text-xs text-amber">
-            Driver is Demo/fake — live NIP deposits will not credit Reton wallets. Switch to Live HTTP, save, then Sync VA
+            Driver is Demo/fake - live NIP deposits will not credit Reton wallets. Switch to Live HTTP, save, then Sync VA
             deposits.
           </p>
         )}
@@ -591,7 +591,7 @@ export default function Integrations() {
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Integrations</h1>
           <p className="mt-1 text-sm text-muted">
-            Store payment, KYC, card, and logistics credentials securely. Values are encrypted at rest — env vars are fallbacks until saved here.
+            Store payment, KYC, card, and logistics credentials securely. Values are encrypted at rest - env vars are fallbacks until saved here.
           </p>
         </div>
 

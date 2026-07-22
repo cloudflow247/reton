@@ -58,7 +58,7 @@ function partyLines(party: ReceiptParty): string[] {
   if (party.bank_name) lines.push(party.bank_name)
   if (party.account_number) lines.push(party.account_number)
   if (party.detail && !lines.includes(party.detail)) lines.push(party.detail)
-  return lines.length > 0 ? lines : ['—']
+  return lines.length > 0 ? lines : ['-']
 }
 
 export default function ActivityShow() {
@@ -223,7 +223,7 @@ export default function ActivityShow() {
             <div className="flex items-start gap-2 rounded-2xl border border-mint/20 bg-mint/[0.06] px-3.5 py-3 text-xs leading-relaxed text-text/80">
               <ShieldIcon size={14} className="mt-0.5 shrink-0 text-mint" />
               <span>
-                Protected transfer — funds stayed in escrow until release or callback resolution.
+                Protected transfer - funds stayed in escrow until release or callback resolution.
               </span>
             </div>
           )}
@@ -324,7 +324,7 @@ function Detail({
     <div className="rounded-2xl border border-line/80 bg-surface-2/50 px-3.5 py-3">
       <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-text/65">{label}</dt>
       <dd className={`mt-1 break-all text-sm font-bold text-text ${mono ? 'font-num tracking-wide' : ''}`}>
-        {value ?? '—'}
+        {value ?? '-'}
       </dd>
     </div>
   )

@@ -63,7 +63,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Payment codes are Interswitch Quickteller identifiers per biller. Update
-    | these from your merchant dashboard for production — QA sandbox often uses
+    | these from your merchant dashboard for production - QA sandbox often uses
     | 10903 for mobile recharge test scenarios.
     |
     | @see https://docs.interswitchgroup.com/docs/bills-payment-1
@@ -180,7 +180,7 @@ return [
         'dispute_grace_hours' => (int) env('RETON_PHYSICAL_DISPUTE_GRACE_HOURS', 48),
         'verification_pass_score' => (int) env('RETON_PHYSICAL_VERIFICATION_PASS_SCORE', 70),
         'hub_verification_pass_score' => (int) env('RETON_PHYSICAL_HUB_PASS_SCORE', 80),
-        'default_hub_name' => env('RETON_GIGLOGISTICS_HUB_NAME', 'Giglogistics Verification Hub — Lekki'),
+        'default_hub_name' => env('RETON_GIGLOGISTICS_HUB_NAME', 'Giglogistics Verification Hub - Lekki'),
         'default_hub_address' => [
             'line1' => env('RETON_GIGLOGISTICS_HUB_LINE1', '12 Admiralty Way'),
             'city' => env('RETON_GIGLOGISTICS_HUB_CITY', 'Lekki'),
@@ -235,9 +235,9 @@ return [
     | KYC tiers (CBN-style limits + ALATPay static wallet mapping)
     |--------------------------------------------------------------------------
     |
-    | Tier 1 — basic: collection static wallet (business BVN on ALATPay).
-    | Tier 2 — BVN verified: individual static wallet.
-    | Tier 3 — NIN + address: highest limits.
+    | Tier 1 - basic: collection static wallet (business BVN on ALATPay).
+    | Tier 2 - BVN verified: individual static wallet.
+    | Tier 3 - NIN + address: highest limits.
     | Amounts are in minor units (kobo).
     |
     */
@@ -350,8 +350,8 @@ return [
 
     'seo' => [
         'site_name' => env('RETON_SEO_SITE_NAME', 'Reton'),
-        'title' => env('RETON_SEO_TITLE', 'Reton — payments you can take back'),
-        'description' => env('RETON_SEO_DESCRIPTION', 'Reton is Africa\'s trust-first wallet with Callback Protection, wrong-transfer recovery, and real-time fraud checks — settled on ALAT by Wema.'),
+        'title' => env('RETON_SEO_TITLE', 'Reton - payments you can take back'),
+        'description' => env('RETON_SEO_DESCRIPTION', 'Reton is Africa\'s trust-first wallet with Callback Protection, wrong-transfer recovery, and real-time fraud checks - settled on ALAT by Wema.'),
         'keywords' => env('RETON_SEO_KEYWORDS', 'fintech, nigeria, wallet, callback protection, wrong transfer recovery, ALATPay, trust-first payments'),
         'og_image' => env('RETON_SEO_OG_IMAGE', '/og-banner.png'),
         'twitter_site' => env('RETON_SEO_TWITTER', '@retonpay'),

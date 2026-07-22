@@ -53,7 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Render every exception thrown on the API surface as Reton's standard
         // error envelope, so clients never receive an HTML error page.
         $exceptions->render(function (Throwable $e, Request $request) {
-            // Inertia XHR must never receive the API JSON envelope — that body has
+            // Inertia XHR must never receive the API JSON envelope - that body has
             // no X-Inertia header, so the client shows a generic "500 | SERVER ERROR".
             if ($request->header('X-Inertia') || (! $request->is('api/*') && ! $request->expectsJson())) {
                 if ($e instanceof AlatpayException) {

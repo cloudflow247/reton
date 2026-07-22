@@ -11,7 +11,7 @@ export function shortFundingAccountName(
   const provider = (providerAccountName ?? '').trim()
 
   if (!preferred) {
-    return provider || '—'
+    return provider || '-'
   }
 
   if (!provider) {
@@ -28,7 +28,7 @@ export function shortFundingAccountName(
     }
   }
 
-  for (const sep of [' - ', ' – ', ' — ', ' / ', ' | ']) {
+  for (const sep of [' - ', ' - ', ' - ', ' / ', ' | ']) {
     if (!provider.includes(sep)) continue
     const parts = provider.split(sep).map((p) => p.trim()).filter(Boolean)
     const tail = parts[parts.length - 1] ?? ''

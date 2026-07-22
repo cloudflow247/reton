@@ -30,7 +30,7 @@ final class FundingAccountName
             return $preferred;
         }
 
-        foreach ([' - ', ' – ', ' — ', ' / ', ' | '] as $separator) {
+        foreach ([' - ', ' - ', ' - ', ' / ', ' | '] as $separator) {
             if (! str_contains($provider, $separator)) {
                 continue;
             }

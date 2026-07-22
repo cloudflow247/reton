@@ -25,7 +25,7 @@ const slide = {
 }
 
 const stepMeta = [
-  { title: 'Create your wallet', sub: 'Legal name and email — as on your ID (CBN KYC).' },
+  { title: 'Create your wallet', sub: 'Legal name and email - as on your ID (CBN KYC).' },
   { title: 'Your mobile number', sub: 'Used for alerts, OTP, and account recovery.' },
   { title: 'Secure your account', sub: 'Choose a strong password to protect your wallet.' },
 ] as const
@@ -214,7 +214,7 @@ export default function Register() {
                   label="Middle name"
                   placeholder="Optional"
                   autoComplete="additional-name"
-                  hint="Optional — include if it appears on your BVN or government ID."
+                  hint="Optional - include if it appears on your BVN or government ID."
                   error={fieldErrorMessage(errors.middle_name, serverErrors.middle_name)}
                   {...register('middle_name')}
                 />

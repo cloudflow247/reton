@@ -43,7 +43,7 @@ class PromoteAdminCommand extends Command
             $this->info("Created user {$email}.");
             $this->line('Temporary password: '.$password);
             $this->newLine();
-            $this->warn('Save this password now — it will not be shown again.');
+            $this->warn('Save this password now - it will not be shown again.');
             $this->line('Open '.AdminPath::url().' after signing in to configure ALATPay and other integrations.');
 
             return self::SUCCESS;

@@ -29,7 +29,7 @@ export default function Send() {
       <PageHero
         icon={SendIcon}
         title="Send money"
-        subtitle="Protected by default — or Standard for instant"
+        subtitle="Protected by default - or Standard for instant"
         balance={wallet?.available_balance}
         tone="mint"
       />
@@ -318,7 +318,7 @@ function SendForm() {
                 {overBalance
                   ? 'Above available balance'
                   : minor > 0
-                    ? `${wallet ? ngn(wallet.available_balance - minor) : '—'} left after this`
+                    ? `${wallet ? ngn(wallet.available_balance - minor) : '-'} left after this`
                     : 'Enter an amount to send'}
               </div>
             </div>
@@ -346,7 +346,7 @@ function SendForm() {
                   active={field.value === 'protected'}
                   onClick={() => field.onChange('protected')}
                   title="Protected"
-                  desc="Funds held in escrow — you can recall until you release."
+                  desc="Funds held in escrow - you can recall until you release."
                   recommended
                 />
                 <Option
@@ -387,7 +387,7 @@ function SendForm() {
         </form>
 
         <InfoStrip tone="mint">
-          Protected transfers hold funds until you release — great for marketplace sales.
+          Protected transfers hold funds until you release - great for marketplace sales.
         </InfoStrip>
     </FormPanel>
   )

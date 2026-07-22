@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 /**
  * Pure money-flow aggregates for statement windows.
  *
- * Totals must always be computed from the exact entries shown to the user —
+ * Totals must always be computed from the exact entries shown to the user -
  * never from a larger window or from wallet.balance (which is all-time).
  */
 final class StatementMoneyFlow

@@ -38,7 +38,7 @@ class WalletTransactionMail extends Mailable implements ShouldQueue
 
         return new Envelope(
             from: new Address($fromAddress, $fromName),
-            subject: sprintf('Reton %s alert — %s', $label, $this->formatMoney($this->amount)),
+            subject: sprintf('Reton %s alert - %s', $label, $this->formatMoney($this->amount)),
         );
     }
 
@@ -70,7 +70,7 @@ class WalletTransactionMail extends Mailable implements ShouldQueue
         $digits = preg_replace('/\D+/', '', $account) ?? '';
 
         if (strlen($digits) < 4) {
-            return $account !== '' ? $account : '—';
+            return $account !== '' ? $account : '-';
         }
 
         return substr($digits, 0, 4).str_repeat('*', max(0, strlen($digits) - 6)).substr($digits, -2);

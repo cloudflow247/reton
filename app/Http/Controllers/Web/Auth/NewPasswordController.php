@@ -72,7 +72,7 @@ class NewPasswordController extends Controller
         $user = User::query()->where('email', $request->string('email')->toString())->first();
 
         if ($user !== null) {
-            // Password already rotated — other browser sessions fail AuthenticateSession.
+            // Password already rotated - other browser sessions fail AuthenticateSession.
             $this->sessions->startFresh($request, $user);
 
             return redirect()->intended($this->redirectAfterAuth($user));

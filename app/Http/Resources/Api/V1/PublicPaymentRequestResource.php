@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Payer-facing view of a payment request — no requester PII.
+ * Payer-facing view of a payment request - no requester PII.
  *
  * @mixin PaymentRequest
  */

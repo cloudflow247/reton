@@ -78,7 +78,7 @@ final class AlatpayException extends RuntimeException implements RenderableApiEx
 
         return match ($status) {
             400, 404, 422 => $isBvnOp
-                ? 'That BVN was rejected. Double-check the number — it must be your real BVN, not a demo value.'
+                ? 'That BVN was rejected. Double-check the number - it must be your real BVN, not a demo value.'
                 : ($isFundingLink
                     ? 'ALATPay could not start that payment. Try One-time transfer or your permanent deposit account.'
                     : $fallback),

@@ -33,8 +33,8 @@ class SupportTicketOpenedMail extends Mailable
             from: new Address($fromAddress, $fromName),
             replyTo: [new Address($replyTo, $fromName)],
             subject: $this->forSupport
-                ? "[Reton Support] {$this->ticket->reference} — {$this->ticket->subject}"
-                : "We received your support request — {$this->ticket->reference}",
+                ? "[Reton Support] {$this->ticket->reference} - {$this->ticket->subject}"
+                : "We received your support request - {$this->ticket->reference}",
         );
     }
 

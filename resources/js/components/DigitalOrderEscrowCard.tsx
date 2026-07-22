@@ -80,8 +80,8 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
       {order.status === 'paid_held' && isSeller && order.delivery_deadline_at && (
         <p className="mt-2 text-xs text-amber">
           {isPhysical
-            ? `Schedule hub drop-off before ${shortDate(order.delivery_deadline_at)} — buyer is refunded if the item is not verified in time.`
-            : `Deliver before ${shortDate(order.delivery_deadline_at)} — otherwise the buyer is refunded automatically.`}
+            ? `Schedule hub drop-off before ${shortDate(order.delivery_deadline_at)} - buyer is refunded if the item is not verified in time.`
+            : `Deliver before ${shortDate(order.delivery_deadline_at)} - otherwise the buyer is refunded automatically.`}
         </p>
       )}
 
@@ -99,13 +99,13 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
 
       {order.status === 'shipped' && isBuyer && (
         <p className="mt-2 text-xs text-muted">
-          Hub verified — your package is on the way. Confirm only after you receive and inspect the item.
+          Hub verified - your package is on the way. Confirm only after you receive and inspect the item.
         </p>
       )}
 
       {order.status === 'paid_held' && isBuyer && order.delivery_deadline_at && (
         <p className="mt-2 text-xs text-muted">
-          If nothing is delivered by {shortDate(order.delivery_deadline_at)}, you&apos;re refunded automatically — no
+          If nothing is delivered by {shortDate(order.delivery_deadline_at)}, you&apos;re refunded automatically - no
           dispute needed.
           {escrow?.can_dispute_not_delivered ? ' You can also open a dispute sooner if you prefer.' : ''}
         </p>
@@ -138,7 +138,7 @@ export function DigitalOrderEscrowCard({ order, compact = false }: Props) {
           {isBuyer && order.status === 'delivered' && (
             <>
               <Button className="px-4 py-2" onClick={() => setMode('confirm')}>
-                Matches listing — release pay
+                Matches listing - release pay
               </Button>
               <Button variant="ghost" className="px-4 py-2" onClick={() => setMode('dispute')}>
                 Something&apos;s wrong
@@ -217,7 +217,7 @@ function HubDropoffPanel({
     <div className="mt-3 space-y-3 rounded-xl border border-mint/30 bg-mint/[0.06] p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-mint">Take item to verification hub</p>
       <div className="rounded-lg border border-line bg-surface p-3">
-        <p className="font-display text-lg font-bold tracking-widest text-text">{shipment.dropoff_code ?? '—'}</p>
+        <p className="font-display text-lg font-bold tracking-widest text-text">{shipment.dropoff_code ?? '-'}</p>
         <p className="mt-1 text-[11px] text-muted">Show this drop-off code at the hub</p>
       </div>
       <div className="text-sm">
@@ -317,7 +317,7 @@ function DeliveryPanel({ order, isPhysical }: { order: DigitalOrder; isPhysical:
         <p className="text-[11px] text-mint">
           {isPhysical
             ? 'Description integrity verified against your purchase snapshot.'
-            : 'Delivery verified — matches what the seller attested.'}
+            : 'Delivery verified - matches what the seller attested.'}
         </p>
       )}
     </div>
@@ -359,7 +359,7 @@ function ShipModal({ order, onClose }: { order: DigitalOrder; onClose: () => voi
         <RhfField label="Pickup phone" error={errors.pickup_phone?.message} {...register('pickup_phone')} />
         <label className="flex items-start gap-2 rounded-xl border border-line bg-surface-2 p-3 text-sm">
           <input type="checkbox" className="mt-1" {...register('attest_matches_listing')} />
-          <span>The package matches my listing description exactly — brand, condition, and specs.</span>
+          <span>The package matches my listing description exactly - brand, condition, and specs.</span>
         </label>
         {errors.attest_matches_listing && (
           <p className="text-sm text-danger">{errors.attest_matches_listing.message}</p>

@@ -123,7 +123,7 @@ class VirtualCardService
 
             $this->ledger->post(
                 PostingDraft::for(TransactionType::CardFunding)
-                    ->describedAs("Issue {$currency} virtual card — initial load")
+                    ->describedAs("Issue {$currency} virtual card - initial load")
                     ->idempotentBy($issueRef)
                     ->withMetadata([
                         'card_identifier' => $cardIdentifier,

@@ -18,9 +18,9 @@ use Illuminate\Validation\ValidationException;
 /**
  * Identity verification aligned with ALATPay static-wallet tiers.
  *
- * Tier 1 — basic profile (default): collection static wallet, lower limits.
- * Tier 2 — BVN verified via ALATPay OTP (default) or Dojah: individual static wallet on ALATPay.
- * Tier 3 — NIN + address verified via Dojah: highest limits.
+ * Tier 1 - basic profile (default): collection static wallet, lower limits.
+ * Tier 2 - BVN verified via ALATPay OTP (default) or Dojah: individual static wallet on ALATPay.
+ * Tier 3 - NIN + address verified via Dojah: highest limits.
  */
 class KycService
 {

@@ -2,7 +2,7 @@
 
 **Payments you can take back.**
 
-Reton is a trust-first digital banking platform for Africa. We help people send, receive, and recover money with clarity — not just speed.
+Reton is a trust-first digital banking platform for Africa. We help people send, receive, and recover money with clarity - not just speed.
 
 Our flagship idea is **Callback Protection**: hold a payment until the sender is ready to release it, with a full timeline at every step.
 
@@ -16,13 +16,13 @@ Built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Found
 
 Most wallets optimise for “send and forget.” We optimise for the moment something goes wrong:
 
-- **Callback Protection** — protected transfers stay pending until release or recall
-- **Wrong-transfer recovery** — report a mistake, hold funds when eligible, track the case
-- **Fraud signals** — rule-based scoring with admin visibility
-- **KYC tiers** — CBN-aligned limits; BVN verification for funding unlocks
-- **Double-entry wallet** — every movement is ledger-backed
+- **Callback Protection** - protected transfers stay pending until release or recall
+- **Wrong-transfer recovery** - report a mistake, hold funds when eligible, track the case
+- **Fraud signals** - rule-based scoring with admin visibility
+- **KYC tiers** - CBN-aligned limits; BVN verification for funding unlocks
+- **Double-entry wallet** - every movement is ledger-backed
 
-We are not cloning Opay, Kuda, or Moniepoint. The product should feel like a serious fintech — calm, clear, and careful with real money.
+We are not cloning Opay, Kuda, or Moniepoint. The product should feel like a serious fintech - calm, clear, and careful with real money.
 
 ---
 

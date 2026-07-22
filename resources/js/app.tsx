@@ -31,7 +31,7 @@ function renderWithLayout(
 }
 
 createInertiaApp({
-  title: (title) => (title ? `${title} · ${appName}` : `${appName} — payments you can take back`),
+  title: (title) => (title ? `${title} · ${appName}` : `${appName} - payments you can take back`),
   resolve: (name) =>
     resolvePageComponent(
       `./Pages/${name}.tsx`,

@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
  * Fair-usage engine for P2P Callback Protection.
  *
  * Scores both parties, classifies dispute reasons, gates abusive initiates,
- * and produces explainable expiry resolutions — without putting an opaque
+ * and produces explainable expiry resolutions - without putting an opaque
  * model in charge of money movement.
  */
 class ProtectionFairnessService
@@ -254,7 +254,7 @@ class ProtectionFairnessService
         $receiverHigh = $receiver instanceof User && $this->userIsHighRisk($receiver, $transfer, 'callback_expiry');
 
         if ($receiverHigh) {
-            $reasons[] = 'Receiver scored high-risk — funds returned to sender.';
+            $reasons[] = 'Receiver scored high-risk - funds returned to sender.';
 
             return new FairnessAssessment(
                 senderScore: $senderScore,
@@ -267,7 +267,7 @@ class ProtectionFairnessService
         }
 
         if ($senderHigh && $receiverScore >= 60) {
-            $reasons[] = 'Sender scored high-risk while receiver trust is healthy — funds released.';
+            $reasons[] = 'Sender scored high-risk while receiver trust is healthy - funds released.';
 
             return new FairnessAssessment(
                 senderScore: $senderScore,
@@ -290,8 +290,8 @@ class ProtectionFairnessService
         } else {
             $resolution = $this->configuredDefault();
             $reasons[] = $resolution === CallbackResolution::Refund
-                ? 'Scores are close — default protects the party who raised the callback.'
-                : 'Scores are close — default releases held funds to the receiver.';
+                ? 'Scores are close - default protects the party who raised the callback.'
+                : 'Scores are close - default releases held funds to the receiver.';
         }
 
         if ($category === 'suspected_fraud' && $resolution === CallbackResolution::Release && $senderScore >= 50) {

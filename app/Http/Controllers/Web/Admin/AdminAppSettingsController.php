@@ -66,7 +66,7 @@ class AdminAppSettingsController extends Controller
 
         $message = 'Application settings saved.';
         if ($validated['admin_path'] !== $previousPath) {
-            $message = 'Admin URL updated. Bookmark the new path — the old URL no longer works.';
+            $message = 'Admin URL updated. Bookmark the new path - the old URL no longer works.';
         }
 
         return redirect(AdminPath::url('app-settings'))->with('success', $message);

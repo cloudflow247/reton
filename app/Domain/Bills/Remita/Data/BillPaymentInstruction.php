@@ -10,7 +10,7 @@ use App\Support\Money\Money;
 /**
  * An instruction to the provider to settle a single bill.
  *
- * `customerReference` is the biller-specific account the payment credits — a
+ * `customerReference` is the biller-specific account the payment credits - a
  * phone number for airtime, a meter number for electricity, or the RRR itself.
  */
 final readonly class BillPaymentInstruction

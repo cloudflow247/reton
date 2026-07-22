@@ -74,7 +74,7 @@ class UserKyc extends Model
 
     /**
      * Clear BVN identity so another user may verify the same BVN (support only).
-     * Does not delete deposit accounts — review those separately.
+     * Does not delete deposit accounts - review those separately.
      */
     public function clearBvn(): void
     {

@@ -16,7 +16,7 @@ final class PayoutUnavailableException extends RuntimeException implements Rende
     public static function make(): self
     {
         return new self(
-            'Bank withdrawals are temporarily unavailable. Your balance was not charged — try again shortly or contact support.'
+            'Bank withdrawals are temporarily unavailable. Your balance was not charged - try again shortly or contact support.'
         );
     }
 

@@ -133,7 +133,7 @@ export default function Callbacks() {
                           <div className="font-num text-xs text-muted">{ngn(Number(cb.transfer.amount))}</div>
                         </>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5">
@@ -143,11 +143,11 @@ export default function Callbacks() {
                           <div className="text-xs text-muted">{cb.initiator.email}</div>
                         </>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="max-w-[200px] truncate px-4 py-2.5 text-muted" title={cb.reason ?? undefined}>
-                      {cb.reason ?? '—'}
+                      {cb.reason ?? '-'}
                     </td>
                     <td className="px-4 py-2.5 text-muted">{shortDate(cb.responds_by)}</td>
                     <td className="px-4 py-2.5">
@@ -164,7 +164,7 @@ export default function Callbacks() {
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted">—</span>
+                        <span className="text-xs text-muted">-</span>
                       )}
                     </td>
                   </tr>

@@ -134,10 +134,10 @@ export default function Recoveries() {
                           <div className="text-xs text-muted">{row.reporter.email}</div>
                         </>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-muted">{row.transfer?.reference ?? '—'}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted">{row.transfer?.reference ?? '-'}</td>
                     <td className="px-4 py-2.5 font-num">
                       <div>{ngn(Number(row.amount))}</div>
                       {row.fee != null && Number(row.fee) > 0 && (
@@ -145,7 +145,7 @@ export default function Recoveries() {
                       )}
                     </td>
                     <td className="max-w-[180px] truncate px-4 py-2.5 text-muted" title={row.reason ?? undefined}>
-                      {row.reason ?? '—'}
+                      {row.reason ?? '-'}
                     </td>
                     <td className="px-4 py-2.5 text-muted">{shortDate(row.expires_at)}</td>
                     <td className="px-4 py-2.5">
@@ -162,7 +162,7 @@ export default function Recoveries() {
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted">—</span>
+                        <span className="text-xs text-muted">-</span>
                       )}
                     </td>
                   </tr>

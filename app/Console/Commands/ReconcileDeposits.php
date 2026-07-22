@@ -10,7 +10,7 @@ use App\Domain\Payments\Services\AlatpayDepositService;
 use Illuminate\Console\Command;
 
 /**
- * Reconciles pending deposits against AlatPay — a safety net for missed or
+ * Reconciles pending deposits against AlatPay - a safety net for missed or
  * delayed webhooks. Only deposits old enough to have settled are checked.
  */
 class ReconcileDeposits extends Command

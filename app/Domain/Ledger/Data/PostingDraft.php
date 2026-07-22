@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * A mutable builder describing a balanced posting before it is committed.
  *
- * The draft carries no balances of its own — it is validated and persisted by
+ * The draft carries no balances of its own - it is validated and persisted by
  * the LedgerService, which is the sole authority over the ledger.
  */
 final class PostingDraft

@@ -37,7 +37,7 @@ class KycController extends Controller
         $returnTo = $this->safeReturnTo((string) ($validated['return_to'] ?? ''));
 
         if ($result instanceof UserKyc) {
-            $message = 'BVN verified — your permanent deposit account is ready.';
+            $message = 'BVN verified - your permanent deposit account is ready.';
 
             return $returnTo !== null
                 ? redirect($returnTo)->with('success', $message)
@@ -61,7 +61,7 @@ class KycController extends Controller
 
         $this->kyc->confirmAlatpayTier2($user, $validated['otp'], $request->ip());
 
-        $message = 'BVN verified — your permanent deposit account is ready. Transfer any amount anytime.';
+        $message = 'BVN verified - your permanent deposit account is ready. Transfer any amount anytime.';
         $returnTo = $this->safeReturnTo((string) ($validated['return_to'] ?? ''));
 
         return $returnTo !== null
@@ -108,7 +108,7 @@ class KycController extends Controller
             $request->ip(),
         );
 
-        return redirect()->route('profile')->with('success', 'Full KYC complete — your limits have been raised.');
+        return redirect()->route('profile')->with('success', 'Full KYC complete - your limits have been raised.');
     }
 
     private function safeReturnTo(string $returnTo): ?string

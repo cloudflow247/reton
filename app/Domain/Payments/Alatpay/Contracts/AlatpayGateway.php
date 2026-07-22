@@ -19,7 +19,7 @@ use App\Domain\Payments\Alatpay\Data\TransferResponse;
 
 /**
  * The dedicated AlatPay service layer. All AlatPay HTTP traffic flows through an
- * implementation of this contract — no controller or domain service talks to
+ * implementation of this contract - no controller or domain service talks to
  * AlatPay directly.
  */
 interface AlatpayGateway
@@ -32,7 +32,7 @@ interface AlatpayGateway
 
     /**
      * Whether this gateway can send money to external bank accounts.
-     * ALATPay collections (apibox) cannot — that needs Wema Debit Wallet.
+     * ALATPay collections (apibox) cannot - that needs Wema Debit Wallet.
      */
     public function supportsOutboundTransfers(): bool;
 

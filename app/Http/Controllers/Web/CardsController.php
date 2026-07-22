@@ -143,7 +143,7 @@ class CardsController extends Controller
             throw ValidationException::withMessages(['pin' => $e->getMessage()]);
         }
 
-        return back()->with('success', 'Card funding is processing — balance updates shortly.');
+        return back()->with('success', 'Card funding is processing - balance updates shortly.');
     }
 
     public function quote(Request $request): JsonResponse

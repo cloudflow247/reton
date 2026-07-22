@@ -12,8 +12,8 @@ use Illuminate\Console\Command;
 /**
  * Refunds digital orders whose seller missed the delivery deadline.
  *
- * Protects buyers who never received their item — including when the seller
- * cannot respond — without requiring a manual dispute.
+ * Protects buyers who never received their item - including when the seller
+ * cannot respond - without requiring a manual dispute.
  */
 class ExpireUndeliveredDigitalOrders extends Command
 {

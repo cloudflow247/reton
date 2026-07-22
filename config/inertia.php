@@ -21,7 +21,7 @@ return [
 
     'ssr' => [
 
-        // Reton has no SSR entrypoint/bundle — keep off unless explicitly enabled.
+        // Reton has no SSR entrypoint/bundle - keep off unless explicitly enabled.
         'enabled' => (bool) env('INERTIA_SSR_ENABLED', false),
 
         'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),

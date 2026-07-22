@@ -127,7 +127,7 @@ export default function Withdraw({
           <p className="text-sm text-muted">
             {ok
               ? 'Funds are on the way. Most transfers arrive within a few minutes.'
-              : done.failure_reason ?? 'Something went wrong — balance was not debited.'}
+              : done.failure_reason ?? 'Something went wrong - balance was not debited.'}
           </p>
         </SuccessScreen>
       </>
@@ -140,7 +140,7 @@ export default function Withdraw({
       <PageHero
         icon={BankIcon}
         title="Withdraw"
-        subtitle="To your bank — name must match profile"
+        subtitle="To your bank - name must match profile"
         balance={wallet?.available_balance}
         tone="slate"
       />
@@ -152,7 +152,7 @@ export default function Withdraw({
 
       {!payoutsAvailable && (
         <InfoStrip tone="amber" title="Withdrawals paused">
-          Bank withdrawals are temporarily unavailable. Your balance is safe — try again shortly, or contact support.
+          Bank withdrawals are temporarily unavailable. Your balance is safe - try again shortly, or contact support.
         </InfoStrip>
       )}
 
@@ -218,7 +218,7 @@ export default function Withdraw({
               <p className="text-xs font-semibold uppercase tracking-wide text-muted">Summary</p>
               <p className="mt-1 font-medium">{bank.name}</p>
               <p className="font-num text-muted">{accountNumber}</p>
-              <p className="mt-2 font-num text-lg font-bold text-mint">{minor > 0 ? ngn(minor) : '—'}</p>
+              <p className="mt-2 font-num text-lg font-bold text-mint">{minor > 0 ? ngn(minor) : '-'}</p>
             </motion.div>
           )}
 

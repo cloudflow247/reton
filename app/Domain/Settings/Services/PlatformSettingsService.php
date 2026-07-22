@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 /**
  * Encrypted runtime configuration stored in the database.
  *
- * Secrets never touch git — admins set integration keys in the control panel.
+ * Secrets never touch git - admins set integration keys in the control panel.
  * Values are encrypted with APP_KEY and merged into Laravel config at boot.
  * Env vars remain the fallback until an admin saves a group in the dashboard.
  */
@@ -53,7 +53,7 @@ class PlatformSettingsService
     /** @var array<string, array<string, mixed>> */
     private const DEFAULTS = [
         'alatpay' => [
-            // Live by default — fake must be chosen explicitly for local demos.
+            // Live by default - fake must be chosen explicitly for local demos.
             'driver' => 'http',
             'base_url' => 'https://apibox.alatpay.ng',
             'api_key' => '',
@@ -152,7 +152,7 @@ class PlatformSettingsService
             'dispute_grace_hours' => 48,
             'verification_pass_score' => 70,
             'hub_verification_pass_score' => 80,
-            'default_hub_name' => 'Giglogistics Verification Hub — Lekki',
+            'default_hub_name' => 'Giglogistics Verification Hub - Lekki',
             'default_hub_line1' => '12 Admiralty Way',
             'default_hub_city' => 'Lekki',
             'default_hub_state' => 'Lagos',
@@ -260,8 +260,8 @@ class PlatformSettingsService
         ],
         'seo' => [
             'site_name' => 'Reton',
-            'title' => 'Reton — payments you can take back',
-            'description' => 'Reton is Africa\'s trust-first wallet with Callback Protection, wrong-transfer recovery, and real-time fraud checks — settled on ALAT by Wema.',
+            'title' => 'Reton - payments you can take back',
+            'description' => 'Reton is Africa\'s trust-first wallet with Callback Protection, wrong-transfer recovery, and real-time fraud checks - settled on ALAT by Wema.',
             'keywords' => 'fintech, nigeria, wallet, callback protection, wrong transfer recovery, ALATPay',
             'og_image' => '/og-banner.png',
             'twitter_site' => '@retonpay',
@@ -299,7 +299,7 @@ class PlatformSettingsService
             try {
                 $this->applyGroupToConfig($row->group, $row->decryptPayload());
             } catch (\Throwable) {
-                // Corrupt row — skip rather than breaking boot.
+                // Corrupt row - skip rather than breaking boot.
             }
         });
     }
@@ -492,7 +492,7 @@ class PlatformSettingsService
     }
 
     /**
-     * Never run production/staging with driver=fake when merchant credentials exist —
+     * Never run production/staging with driver=fake when merchant credentials exist -
      * that silently skips live collection-history polls and leaves VA deposits uncredited.
      *
      * @param  array<string, mixed>  $values
@@ -509,7 +509,7 @@ class PlatformSettingsService
             && $hasCreds
             && app()->environment(['production', 'staging'])
         ) {
-            Log::warning('ALATPay driver forced from fake to http — live credentials present.');
+            Log::warning('ALATPay driver forced from fake to http - live credentials present.');
             $values['driver'] = 'http';
         }
 

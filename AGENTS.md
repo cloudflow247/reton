@@ -1,24 +1,24 @@
 <laravel-boost-guidelines>
 === .ai/core rules ===
 
-## Reton — trust-first fintech
+## Reton - trust-first fintech
 
-Reton is Africa’s trust-first payment platform, built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Founder: **Aina Christana Olajumoke**) for the ALATPay Buildathon MVP and beyond. Real money can flow through this system — never ship demo or placeholder payment code for live rails.
+Reton is Africa’s trust-first payment platform, built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Founder: **Aina Christana Olajumoke**) for the ALATPay Buildathon MVP and beyond. Real money can flow through this system - never ship demo or placeholder payment code for live rails.
 
 ### Architecture (required)
 
 - Business logic lives in `app/Domain/*` using DDD: Actions, Services, Repositories (when warranted), DTOs, Events/Listeners, Policies.
 - Controllers are HTTP-only: validate, authorize, delegate, respond.
-- Every payment operation must be **atomic** (DB transactions) and ledger-backed via `LedgerService` — never mutate balances without ledger entries.
+- Every payment operation must be **atomic** (DB transactions) and ledger-backed via `LedgerService` - never mutate balances without ledger entries.
 - External providers (ALATPay, Termii, Dojah, Interswitch, Bridgecard, Remita) are accessed only through domain gateways/services, never from controllers.
 
 ### Flagship features (demo-polished)
 
-1. **Callback Protection** — protected transfers, release/callback flows, receiver accept/reject/evidence, admin intervention, full timeline.
-2. **Wrong Transfer Recovery** — use `app/Domain/Recovery/*` patterns.
-3. **Wallet** — double-entry ledger, beneficiaries, statements, transaction timeline on every movement.
-4. **Fraud** — extend `app/Domain/Fraud/*` rule engine; surface alerts in admin.
-5. **Merchant verification** — trust score, blue badge, business profile.
+1. **Callback Protection** - protected transfers, release/callback flows, receiver accept/reject/evidence, admin intervention, full timeline.
+2. **Wrong Transfer Recovery** - use `app/Domain/Recovery/*` patterns.
+3. **Wallet** - double-entry ledger, beneficiaries, statements, transaction timeline on every movement.
+4. **Fraud** - extend `app/Domain/Fraud/*` rule engine; surface alerts in admin.
+5. **Merchant verification** - trust score, blue badge, business profile.
 
 ### Stack
 
@@ -78,7 +78,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 ## Skills Activation
 
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
+This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain-don't wait until you're stuck.
 
 ## Conventions
 

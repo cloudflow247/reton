@@ -62,7 +62,7 @@ function SecretField({
         type={show ? 'text' : 'password'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={isSet && !show ? '•••••••• (saved — type to replace)' : 'Enter value'}
+        placeholder={isSet && !show ? '•••••••• (saved - type to replace)' : 'Enter value'}
         className="field w-full px-4 py-3 font-mono text-sm"
         autoComplete="off"
       />
@@ -449,7 +449,7 @@ export default function Site() {
                 />
                 <Toggle
                   label="CSP report-only mode"
-                  hint="When on, violations are logged but not blocked — safe for rollout."
+                  hint="When on, violations are logged but not blocked - safe for rollout."
                   checked={Boolean(form.data.csp_report_only)}
                   onChange={(v) => form.setData('csp_report_only', v)}
                 />

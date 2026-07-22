@@ -41,8 +41,8 @@ export default function Receive() {
   async function share() {
     const text =
       minor > 0
-        ? `Pay me ${ngn(minor)} on Reton — RETON ID ${account} (${profileName ?? ''}).`
-        : `Pay me on Reton — RETON ID ${account} (${profileName ?? ''}).`
+        ? `Pay me ${ngn(minor)} on Reton - RETON ID ${account} (${profileName ?? ''}).`
+        : `Pay me on Reton - RETON ID ${account} (${profileName ?? ''}).`
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Pay me on Reton', text, url: payload })
@@ -96,7 +96,7 @@ export default function Receive() {
             <span className="min-w-0 flex-1">
               <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted">Account</span>
               <span className="mt-0.5 block font-num text-lg font-bold tracking-wider text-text">
-                {account || '—'}
+                {account || '-'}
               </span>
               <span className="mt-0.5 block truncate text-xs text-muted">{profileName}</span>
             </span>

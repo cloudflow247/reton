@@ -159,7 +159,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </main>
 
           <footer className="px-4 pb-6 text-center text-[11px] text-zinc-500 sm:px-6">
-            Signed in as {user?.email}. Secrets stay encrypted in the database — never in git.
+            Signed in as {user?.email}. Secrets stay encrypted in the database - never in git.
           </footer>
         </div>
       </div>
@@ -211,7 +211,7 @@ export function AdminFormErrors({ errors }: { errors: Record<string, string | st
 
   return (
     <div role="alert" className="space-y-1 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
-      <p className="font-semibold">Could not save — fix the following:</p>
+      <p className="font-semibold">Could not save - fix the following:</p>
       <ul className="list-inside list-disc space-y-0.5 text-xs">
         {messages.map((m) => (
           <li key={m}>{m}</li>

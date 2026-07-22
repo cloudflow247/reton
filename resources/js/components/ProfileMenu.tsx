@@ -87,7 +87,7 @@ export function ProfileMenu({ user, needsPin, profileActive, onNavigate }: Profi
               href="/pin"
               Icon={LockIcon}
               label="Transaction PIN"
-              hint={needsPin ? 'Required — set your PIN' : 'Manage your 4-digit PIN'}
+              hint={needsPin ? 'Required - set your PIN' : 'Manage your 4-digit PIN'}
               warn={needsPin}
               onClick={() => {
                 close()

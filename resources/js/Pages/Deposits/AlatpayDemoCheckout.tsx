@@ -57,7 +57,7 @@ export default function AlatpayDemoCheckout() {
             </div>
 
             <p className="rounded-xl border border-amber/30 bg-amber/5 px-3 py-2 text-xs text-muted">
-              Local demo checkout — simulates ALATPay&apos;s hosted page. In production you&apos;ll be redirected to
+              Local demo checkout - simulates ALATPay&apos;s hosted page. In production you&apos;ll be redirected to
               pay.alatpay.ng instead.
             </p>
 

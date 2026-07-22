@@ -47,8 +47,8 @@ class ReleaseBvnCommand extends Command
                 $user->name,
                 $user->email,
                 $kyc->tier->value,
-                $kyc->bvn_last4 ?? '—',
-                $kyc->bvn_verified_at?->toDateTimeString() ?? '—',
+                $kyc->bvn_last4 ?? '-',
+                $kyc->bvn_verified_at?->toDateTimeString() ?? '-',
             ]],
         );
 

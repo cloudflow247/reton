@@ -278,7 +278,7 @@ class AlatpayDepositService
             ], static fn (mixed $v): bool => $v !== null && $v !== '');
 
             $description = $remote?->fundingDescription()
-                ?? (isset($bankMeta['narration']) ? 'Bank transfer — '.$bankMeta['narration'] : 'Wallet funding via bank transfer');
+                ?? (isset($bankMeta['narration']) ? 'Bank transfer - '.$bankMeta['narration'] : 'Wallet funding via bank transfer');
 
             $credited = Money::of($deposit->amount, $deposit->currency);
 

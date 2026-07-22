@@ -84,7 +84,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             ]),
             'redirectUrl' => $request->redirectUrl,
             'expiresAt' => $request->expiresAt,
-            // Omit "*" / null — ALATPay treats missing channel as all methods.
+            // Omit "*" / null - ALATPay treats missing channel as all methods.
             'channel' => ($request->channel !== null && $request->channel !== '*')
                 ? $request->channel
                 : null,
@@ -149,7 +149,7 @@ class HttpAlatpayGateway implements AlatpayGateway
     /**
      * ALATPay on apibox (docs.alatpay.ng) is collection-only. Outbound NIP payouts
      * require Wema's separate Debit Wallet API (playground.alat.ng) with its own
-     * access key, securityInfo, and bank-profiled auth callback — not the same
+     * access key, securityInfo, and bank-profiled auth callback - not the same
      * merchant subscription used for Static Wallet / bank-transfer collections.
      *
      * @see https://docs.alatpay.ng/
@@ -172,7 +172,7 @@ class HttpAlatpayGateway implements AlatpayGateway
         }
 
         // Debit Wallet: POST /debit-wallet/api/Shared/ProcessClientTransfer
-        // Requires bank-onboarded access key + securityInfo callback — wire when live.
+        // Requires bank-onboarded access key + securityInfo callback - wire when live.
         throw AlatpayException::requestFailed(
             'initiateTransfer',
             501,
@@ -192,7 +192,7 @@ class HttpAlatpayGateway implements AlatpayGateway
     /**
      * Health-check against Get Static Wallets.
      *
-     * @see https://docs.alatpay.ng/static-wallet — GET /alatpay-wallet/api/v1/staticaccount
+     * @see https://docs.alatpay.ng/static-wallet - GET /alatpay-wallet/api/v1/staticaccount
      */
     public function pingStaticWallet(): void
     {
@@ -235,9 +235,9 @@ class HttpAlatpayGateway implements AlatpayGateway
     }
 
     /**
-     * Create Individual (1) or Collection (2) static wallet — Step 1.
+     * Create Individual (1) or Collection (2) static wallet - Step 1.
      *
-     * @see https://docs.alatpay.ng/static-wallet — POST /alatpay-wallet/api/v1/staticaccount
+     * @see https://docs.alatpay.ng/static-wallet - POST /alatpay-wallet/api/v1/staticaccount
      */
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
     {
@@ -347,9 +347,9 @@ class HttpAlatpayGateway implements AlatpayGateway
     }
 
     /**
-     * Validate OTP and finalise wallet — Step 2.
+     * Validate OTP and finalise wallet - Step 2.
      *
-     * @see https://docs.alatpay.ng/static-wallet — POST .../validateAndCreate
+     * @see https://docs.alatpay.ng/static-wallet - POST .../validateAndCreate
      */
     public function verifyStaticAccount(StaticAccountVerifyRequest $request): StaticAccountResponse
     {
@@ -457,7 +457,7 @@ class HttpAlatpayGateway implements AlatpayGateway
 
     /**
      * Attempt to move Wema bank alerts onto the merchant/CEO contact email.
-     * ALATPay does not publicly document this endpoint — we try known update
+     * ALATPay does not publicly document this endpoint - we try known update
      * shapes and surface a clear support message when the provider rejects them.
      */
     public function updateStaticAccountEmail(string $staticWalletId, string $email): void
@@ -616,7 +616,7 @@ class HttpAlatpayGateway implements AlatpayGateway
      * rows match (portal "Settled" sometimes differs). Account numbers are
      * matched loosely (leading-zero / JSON number quirks).
      *
-     * @see https://docs.alatpay.ng/static-wallet — GET .../staticaccount/collectionhistory
+     * @see https://docs.alatpay.ng/static-wallet - GET .../staticaccount/collectionhistory
      *
      * @return array<int, StaticAccountTransaction>
      */
@@ -691,7 +691,7 @@ class HttpAlatpayGateway implements AlatpayGateway
                     'body' => $response->json() ?? $response->body(),
                 ]);
 
-                // Status filter may be rejected by some tenants — let caller retry without it.
+                // Status filter may be rejected by some tenants - let caller retry without it.
                 if ($includeStatusFilter) {
                     return [];
                 }

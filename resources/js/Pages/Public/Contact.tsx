@@ -12,7 +12,7 @@ const channels = [
   { Icon: MailIcon, label: 'Email us', value: 'support@retonpay.com', href: 'mailto:support@retonpay.com' },
   { Icon: PhoneIcon, label: 'Call us', value: '+234 902 826 0661', href: 'tel:+2349028260661' },
   { Icon: MapPinIcon, label: 'Visit us', value: OFFICE_ADDRESS, href: null },
-  { Icon: ChatIcon, label: 'In-app chat', value: 'Mon–Sat, 8am–8pm WAT', href: null },
+  { Icon: ChatIcon, label: 'In-app chat', value: 'Mon-Sat, 8am-8pm WAT', href: null },
 ]
 
 export default function Contact() {
@@ -23,8 +23,8 @@ export default function Contact() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    // No inbox backend yet — hand off to the user's mail client.
-    const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`)
+    // No inbox backend yet - hand off to the user's mail client.
+    const body = encodeURIComponent(`${message}\n\n- ${name} (${email})`)
     window.location.href = `mailto:support@retonpay.com?subject=${encodeURIComponent('Reton enquiry from ' + name)}&body=${body}`
     setSent(true)
   }
@@ -44,7 +44,7 @@ export default function Contact() {
             Talk to <span className="gradient-text">Reton</span>.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-            Questions about Callback Protection, recovery, your wallet, or the Business waitlist? Reach a real person —
+            Questions about Callback Protection, recovery, your wallet, or the Business waitlist? Reach a real person -
             we reply within one business day.
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function Contact() {
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint/10 text-mint">
                   <CheckIcon size={26} />
                 </span>
-                <h2 className="font-display text-lg font-bold">Thanks — your mail client is open.</h2>
+                <h2 className="font-display text-lg font-bold">Thanks - your mail client is open.</h2>
                 <p className="max-w-xs text-sm text-muted">Send the message and we’ll reply within one business day.</p>
               </div>
             ) : (

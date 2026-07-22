@@ -19,7 +19,7 @@ return [
 
     'max_age' => 0,
 
-    // Token (bearer) auth — no cookies, so credentials are not required.
+    // Token (bearer) auth - no cookies, so credentials are not required.
     'supports_credentials' => false,
 
 ];

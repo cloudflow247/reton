@@ -25,7 +25,7 @@ export type AppService = {
   group: 'money' | 'trust' | 'account'
 }
 
-/** Full service catalog — user-facing names only (no payment-rail brands). */
+/** Full service catalog - user-facing names only (no payment-rail brands). */
 export const APP_SERVICES: AppService[] = [
   {
     to: '/send',
@@ -116,7 +116,7 @@ export const DASHBOARD_SHORTCUTS: AppService[] = [
   APP_SERVICES.find((s) => s.to === '/bills')!,
 ]
 
-/** Second dashboard row — services that were desktop-nav only. */
+/** Second dashboard row - services that were desktop-nav only. */
 export const DASHBOARD_MORE_SHORTCUTS: AppService[] = [
   APP_SERVICES.find((s) => s.to === '/cards')!,
   APP_SERVICES.find((s) => s.to === '/protection')!,

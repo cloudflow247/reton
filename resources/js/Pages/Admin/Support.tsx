@@ -129,7 +129,7 @@ export default function Support() {
                           <div className="text-xs text-muted">{ticket.user.email}</div>
                         </>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5">
@@ -142,7 +142,7 @@ export default function Support() {
                           Resolve
                         </Button>
                       ) : (
-                        <span className="text-xs text-muted">—</span>
+                        <span className="text-xs text-muted">-</span>
                       )}
                     </td>
                   </tr>

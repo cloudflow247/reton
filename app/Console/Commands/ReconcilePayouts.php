@@ -10,7 +10,7 @@ use App\Domain\Payments\Services\PayoutService;
 use Illuminate\Console\Command;
 
 /**
- * Reconciles pending payouts against AlatPay — settles confirmed transfers and
+ * Reconciles pending payouts against AlatPay - settles confirmed transfers and
  * reverses failed ones whose webhook was missed.
  */
 class ReconcilePayouts extends Command

@@ -15,7 +15,7 @@ export function ListingSharePanel({ listing, compact = false }: Props) {
   const [showQr, setShowQr] = useState(!compact)
   const shareUrl = listing.share_url ?? ''
   const itemCode = listing.item_code ?? ''
-  const shareText = `${listing.title} — ${ngn(listing.price)} on Reton (protected purchase).`
+  const shareText = `${listing.title} - ${ngn(listing.price)} on Reton (protected purchase).`
 
   const qrPayload = useMemo(
     () =>
@@ -73,7 +73,7 @@ export function ListingSharePanel({ listing, compact = false }: Props) {
     <div className={`rounded-xl border border-mint/25 bg-mint/[0.04] ${compact ? 'p-3' : 'p-4'}`}>
       <p className="text-sm font-semibold text-text">Share with your buyer</p>
       <p className="mt-1 text-xs text-muted">
-        Send the link or item code in WhatsApp, Instagram, or email. Buyers cannot browse a public shop — they need one
+        Send the link or item code in WhatsApp, Instagram, or email. Buyers cannot browse a public shop - they need one
         of these to open your listing.
       </p>
 

@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 trait RejectsBotHoneypot
 {
     /**
-     * Silent bot trap — filled honeypot fields fail with a generic auth error
+     * Silent bot trap - filled honeypot fields fail with a generic auth error
      * so scrapers learn nothing about the trap field name.
      */
     protected function rejectIfHoneypotFilled(): void

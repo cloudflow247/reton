@@ -12,7 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Public Giglogistics webhook receiver — trust via HMAC, not Sanctum.
+ * Public Giglogistics webhook receiver - trust via HMAC, not Sanctum.
  */
 class GiglogisticsWebhookController extends Controller
 {

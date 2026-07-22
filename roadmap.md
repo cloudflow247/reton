@@ -16,19 +16,19 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 | Horizon | Goal | Primary audience |
 |---------|------|------------------|
 | **Now (Phase 0)** | Win the buildathon with a polished live demo | Judges, investors |
-| **0–3 months (Phase 1)** | Real users on Tier 1, licensed settlement | Early adopters, bank partner |
-| **3–9 months (Phase 2)** | Compliance-ready operations | Regulators, bank partner, merchants |
-| **9–18 months (Phase 3)** | Category leader in trust-layer payments | Consumers, SMEs, API partners |
+| **0-3 months (Phase 1)** | Real users on Tier 1, licensed settlement | Early adopters, bank partner |
+| **3-9 months (Phase 2)** | Compliance-ready operations | Regulators, bank partner, merchants |
+| **9-18 months (Phase 3)** | Category leader in trust-layer payments | Consumers, SMEs, API partners |
 
 ---
 
 ## Strategic principles
 
-1. **Licensed rails first** — Reton orchestrates trust; settlement and primary AML obligations sit with the licensed partner until Reton holds its own licence.
-2. **CBN-style KYC by default** — Tier 1 at ₦50k single / ₦200k daily inflow / ₦300k balance; higher limits only after verified identity.
-3. **Never claim full AML compliance** without STR workflow, sanctions screening, and an MLRO — position as an **AML-ready foundation**.
-4. **Demo ≠ production** — fake drivers and sandbox accounts are fine for demos; production needs live KYB on every integration.
-5. **Ship trust features people can see** — Callback Protection timeline, recovery cases, fraud alerts, and KYC badges beat feature breadth.
+1. **Licensed rails first** - Reton orchestrates trust; settlement and primary AML obligations sit with the licensed partner until Reton holds its own licence.
+2. **CBN-style KYC by default** - Tier 1 at ₦50k single / ₦200k daily inflow / ₦300k balance; higher limits only after verified identity.
+3. **Never claim full AML compliance** without STR workflow, sanctions screening, and an MLRO - position as an **AML-ready foundation**.
+4. **Demo ≠ production** - fake drivers and sandbox accounts are fine for demos; production needs live KYB on every integration.
+5. **Ship trust features people can see** - Callback Protection timeline, recovery cases, fraud alerts, and KYC badges beat feature breadth.
 
 ---
 
@@ -45,7 +45,7 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 | Wrong-transfer recovery | Done | Eligibility rules, hold, admin escalation |
 | Fraud engine | Done | Rule-based scoring, velocity, holds, alerts |
 | Transaction timeline | Done | Every money movement logged |
-| KYC tiers (1–3) | Done | Limits enforced; BVN / NIN providers via admin |
+| KYC tiers (1-3) | Done | Limits enforced; BVN / NIN providers via admin |
 | Bills | Done | Gateway abstraction, reconcile paths |
 | Virtual cards | Done | Issue, fund, freeze; fake + HTTP |
 | Digital marketplace | Done | Escrow, disputes, auto-refund scheduler |
@@ -63,20 +63,20 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 
 ---
 
-## Phase 0 — Buildathon demo (now)
+## Phase 0 - Buildathon demo (now)
 
 **Objective:** A credible live demo that shows trust differentiation in under 10 minutes.
 
 ### Suggested judge flow
 
 1. Sign in with a seeded sandbox account (local demo mode only)
-2. Dashboard — balance, KYC badge, pending protected funds
-3. Send a **protected transfer** — receiver sees “Payment Protected”
-4. Callback Protection — request callback; show the timeline
-5. Wrong-transfer recovery — open a recovery case
-6. Fraud alert — show admin visibility
-7. Support chat — look up a transaction; escalate a ticket
-8. Admin — integration health and platform KYC limits
+2. Dashboard - balance, KYC badge, pending protected funds
+3. Send a **protected transfer** - receiver sees “Payment Protected”
+4. Callback Protection - request callback; show the timeline
+5. Wrong-transfer recovery - open a recovery case
+6. Fraud alert - show admin visibility
+7. Support chat - look up a transaction; escalate a ticket
+8. Admin - integration health and platform KYC limits
 
 ### Phase 0 checklist
 
@@ -90,7 +90,7 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 
 ---
 
-## Phase 1 — Soft launch on licensed rails (0–3 months)
+## Phase 1 - Soft launch on licensed rails (0-3 months)
 
 **Objective:** Real NGN flows for early users via production payment rails, Tier 1 signup without friction, Tier 2+ via live identity verification.
 
@@ -126,9 +126,9 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 
 ---
 
-## Phase 2 — Compliance & AML foundation (3–9 months)
+## Phase 2 - Compliance & AML foundation (3-9 months)
 
-**Objective:** Operate credibly with bank partner and regulators — with software and processes that satisfy partner due diligence.
+**Objective:** Operate credibly with bank partner and regulators - with software and processes that satisfy partner due diligence.
 
 ### Responsibilities model
 
@@ -153,7 +153,7 @@ Reton platform
 | Unified AML + fraud case queue | Assign, resolve, audit |
 | Admin wallet freeze | With user notification |
 | STR export pack | User, KYC, and history for partner MLRO |
-| Record retention | 5–7 year policy + archival |
+| Record retention | 5-7 year policy + archival |
 
 ### Operations (non-software)
 
@@ -168,7 +168,7 @@ Reton platform
 
 ---
 
-## Phase 3 — Scale & differentiation (9–18 months)
+## Phase 3 - Scale & differentiation (9-18 months)
 
 | Initiative | Description |
 |------------|-------------|
@@ -202,7 +202,7 @@ Use language that is accurate and defensible:
 | **2** | BVN verified | Higher limits (admin-configurable) |
 | **3** | NIN + address | Highest consumer / merchant tiers |
 
-Sandbox identity shortcuts belong in local test config only — never in production docs or public credentials.
+Sandbox identity shortcuts belong in local test config only - never in production docs or public credentials.
 
 ---
 
@@ -233,8 +233,8 @@ Sandbox identity shortcuts belong in local test config only — never in product
 
 1. Finalise buildathon demo (script + video backup)
 2. Submit production KYB for payment and identity providers
-3. Production checklist — demo mode off, Redis, Horizon, monitoring
-4. Partner responsibilities call — STR, sanctions, KYC record ownership
+3. Production checklist - demo mode off, Redis, Horizon, monitoring
+4. Partner responsibilities call - STR, sanctions, KYC record ownership
 5. Scope Phase 2 sanctions / case-management work
 
 ---
@@ -250,4 +250,4 @@ Sandbox identity shortcuts belong in local test config only — never in product
 ---
 
 © 2026 RETON PTE LTD. All rights reserved.  
-*Reton — trust at the moment money moves.*
+*Reton - trust at the moment money moves.*

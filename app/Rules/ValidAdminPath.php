@@ -13,7 +13,7 @@ class ValidAdminPath implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_string($value) || ! AdminPath::isValid($value)) {
-            $fail('Use 3–48 lowercase letters, numbers, and hyphens — not a reserved app route.');
+            $fail('Use 3-48 lowercase letters, numbers, and hyphens - not a reserved app route.');
         }
     }
 }

@@ -21,6 +21,6 @@ class VerifyEmailController extends Controller
             event(new Verified($request->user()));
         }
 
-        return redirect()->route('onboarding')->with('success', 'Email verified — let\'s finish setting up your wallet.');
+        return redirect()->route('onboarding')->with('success', 'Email verified - let\'s finish setting up your wallet.');
     }
 }

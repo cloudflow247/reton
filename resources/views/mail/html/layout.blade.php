@@ -38,7 +38,7 @@
                 <tr>
                     <td style="padding:20px 32px 28px;border-top:1px solid #e3ece7;background:#fafcfb;">
                         <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#5c7368;">
-                            {{ $siteName }} — Africa's trust-first wallet with Callback Protection.
+                            {{ $siteName }} - Africa's trust-first wallet with Callback Protection.
                         </p>
                         <p style="margin:0;font-size:12px;line-height:1.5;color:#5c7368;">
                             Questions? Reply to this email or write to

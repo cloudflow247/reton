@@ -122,7 +122,7 @@ class BillsController extends Controller
 
         $category = BillCategory::from($request->string('category')->toString());
 
-        // For an RRR the biller and amount are authoritative from the lookup —
+        // For an RRR the biller and amount are authoritative from the lookup -
         // never trust a client-supplied amount for a fixed-amount bill.
         if ($category->hasFixedAmount()) {
             $reference = $request->string('customer_reference')->toString();

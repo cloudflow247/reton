@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 /**
- * Termii Go / Termii API v3 — SMS and optional WhatsApp OTP delivery.
+ * Termii Go / Termii API v3 - SMS and optional WhatsApp OTP delivery.
  *
  * @see https://developers.termii.com/
  */

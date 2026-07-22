@@ -212,7 +212,7 @@ export default function Bills({ categories: categoriesProp, bills: billsProp }: 
             </div>
           </div>
           <p className="text-sm text-muted">
-            {ok ? 'Bill settled instantly from your wallet.' : done.failure_reason ?? 'Payment failed — funds returned.'}
+            {ok ? 'Bill settled instantly from your wallet.' : done.failure_reason ?? 'Payment failed - funds returned.'}
           </p>
         </SuccessScreen>
       </>
@@ -309,7 +309,7 @@ export default function Bills({ categories: categoriesProp, bills: billsProp }: 
         >
           <Card className="shield-glow space-y-5 p-4 sm:p-5">
             <form onSubmit={submit} className="space-y-5">
-              {/* Networks — airtime / data */}
+              {/* Networks - airtime / data */}
               {networkMode && billers.length > 0 && (
                 <motion.div variants={list} initial="hidden" animate="show">
                   <span className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">

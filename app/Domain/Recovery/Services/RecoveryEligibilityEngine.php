@@ -19,8 +19,8 @@ use Illuminate\Support\Carbon;
  *
  * Validates the three inputs the spec calls for: the funds are still available,
  * the report is within the window, and fraud indicators. A high-risk receiver
- * extends the report window — victims get longer to claw back from flagged
- * accounts — but funds that are already gone can never be recovered.
+ * extends the report window - victims get longer to claw back from flagged
+ * accounts - but funds that are already gone can never be recovered.
  */
 class RecoveryEligibilityEngine
 {

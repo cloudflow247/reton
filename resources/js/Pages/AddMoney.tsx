@@ -78,7 +78,7 @@ const ctaLabel: Record<DepositMethod, string> = {
 
 const trustPoints = [
   { title: 'Bank-grade rails', detail: 'Settled through licensed Nigerian collection partners' },
-  { title: 'Encrypted identity', detail: 'BVN verified once — never stored in plain text' },
+  { title: 'Encrypted identity', detail: 'BVN verified once - never stored in plain text' },
   { title: 'Ledger-backed credit', detail: 'Every naira posts to an immutable double-entry ledger' },
   { title: 'PIN on spend', detail: 'Outbound payments always require your transaction PIN' },
 ] as const
@@ -206,7 +206,7 @@ export default function AddMoney() {
           title="Add money"
           subtitle={
             amountMethodsLive
-              ? 'Fund safely — bank transfer or checkout'
+              ? 'Fund safely - bank transfer or checkout'
               : 'Transfer to your protected deposit account'
           }
           balance={wallet?.available_balance}
@@ -420,7 +420,7 @@ function ComingSoonFundingPanel({ flashError }: { flashError?: string | null }) 
           <BoltIcon size={16} className="mt-0.5 shrink-0 text-mint" />
           <span>
             For now, use your <span className="font-semibold text-text">permanent deposit account</span> above.
-            Send from any Nigerian bank — Reton credits you automatically when the transfer settles.
+            Send from any Nigerian bank - Reton credits you automatically when the transfer settles.
           </span>
         </p>
         {flashError && <p className="text-sm text-danger">{flashError}</p>}
@@ -445,7 +445,7 @@ function FundingSafetyPanel() {
         <div>
           <p className="text-sm font-semibold text-text">Built for safe deposits</p>
           <p className="mt-0.5 text-xs leading-relaxed text-muted">
-            Trust-first funding — verify once, transfer with confidence, recover when something goes wrong.
+            Trust-first funding - verify once, transfer with confidence, recover when something goes wrong.
           </p>
         </div>
       </div>
@@ -507,8 +507,8 @@ function BankTransferPanel({
           Send exactly {ngn(deposit.amount)}. Credits automatically when it arrives.
         </p>
         <div className="divide-y divide-line rounded-2xl border border-line bg-surface-2/50 px-4">
-          <CopyRow label="Bank" value={va?.bank_name ?? '—'} />
-          <CopyRow label="Account number" value={va?.account_number ?? '—'} mono />
+          <CopyRow label="Bank" value={va?.bank_name ?? '-'} />
+          <CopyRow label="Account number" value={va?.account_number ?? '-'} mono />
           <CopyRow label="Account name" value={accountName} />
         </div>
         <Button variant="ghost" className="w-full" onClick={onDismiss}>
@@ -562,7 +562,7 @@ function SuccessPanel({ deposit, onDismiss }: { deposit: Deposit; onDismiss: () 
   const description =
     deposit.description ??
     (bank?.narration
-      ? `Bank transfer — ${bank.narration}`
+      ? `Bank transfer - ${bank.narration}`
       : bank?.payer_name
         ? `Bank transfer from ${bank.payer_name}`
         : null)

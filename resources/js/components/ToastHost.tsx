@@ -135,7 +135,7 @@ function ToastHostInner() {
 }
 
 /**
- * Global, instant feedback layer — must render inside Inertia's <App> tree
+ * Global, instant feedback layer - must render inside Inertia's <App> tree
  * so usePage() has context. Isolated so toast failures never blank the app.
  */
 export function ToastHost() {

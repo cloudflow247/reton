@@ -9,6 +9,6 @@ Reset your password:
 
 This link expires in {{ (int) config('auth.passwords.users.expire', 60) }} minutes.
 
-If you didn't request a password reset, you can safely ignore this email — your password won't change.
+If you didn't request a password reset, you can safely ignore this email - your password won't change.
 
-— Reton
+- Reton

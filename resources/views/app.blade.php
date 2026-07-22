@@ -53,7 +53,7 @@
         <meta property="og:image:type" content="{{ $ogMime }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
-        <meta property="og:image:alt" content="{{ $siteName }} — {{ $description }}">
+        <meta property="og:image:alt" content="{{ $siteName }} - {{ $description }}">
 
         {{-- Twitter Card --}}
         <meta name="twitter:card" content="summary_large_image">

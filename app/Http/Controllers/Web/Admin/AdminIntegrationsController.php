@@ -189,11 +189,11 @@ class AdminIntegrationsController extends Controller
             }
 
             if (config('services.alatpay.driver') === 'fake') {
-                return back()->with('success', 'ALATPay is in demo (fake) mode — switch driver to Live HTTP to test the real API.');
+                return back()->with('success', 'ALATPay is in demo (fake) mode - switch driver to Live HTTP to test the real API.');
             }
 
             try {
-                // Must hit Static Wallet — bank-transfer 404 was a false "credentials OK".
+                // Must hit Static Wallet - bank-transfer 404 was a false "credentials OK".
                 $this->alatpay->pingStaticWallet();
 
                 return back()->with('success', 'ALATPay merchant login + Static Wallet API reachable.');
@@ -208,13 +208,13 @@ class AdminIntegrationsController extends Controller
             }
 
             if (config('services.paystack.driver') === 'fake') {
-                return back()->with('success', 'Paystack is in demo (fake) mode — switch driver to Live HTTP to test Transfers.');
+                return back()->with('success', 'Paystack is in demo (fake) mode - switch driver to Live HTTP to test Transfers.');
             }
 
             try {
                 $this->payouts->ping();
 
-                return back()->with('success', 'Paystack Transfers API reachable — withdrawals ready.');
+                return back()->with('success', 'Paystack Transfers API reachable - withdrawals ready.');
             } catch (\Throwable $e) {
                 return back()->with('error', 'Paystack test failed: '.$e->getMessage());
             }
@@ -226,7 +226,7 @@ class AdminIntegrationsController extends Controller
             }
 
             if (config('services.interswitch.driver') === 'fake') {
-                return back()->with('success', 'Interswitch is in demo (fake) mode — switch driver to Live HTTP for production bill APIs.');
+                return back()->with('success', 'Interswitch is in demo (fake) mode - switch driver to Live HTTP for production bill APIs.');
             }
 
             try {
@@ -246,7 +246,7 @@ class AdminIntegrationsController extends Controller
             }
 
             if (config('services.bridgecard.driver') === 'fake') {
-                return back()->with('success', 'Bridgecard is in demo (fake) mode — switch driver to Live HTTP for production card issuing.');
+                return back()->with('success', 'Bridgecard is in demo (fake) mode - switch driver to Live HTTP for production card issuing.');
             }
 
             try {
@@ -266,14 +266,14 @@ class AdminIntegrationsController extends Controller
             }
 
             if (config('services.termii.driver') === 'fake') {
-                return back()->with('success', 'Termii is in demo (fake) mode — switch driver to Live HTTP for production SMS.');
+                return back()->with('success', 'Termii is in demo (fake) mode - switch driver to Live HTTP for production SMS.');
             }
 
             if ($this->sms->ping()) {
-                return back()->with('success', 'Termii API reachable — SMS & WhatsApp OTP ready.');
+                return back()->with('success', 'Termii API reachable - SMS & WhatsApp OTP ready.');
             }
 
-            return back()->with('error', 'Termii test failed — check API key and sender ID.');
+            return back()->with('error', 'Termii test failed - check API key and sender ID.');
         }
 
         if ($integration === 'dojah') {
@@ -282,7 +282,7 @@ class AdminIntegrationsController extends Controller
             }
 
             if (config('services.dojah.driver') === 'fake') {
-                return back()->with('success', 'Dojah is in demo (fake) mode — switch driver to Live HTTP for production BVN/NIN checks.');
+                return back()->with('success', 'Dojah is in demo (fake) mode - switch driver to Live HTTP for production BVN/NIN checks.');
             }
 
             return back()->with('success', 'Dojah credentials configured for live BVN/NIN verification.');

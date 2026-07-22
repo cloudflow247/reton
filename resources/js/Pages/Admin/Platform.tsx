@@ -472,10 +472,10 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
               ['withdraw', 'Bank withdrawals (Cash)', 'Cash-out to Nigerian banks. Off = Coming Soon for customers until Debit Wallet / payout access is live.'],
               ['bills', 'Bill payments', 'Airtime, data, power, TV, and betting.'],
               ['cards', 'Virtual cards', 'Bridgecard NGN / USD virtual cards.'],
-              ['checkout', 'Add Money — Checkout', 'Hosted checkout (card · transfer · USSD). Requires Payment Link on the merchant.'],
-              ['card_pay', 'Add Money — Card', 'Card-only payment link. Requires Payment Link on the merchant.'],
-              ['one_time', 'Add Money — One-time', 'Temporary virtual account for a single amount. Permanent deposit account stays available.'],
-              ['physical_listings', 'Shop — Physical listings', 'Hub-verified physical goods. Digital listings stay available when this is off.'],
+              ['checkout', 'Add Money - Checkout', 'Hosted checkout (card · transfer · USSD). Requires Payment Link on the merchant.'],
+              ['card_pay', 'Add Money - Card', 'Card-only payment link. Requires Payment Link on the merchant.'],
+              ['one_time', 'Add Money - One-time', 'Temporary virtual account for a single amount. Permanent deposit account stays available.'],
+              ['physical_listings', 'Shop - Physical listings', 'Hub-verified physical goods. Digital listings stay available when this is off.'],
             ] as const
           ).map(([key, label, hint]) => (
             <label key={key} className="flex items-start gap-3 rounded-xl border border-line bg-surface-2/40 px-4 py-3">
@@ -565,7 +565,7 @@ export default function Platform() {
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Platform</h1>
           <p className="mt-1 text-sm text-muted">
-            Business rules, KYC limits, fraud scoring, and marketplace timing. Encrypted at rest — env vars are fallbacks until saved here.
+            Business rules, KYC limits, fraud scoring, and marketplace timing. Encrypted at rest - env vars are fallbacks until saved here.
           </p>
         </div>
 

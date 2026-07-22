@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { AppleLogoIcon, GooglePlayLogoIcon } from './icons'
 
-/** Centered mobile-app promo — App Store & Google Play badges (Coming soon). */
+/** Centered mobile-app promo - App Store & Google Play badges (Coming soon). */
 export function GetTheAppSection() {
   return (
     <section className="relative overflow-hidden px-5 py-14 sm:py-16" aria-labelledby="get-the-app-heading">
@@ -24,19 +24,19 @@ export function GetTheAppSection() {
           Get the app
         </h2>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-muted sm:text-base">
-          Reton on iOS and Android — protect payments, recover mistakes, and bank with trust from your phone.
+          Reton on iOS and Android - protect payments, recover mistakes, and bank with trust from your phone.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <StoreBadge
             href="#"
-            label="Download on the App Store — Coming soon"
+            label="Download on the App Store - Coming soon"
             eyebrow="Download on the"
             title="App Store"
             icon={<AppleLogoIcon size={24} />}
           />
           <StoreBadge
             href="#"
-            label="Get it on Google Play — Coming soon"
+            label="Get it on Google Play - Coming soon"
             eyebrow="Get it on"
             title="Google Play"
             icon={<GooglePlayLogoIcon size={24} />}

@@ -204,7 +204,7 @@ export default function Protection() {
       </div>
 
       {activeDigitalOrders.length > 0 && (
-        <Section title="Digital purchases & sales" hint="Guided escrow — confirm, deliver, or dispute with fair rules.">
+        <Section title="Digital purchases & sales" hint="Guided escrow - confirm, deliver, or dispute with fair rules.">
           <div className="space-y-2 px-4 pb-4">
             {activeDigitalOrders.map((order) => (
               <DigitalOrderEscrowCard key={order.id} order={order} />
@@ -447,7 +447,7 @@ export default function Protection() {
                     <CaseHeader
                       title={role === 'receiver' ? 'Recovery claim on funds you received' : 'Your recovery claim'}
                       amount={r.amount}
-                      meta={`${r.reason ?? '—'}${r.fee ? ` · fee ${ngn(r.fee)}` : ''}`}
+                      meta={`${r.reason ?? '-'}${r.fee ? ` · fee ${ngn(r.fee)}` : ''}`}
                       badge={<StatusPill status={r.status} />}
                     />
                     {canAnswer && (
@@ -501,13 +501,13 @@ export default function Protection() {
         <p className="text-xs font-semibold uppercase tracking-wide text-mint">How it works</p>
         <ol className="mt-2 space-y-1.5 text-xs leading-relaxed text-muted">
           <li>
-            <strong className="text-text">Protected send</strong> — funds stay in escrow until the sender releases them.
+            <strong className="text-text">Protected send</strong> - funds stay in escrow until the sender releases them.
           </li>
           <li>
-            <strong className="text-text">Callback</strong> — sender recalls; receiver accepts (refund) or rejects (review).
+            <strong className="text-text">Callback</strong> - sender recalls; receiver accepts (refund) or rejects (review).
           </li>
           <li>
-            <strong className="text-text">Recovery</strong> — report a wrong normal transfer; eligible funds are held pending return.
+            <strong className="text-text">Recovery</strong> - report a wrong normal transfer; eligible funds are held pending return.
           </li>
         </ol>
       </Card>
@@ -658,7 +658,7 @@ function Timeline({ events, defaultOpen = false }: { events: ProtectionEvent[]; 
             <li key={e.id} className="relative text-xs">
               <span className="absolute -left-[1.3rem] top-1.5 h-2 w-2 rounded-full bg-mint" />
               <span className="font-medium capitalize text-text">{(e.action ?? '').replace(/_/g, ' ')}</span>
-              {e.notes ? <span className="text-muted"> — {e.notes}</span> : null}
+              {e.notes ? <span className="text-muted"> - {e.notes}</span> : null}
               <span className="block text-muted">{shortDate(e.created_at)}</span>
             </li>
           ))}

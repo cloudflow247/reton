@@ -48,10 +48,10 @@ return [
         'business_bvn' => env('ALATPAY_BUSINESS_BVN'),
         'webhook_secret' => env('ALATPAY_WEBHOOK_SECRET', ''),
         'timeout' => (int) env('ALATPAY_TIMEOUT', 12),
-        // Reton-owned / merchant plus-alias for ALATPay/Wema bank alerts (CEO inbox — never the customer).
+        // Reton-owned / merchant plus-alias for ALATPay/Wema bank alerts (CEO inbox - never the customer).
         'provider_contact_domain' => env('ALATPAY_PROVIDER_CONTACT_DOMAIN', 'va.retonpay.com'),
         // Outbound NIP payouts are NOT part of ALATPay collections (apibox).
-        // They require Wema Debit Wallet (playground.alat.ng) — separate onboarding.
+        // They require Wema Debit Wallet (playground.alat.ng) - separate onboarding.
         'debit_wallet' => [
             'enabled' => (bool) env('ALATPAY_DEBIT_WALLET_ENABLED', false),
             'base_url' => env('ALATPAY_DEBIT_WALLET_BASE_URL', 'https://playground.alat.ng'),

@@ -39,10 +39,10 @@ class PinController extends Controller
             if ($request->boolean('from_onboarding')) {
                 return redirect()
                     ->route('onboarding', ['step' => 2])
-                    ->with('success', 'PIN saved — wallet secured.');
+                    ->with('success', 'PIN saved - wallet secured.');
             }
 
-            return redirect()->route('dashboard')->with('success', 'PIN set — your wallet is ready.');
+            return redirect()->route('dashboard')->with('success', 'PIN set - your wallet is ready.');
         }
 
         return back()->with('success', 'Transaction PIN updated.');

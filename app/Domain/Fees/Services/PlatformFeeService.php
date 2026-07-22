@@ -63,7 +63,7 @@ class PlatformFeeService
         }
 
         // Cap percentage+flat fees at the principal for money movements.
-        // Flat-only rails (e.g. SMS) may pass a zero principal — do not wipe the fee.
+        // Flat-only rails (e.g. SMS) may pass a zero principal - do not wipe the fee.
         if ($amount->amount > 0) {
             $feeMinor = min($feeMinor, $amount->amount);
         }

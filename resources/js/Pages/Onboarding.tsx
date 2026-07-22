@@ -83,7 +83,7 @@ export default function Onboarding() {
                 <ul className="mt-6 space-y-3 text-left">
                   {[
                     { Icon: ShieldIcon, t: 'Callback Protection', d: 'Hold funds until you confirm delivery.' },
-                    { Icon: LockIcon, t: 'Transaction PIN', d: 'Separate from your password — required for every payment.' },
+                    { Icon: LockIcon, t: 'Transaction PIN', d: 'Separate from your password - required for every payment.' },
                     { Icon: PlusIcon, t: 'Fund your wallet', d: 'Add money via bank transfer or checkout.' },
                   ].map(({ Icon, t, d }) => (
                     <li key={t} className="flex gap-3 rounded-xl border border-line p-3">
@@ -158,7 +158,7 @@ export default function Onboarding() {
                 </span>
                 <h1 className="mt-4 font-display text-xl font-bold tracking-tight sm:text-2xl">You&apos;re all set</h1>
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
-                  Your wallet is secured with a 4-digit PIN. Add money now or explore the dashboard — you can fund anytime.
+                  Your wallet is secured with a 4-digit PIN. Add money now or explore the dashboard - you can fund anytime.
                 </p>
                 <div className="mt-6 flex flex-col gap-3">
                   <Link href="/add-money" className="btn w-full bg-mint py-3 text-sm font-semibold text-white">

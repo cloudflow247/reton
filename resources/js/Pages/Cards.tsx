@@ -258,12 +258,12 @@ export default function Cards({ cards, cardsReady, cardsDriver, fx, minFunding }
 
           {activeCurrency === 'USD' && ngnWallet && !usdWallet && (
             <p className="rounded-xl border border-line bg-surface-2/80 px-3 py-2.5 text-xs text-muted">
-              No USD wallet yet — we&apos;ll convert from your NGN balance at ₦{fx.usd_ngn_rate.toLocaleString()}/$.
+              No USD wallet yet - we&apos;ll convert from your NGN balance at ₦{fx.usd_ngn_rate.toLocaleString()}/$.
             </p>
           )}
 
           {cardsDriver === 'fake' && (
-            <p className="rounded-xl border border-dashed border-line px-3 py-2 text-xs text-muted">Demo environment — test cards only.</p>
+            <p className="rounded-xl border border-dashed border-line px-3 py-2 text-xs text-muted">Demo environment - test cards only.</p>
           )}
 
           <form onSubmit={issueCard} className="space-y-4">
@@ -401,7 +401,7 @@ export default function Cards({ cards, cardsReady, cardsDriver, fx, minFunding }
               <div>
                 <div className="text-xs text-muted">Available on card</div>
                 <div className="font-num text-2xl font-bold">
-                  {cardBalance !== null ? money(cardBalance, card.currency) : '—'}
+                  {cardBalance !== null ? money(cardBalance, card.currency) : '-'}
                 </div>
               </div>
               <Button type="button" onClick={() => setFundOpen(true)} className="shrink-0 gap-1.5 px-4 py-2.5 text-sm">
@@ -410,8 +410,8 @@ export default function Cards({ cards, cardsReady, cardsDriver, fx, minFunding }
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-4">
-              <Stat label="Wallet NGN" value={ngnWallet ? ngn(ngnWallet.available_balance) : '—'} />
-              <Stat label="Wallet USD" value={usdWallet ? usd(usdWallet.available_balance) : '—'} />
+              <Stat label="Wallet NGN" value={ngnWallet ? ngn(ngnWallet.available_balance) : '-'} />
+              <Stat label="Wallet USD" value={usdWallet ? usd(usdWallet.available_balance) : '-'} />
               <Stat label="Type" value={card.card_type} />
               <Stat label="Status" value={blocked ? 'Frozen' : 'Active'} />
             </div>
@@ -572,7 +572,7 @@ export default function Cards({ cards, cardsReady, cardsDriver, fx, minFunding }
                     : 'Not created yet'}
                 </div>
               </div>
-              <Pill tone={c ? (c.is_blocked ? 'amber' : 'mint') : 'muted'}>{c ? c.currency : '—'}</Pill>
+              <Pill tone={c ? (c.is_blocked ? 'amber' : 'mint') : 'muted'}>{c ? c.currency : '-'}</Pill>
             </button>
           )
         })}

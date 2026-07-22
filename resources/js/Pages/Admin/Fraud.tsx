@@ -66,7 +66,7 @@ function levelTone(level: string): 'mint' | 'amber' | 'danger' | 'muted' {
 }
 
 function signalSummary(signals: unknown): string {
-  if (!signals) return '—'
+  if (!signals) return '-'
   if (Array.isArray(signals)) {
     return signals
       .map((s) => (typeof s === 'string' ? s : typeof s === 'object' && s && 'code' in s ? String((s as { code: unknown }).code) : JSON.stringify(s)))
@@ -74,7 +74,7 @@ function signalSummary(signals: unknown): string {
       .join(', ')
   }
   if (typeof signals === 'object') {
-    return Object.keys(signals as object).slice(0, 4).join(', ') || '—'
+    return Object.keys(signals as object).slice(0, 4).join(', ') || '-'
   }
   return String(signals)
 }
@@ -158,14 +158,14 @@ export default function Fraud() {
                           <div className="text-xs text-muted">{alert.user.email}</div>
                         </>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5 font-num">
-                      {alert.amount != null ? ngn(Number(alert.amount)) : '—'}
+                      {alert.amount != null ? ngn(Number(alert.amount)) : '-'}
                     </td>
                     <td className="px-4 py-2.5">
-                      <div className="text-xs">{alert.action ?? '—'}</div>
+                      <div className="text-xs">{alert.action ?? '-'}</div>
                       {alert.recommended_action && (
                         <div className="mt-0.5 text-xs text-amber">{alert.recommended_action}</div>
                       )}
@@ -183,7 +183,7 @@ export default function Fraud() {
                           Resolve
                         </Button>
                       ) : (
-                        <span className="text-xs text-muted">—</span>
+                        <span className="text-xs text-muted">-</span>
                       )}
                     </td>
                   </tr>

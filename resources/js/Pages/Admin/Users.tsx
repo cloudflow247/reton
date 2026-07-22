@@ -137,7 +137,7 @@ export default function Users() {
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">Users</h1>
             <p className="mt-1 text-sm text-muted">
-              Manage accounts, roles, and access — {users.total.toLocaleString()} total.
+              Manage accounts, roles, and access - {users.total.toLocaleString()} total.
             </p>
           </div>
           <Button type="button" onClick={() => setCreating((v) => !v)}>
@@ -248,8 +248,8 @@ export default function Users() {
                       {user.is_admin ? <Pill tone="mint">Admin</Pill> : <span className="text-muted">Customer</span>}
                       {!user.email_verified && <div className="mt-1 text-xs text-amber">Unverified email</div>}
                     </td>
-                    <td className="px-4 py-3 text-muted">{user.last_login_at ? shortDate(user.last_login_at) : '—'}</td>
-                    <td className="px-4 py-3 text-muted">{user.created_at ? shortDate(user.created_at) : '—'}</td>
+                    <td className="px-4 py-3 text-muted">{user.last_login_at ? shortDate(user.last_login_at) : '-'}</td>
+                    <td className="px-4 py-3 text-muted">{user.created_at ? shortDate(user.created_at) : '-'}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
                         <Link

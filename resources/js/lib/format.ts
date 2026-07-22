@@ -26,7 +26,7 @@ export function toMinor(value: string): number {
 }
 
 export function shortDate(iso?: string | null): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleString('en-NG', {
     day: '2-digit',
     month: 'short',

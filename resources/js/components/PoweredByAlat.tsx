@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { BankIcon, BoltIcon, ShieldIcon } from './icons'
 
 /**
- * The partner lockup: Reton settles real money on ALAT — Wema Bank's licensed
+ * The partner lockup: Reton settles real money on ALAT - Wema Bank's licensed
  * digital-banking rail. Surfaced prominently so visitors trust that funds move
  * on a regulated bank, not a closed wallet.
  */
@@ -34,7 +34,7 @@ export function PoweredByAlatInline() {
   )
 }
 
-/** A full-width trust band — the powerful, primary placement. */
+/** A full-width trust band - the powerful, primary placement. */
 export function PoweredByAlat() {
   const chips = [
     { Icon: ShieldIcon, label: 'Licensed bank rail' },
@@ -75,7 +75,7 @@ export function PoweredByAlat() {
               ALAT <span className="text-muted">by</span> Wema
             </h2>
             <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
-              Every naira moves on a licensed bank rail. Funding, payouts and settlement are powered by ALAT —
+              Every naira moves on a licensed bank rail. Funding, payouts and settlement are powered by ALAT -
               Wema Bank’s regulated digital-banking platform.
             </p>
           </div>

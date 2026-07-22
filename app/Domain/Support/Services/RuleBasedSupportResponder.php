@@ -21,7 +21,7 @@ use App\Support\Money\Money;
 /**
  * Rule-based intent router for the in-app support assistant.
  *
- * No external LLM — deterministic responses backed by live account data.
+ * No external LLM - deterministic responses backed by live account data.
  */
 class RuleBasedSupportResponder
 {
@@ -71,7 +71,7 @@ class RuleBasedSupportResponder
 
         if ($this->matchesAny($lower, ['human', 'agent', 'person', 'escalate', 'talk to', 'speak to', 'support team'])) {
             return new SupportReply(
-                body: 'I can connect you with our support team. Tap **Talk to a human** below to open a ticket — a specialist will review your case and respond by email.',
+                body: 'I can connect you with our support team. Tap **Talk to a human** below to open a ticket - a specialist will review your case and respond by email.',
                 actions: [
                     ['label' => 'Talk to a human', 'href' => '/support?escalate=1'],
                 ],
@@ -90,7 +90,7 @@ class RuleBasedSupportResponder
 
         if ($this->matchesAny($lower, ['pin', 'transaction pin', 'locked pin'])) {
             return new SupportReply(
-                body: 'Your transaction PIN authorises every payment. After repeated wrong attempts it locks temporarily. You can reset it from Profile — you will need your login password.',
+                body: 'Your transaction PIN authorises every payment. After repeated wrong attempts it locks temporarily. You can reset it from Profile - you will need your login password.',
                 actions: [
                     ['label' => 'Set or reset PIN', 'href' => '/pin'],
                     ['label' => 'Profile', 'href' => '/profile'],
@@ -106,7 +106,7 @@ class RuleBasedSupportResponder
         $name = strtok($user->name, ' ') ?: 'there';
 
         return new SupportReply(
-            body: "Hi {$name}! I'm Reton Support — I can find transactions, explain callback protection, help with wrong-transfer recovery, and escalate to a human when needed. What can I help with?",
+            body: "Hi {$name}! I'm Reton Support - I can find transactions, explain callback protection, help with wrong-transfer recovery, and escalate to a human when needed. What can I help with?",
             actions: [
                 ['label' => 'Find a transaction', 'href' => '/support?prompt=find'],
                 ['label' => 'Callback protection', 'href' => '/support?prompt=protection'],
@@ -118,7 +118,7 @@ class RuleBasedSupportResponder
     private function helpMenu(): SupportReply
     {
         return new SupportReply(
-            body: "Here's what I can help with:\n\n• **Find a transaction** — paste a reference like TRF-… or DEP-…\n• **Callback protection** — how protected transfers and disputes work\n• **Wrong transfer** — report and recover money sent by mistake\n• **Trust score** — your protection standing and open alerts\n• **Talk to a human** — open a ticket for our team",
+            body: "Here's what I can help with:\n\n• **Find a transaction** - paste a reference like TRF-… or DEP-…\n• **Callback protection** - how protected transfers and disputes work\n• **Wrong transfer** - report and recover money sent by mistake\n• **Trust score** - your protection standing and open alerts\n• **Talk to a human** - open a ticket for our team",
             actions: [
                 ['label' => 'Protection center', 'href' => '/protection'],
                 ['label' => 'Activity', 'href' => '/activity'],
@@ -133,7 +133,7 @@ class RuleBasedSupportResponder
         $responseHours = (int) config('reton.callback.response_hours', 24);
 
         return new SupportReply(
-            body: "Protected transfers keep money in a hold until you confirm. The sender can **release** payment to you, or **raise a callback** to pull it back within {$holdHours} hours. If there's a dispute, the receiver has {$responseHours} hours to respond with evidence — every step is logged on your timeline.\n\nUse a protected transfer when you want a safety net before the recipient gets spendable funds.",
+            body: "Protected transfers keep money in a hold until you confirm. The sender can **release** payment to you, or **raise a callback** to pull it back within {$holdHours} hours. If there's a dispute, the receiver has {$responseHours} hours to respond with evidence - every step is logged on your timeline.\n\nUse a protected transfer when you want a safety net before the recipient gets spendable funds.",
             actions: [
                 ['label' => 'Protection center', 'href' => '/protection'],
                 ['label' => 'Send protected', 'href' => '/send'],
@@ -150,7 +150,7 @@ class RuleBasedSupportResponder
         $body = "Wrong-transfer recovery lets you report a normal transfer sent to the wrong person. You must report within {$windowHours} hours, and we can only hold funds still available in the receiver's wallet.";
 
         if ($eligible instanceof Transfer) {
-            $body .= "\n\nI found a recent transfer you may be able to report: **{$eligible->reference}** ({$this->formatMoney($eligible->amount, $eligible->currency)}). Open Protection to start recovery — you'll need your PIN.";
+            $body .= "\n\nI found a recent transfer you may be able to report: **{$eligible->reference}** ({$this->formatMoney($eligible->amount, $eligible->currency)}). Open Protection to start recovery - you'll need your PIN.";
         } else {
             $body .= "\n\nOpen Protection to see transfers eligible for recovery.";
         }
@@ -234,7 +234,7 @@ class RuleBasedSupportResponder
 
         foreach ($callbacks as $callback) {
             $lines[] = sprintf(
-                '• Callback **%s** on transfer %s — %s',
+                '• Callback **%s** on transfer %s - %s',
                 $callback->reference,
                 $callback->transfer->reference,
                 $callback->status->value,
@@ -243,7 +243,7 @@ class RuleBasedSupportResponder
 
         foreach ($recoveries as $recovery) {
             $lines[] = sprintf(
-                '• Recovery **%s** on transfer %s — %s',
+                '• Recovery **%s** on transfer %s - %s',
                 $recovery->reference,
                 $recovery->transfer->reference,
                 $recovery->status->value,
@@ -264,7 +264,7 @@ class RuleBasedSupportResponder
 
         if (! $result instanceof TransactionLookupResult) {
             return new SupportReply(
-                body: "I couldn't find **{$reference}** on your account. Double-check the reference from your receipt or Activity — references are case-insensitive but must be exact.",
+                body: "I couldn't find **{$reference}** on your account. Double-check the reference from your receipt or Activity - references are case-insensitive but must be exact.",
                 actions: [
                     ['label' => 'View activity', 'href' => '/activity'],
                 ],

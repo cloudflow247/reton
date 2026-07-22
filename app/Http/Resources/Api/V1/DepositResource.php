@@ -36,7 +36,7 @@ class DepositResource extends JsonResource
             'bank_transfer' => $bank,
             'description' => $this->metadata['ledger_description']
                 ?? (isset($bank['narration']) && is_string($bank['narration']) && $bank['narration'] !== ''
-                    ? 'Bank transfer — '.$bank['narration']
+                    ? 'Bank transfer - '.$bank['narration']
                     : null),
             'paid_at' => $this->paid_at,
             'created_at' => $this->created_at,

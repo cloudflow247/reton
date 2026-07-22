@@ -6,7 +6,7 @@ import { PoweredByAlat } from '@/components/PoweredByAlat'
 import { ArrowRightIcon, ScanIcon, ShieldIcon, UndoIcon } from '@/components/icons'
 
 const values = [
-  [ShieldIcon, 'Safety is the product', 'Most wallets move money fast. We move it safely — protection and recovery are the default, not an afterthought.'],
+  [ShieldIcon, 'Safety is the product', 'Most wallets move money fast. We move it safely - protection and recovery are the default, not an afterthought.'],
   [UndoIcon, 'Mistakes shouldn’t be final', 'A wrong number or a scam is a moment, not a life sentence. Reton is built so money can come back.'],
   [ScanIcon, 'Earn trust with proof', 'Every naira is double-entry ledgered, every action audited. We’d rather be provably correct than merely fast.'],
 ] as const
@@ -30,7 +30,7 @@ export default function About() {
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
             Reton is a trust-first digital wallet for Nigeria. While others compete on speed alone, we compete on
-            something harder — making money safe, recoverable, and easy to understand when something goes wrong.
+            something harder - making money safe, recoverable, and easy to understand when something goes wrong.
           </p>
         </div>
       </section>

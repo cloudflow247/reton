@@ -8,7 +8,7 @@ use App\Domain\Marketplace\Enums\HubVerificationStatus;
 
 /**
  * Scores whether a physical item at the Giglogistics hub matches the locked
- * listing snapshot — the objective basis for escrow judgement.
+ * listing snapshot - the objective basis for escrow judgement.
  */
 class HubVerificationService
 {

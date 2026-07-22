@@ -16,7 +16,7 @@ enum ShipmentStatus: string
     case Delivered = 'delivered';
     case Failed = 'failed';
 
-    /** @deprecated Use AwaitingDropoff — kept for legacy rows */
+    /** @deprecated Use AwaitingDropoff - kept for legacy rows */
     case PendingPickup = 'pending_pickup';
 
     /** @deprecated Use InTransit */
@@ -28,7 +28,7 @@ enum ShipmentStatus: string
             self::AwaitingDropoff, self::PendingPickup => 'Take item to Giglogistics hub',
             self::AtHub => 'Received at verification hub',
             self::Verifying => 'Giglogistics verifying item',
-            self::VerificationPassed => 'Verified — shipping to buyer',
+            self::VerificationPassed => 'Verified - shipping to buyer',
             self::VerificationFailed => 'Did not pass hub verification',
             self::InTransit, self::PickedUp => 'In transit to buyer',
             self::OutForDelivery => 'Out for delivery',

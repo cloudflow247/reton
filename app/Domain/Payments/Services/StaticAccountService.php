@@ -37,7 +37,7 @@ use Illuminate\Validation\ValidationException;
  * Provisioning is a two-step OTP flow (provision -> verify), except when the
  * provider returns an account number immediately (e.g. a Collection wallet that
  * needs no OTP), in which case the account is activated on provision. Funding is
- * poll-driven: see poll()/credit() — every credit flows through the audited
+ * poll-driven: see poll()/credit() - every credit flows through the audited
  * WalletService ledger path.
  */
 class StaticAccountService
@@ -334,7 +334,7 @@ class StaticAccountService
      *
      * Prefers the wallet-linked Active VA, then falls back to any Active VA on the user
      * (production rows sometimes attach by user_id first). Never uses latestOfMany +
-     * constrained eager-load — that combination can hide a valid Active account.
+     * constrained eager-load - that combination can hide a valid Active account.
      */
     public function activeFundingAccountFor(User $user, ?Wallet $wallet = null): ?StaticAccount
     {
@@ -478,7 +478,7 @@ class StaticAccountService
             ]);
 
             $description = filled($txn->narration)
-                ? 'Bank transfer — '.$txn->narration
+                ? 'Bank transfer - '.$txn->narration
                 : 'Wallet funding via dedicated account';
 
             $transaction = $this->wallets->fund(

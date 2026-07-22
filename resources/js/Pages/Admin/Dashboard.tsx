@@ -119,11 +119,11 @@ export default function AdminDashboard() {
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">Control center</h1>
             <p className="mt-1 text-sm text-muted">
-              Ops queues, live integrations, fees, and go-live readiness — encrypted secrets stay in the database.
+              Ops queues, live integrations, fees, and go-live readiness - encrypted secrets stay in the database.
             </p>
           </div>
           <Pill tone={readyCount === goLive.length ? 'mint' : 'amber'}>
-            Go-live {readyCount}/{goLive.length || '—'}
+            Go-live {readyCount}/{goLive.length || '-'}
           </Pill>
         </div>
 

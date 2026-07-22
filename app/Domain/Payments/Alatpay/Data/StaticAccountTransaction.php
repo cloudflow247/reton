@@ -21,7 +21,7 @@ final readonly class StaticAccountTransaction
 
     /**
      * Collection-history rows are inbound payments. Portal "Settled" may arrive as
-     * numeric status 1, or as settlementStatus/status strings — treat all as paid.
+     * numeric status 1, or as settlementStatus/status strings - treat all as paid.
      */
     public function isSuccessful(): bool
     {

@@ -107,10 +107,10 @@ export default function Profile() {
             {initial}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate font-display text-lg font-semibold leading-tight">{user?.name ?? '—'}</div>
+            <div className="truncate font-display text-lg font-semibold leading-tight">{user?.name ?? '-'}</div>
             <div className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted">
               <MailIcon size={14} className="shrink-0" />
-              <span className="truncate">{user?.email ?? '—'}</span>
+              <span className="truncate">{user?.email ?? '-'}</span>
             </div>
             {user?.phone && (
               <div className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted">
@@ -205,7 +205,7 @@ export default function Profile() {
 
           {kyc.tier === 2 && (
             <form onSubmit={submitTier3} className="space-y-3 border-t border-line pt-4">
-              <p className="text-sm font-semibold text-text">Upgrade to Tier 3 — NIN & address</p>
+              <p className="text-sm font-semibold text-text">Upgrade to Tier 3 - NIN & address</p>
               <p className="text-xs text-muted">Unlock the highest limits for funding, sending, and marketplace sales.</p>
               <input
                 className="field w-full px-3 py-2.5 text-sm"
@@ -248,7 +248,7 @@ export default function Profile() {
                   checked={tier3.data.identity_consent}
                   onChange={(e) => tier3.setData('identity_consent', e.target.checked)}
                 />
-                I consent to NIN verification. Reton logs verification outcomes for audit — never your full NIN in
+                I consent to NIN verification. Reton logs verification outcomes for audit - never your full NIN in
                 application logs.
               </label>
               {tier3.errors.identity_consent && <p className="text-xs text-danger">{tier3.errors.identity_consent}</p>}
@@ -260,7 +260,7 @@ export default function Profile() {
 
           {kyc.tier >= 3 && (
             <p className="flex items-center gap-2 border-t border-line pt-4 text-sm text-mint">
-              <CheckIcon size={16} /> You have full KYC — highest limits apply.
+              <CheckIcon size={16} /> You have full KYC - highest limits apply.
             </p>
           )}
       </FormPanel>
@@ -285,12 +285,12 @@ export default function Profile() {
       <SectionLabel>Notifications</SectionLabel>
       <FormPanel className="!space-y-0 !p-0">
         <p className="border-b border-line px-5 py-3 text-xs leading-relaxed text-muted">
-          Transaction alerts come from Reton only — not from your bank. Email is free. SMS is charged per alert.
+          Transaction alerts come from Reton only - not from your bank. Email is free. SMS is charged per alert.
         </p>
         <PreferenceToggle
           icon={<MailIcon size={18} />}
           label="Email alerts"
-          sub="Credits, debits, and account notices — free"
+          sub="Credits, debits, and account notices - free"
           checked={notifications.data.notify_email}
           disabled={notifications.processing}
           onChange={toggleEmail}

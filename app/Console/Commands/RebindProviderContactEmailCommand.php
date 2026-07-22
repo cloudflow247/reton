@@ -63,8 +63,8 @@ class RebindProviderContactEmailCommand extends Command
         $rows = array_map(
             static fn (ProviderContactRebindResult $result): array => [
                 $result->userEmail,
-                $result->accountNumber ?? '—',
-                $result->previousProviderEmail ?? '—',
+                $result->accountNumber ?? '-',
+                $result->previousProviderEmail ?? '-',
                 $result->desiredProviderEmail,
                 $result->status,
                 $result->message,
@@ -85,7 +85,7 @@ class RebindProviderContactEmailCommand extends Command
         $this->info("Done. rebound={$rebound} already_ok={$ok} needs_support={$needsSupport} missing={$missing} total=".count($results));
 
         if ($needsSupport > 0) {
-            $this->warn('ALATPay rejected API email updates for some accounts (often HTTP 404). Forward those account numbers + desired emails to ALATPay support — Reton still recorded the target CEO alias locally.');
+            $this->warn('ALATPay rejected API email updates for some accounts (often HTTP 404). Forward those account numbers + desired emails to ALATPay support - Reton still recorded the target CEO alias locally.');
         }
 
         return self::SUCCESS;

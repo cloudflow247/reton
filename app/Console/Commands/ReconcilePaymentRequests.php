@@ -10,7 +10,7 @@ use App\Domain\Payments\Services\PaymentRequestService;
 use Illuminate\Console\Command;
 
 /**
- * Reconciles pending payment requests against AlatPay — a safety net for missed
+ * Reconciles pending payment requests against AlatPay - a safety net for missed
  * or delayed webhooks. Only requests old enough to have settled are checked.
  */
 class ReconcilePaymentRequests extends Command

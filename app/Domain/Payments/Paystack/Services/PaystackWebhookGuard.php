@@ -34,7 +34,7 @@ final class PaystackWebhookGuard
         $merchantReference = (string) ($data['reference'] ?? '');
         $dataId = (string) ($data['id'] ?? $payload['id'] ?? '');
 
-        // Paystack payloads often omit a top-level id — key on transfer + event for replay safety.
+        // Paystack payloads often omit a top-level id - key on transfer + event for replay safety.
         $eventId = $dataId !== ''
             ? $dataId
             : ($transferCode !== '' || $merchantReference !== ''

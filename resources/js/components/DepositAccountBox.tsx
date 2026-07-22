@@ -120,7 +120,7 @@ export function DepositAccountBox({
         <span className="min-w-0 flex-1">
           <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Account number</span>
           <span className="mt-1 block font-num text-[1.55rem] font-bold tracking-[0.12em] text-text">
-            {accountNumber || '—'}
+            {accountNumber || '-'}
           </span>
           <span className="mt-1 block truncate text-xs text-muted">
             {bank} · {accountName}

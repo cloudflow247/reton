@@ -18,7 +18,7 @@ class WalletResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Inline clamps — avoid calling Wallet helpers so a stale OPcache
+        // Inline clamps - avoid calling Wallet helpers so a stale OPcache
         // Wallet class after deploy cannot 500 every authenticated Inertia page.
         $ledger = max(0, (int) $this->balance);
         $held = max(0, (int) $this->held_balance);

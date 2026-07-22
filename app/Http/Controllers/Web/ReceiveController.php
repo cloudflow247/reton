@@ -69,7 +69,7 @@ class ReceiveController extends Controller
 
         $message = $account->isActive()
             ? 'Your permanent deposit account is ready.'
-            : 'We sent an OTP — enter it to activate your deposit account.';
+            : 'We sent an OTP - enter it to activate your deposit account.';
 
         return back()->with('success', $message);
     }
@@ -90,6 +90,6 @@ class ReceiveController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Deposit account activated — share the number to receive bank transfers.');
+        return back()->with('success', 'Deposit account activated - share the number to receive bank transfers.');
     }
 }

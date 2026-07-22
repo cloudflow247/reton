@@ -21,5 +21,5 @@ Subject: {{ $ticket->subject }}
 
 Our team will respond within one business day at {{ $user->email }}.
 
-— Reton Support
+- Reton Support
 @endif

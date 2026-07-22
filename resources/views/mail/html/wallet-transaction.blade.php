@@ -11,7 +11,7 @@
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;border:1px solid #e3ece7;border-radius:12px;overflow:hidden;">
         <tr>
             <td colspan="2" style="padding:12px 16px;background:#0e7e5c;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">
-                Transaction details — {{ $directionLabel }}
+                Transaction details - {{ $directionLabel }}
             </td>
         </tr>
         <tr>

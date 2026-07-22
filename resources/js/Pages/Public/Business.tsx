@@ -19,7 +19,7 @@ const comingFeatures = [
   {
     Icon: WalletIcon,
     title: 'Payment links & invoices',
-    body: 'Share a link or dedicated account and get paid by anyone — Reton wallet or any Nigerian bank.',
+    body: 'Share a link or dedicated account and get paid by anyone - Reton wallet or any Nigerian bank.',
   },
   {
     Icon: ShieldIcon,
@@ -34,14 +34,14 @@ const comingFeatures = [
   {
     Icon: ScanIcon,
     title: 'Fraud-screened by default',
-    body: 'Inbound and outbound movements are risk-scored before they settle — chargebacks designed out.',
+    body: 'Inbound and outbound movements are risk-scored before they settle - chargebacks designed out.',
   },
 ] as const
 
 const timeline = [
-  ['Personal wallets', 'Live today — send, protect, recover, and fund with confidence.'],
-  ['Business tools', 'Coming soon — merchant collection, payment links, and trust badges.'],
-  ['Team & API access', 'Next — roles, statements, and programmatic payouts for growing brands.'],
+  ['Personal wallets', 'Live today - send, protect, recover, and fund with confidence.'],
+  ['Business tools', 'Coming soon - merchant collection, payment links, and trust badges.'],
+  ['Team & API access', 'Next - roles, statements, and programmatic payouts for growing brands.'],
 ] as const
 
 const fade = {
@@ -52,7 +52,7 @@ const fade = {
 export default function Business() {
   return (
     <div>
-      <Head title="Reton Business — Coming soon" />
+      <Head title="Reton Business - Coming soon" />
 
       <section className="relative overflow-hidden">
         <div className="aurora" aria-hidden />
@@ -81,7 +81,7 @@ export default function Business() {
               Merchant tools are almost ready. <span className="gradient-text">Personal wallets are live.</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-              Reton Business will help you collect payments, settle cleanly, and give buyers Callback Protection —
+              Reton Business will help you collect payments, settle cleanly, and give buyers Callback Protection -
               the same trust stack people already use for personal money. We’re finishing the merchant desk before
               we open the doors.
             </p>
@@ -102,7 +102,7 @@ export default function Business() {
             </div>
 
             <p className="mt-5 max-w-xl text-sm text-muted">
-              No spam — waitlist emails go to our team. We’ll invite early merchants when Reton Business launches.
+              No spam - waitlist emails go to our team. We’ll invite early merchants when Reton Business launches.
             </p>
           </motion.div>
 
@@ -159,7 +159,7 @@ export default function Business() {
                 <div className="mt-8 rounded-2xl border border-mint/20 bg-mint/5 p-4">
                   <p className="text-sm font-semibold text-text">Need to collect today?</p>
                   <p className="mt-1 text-sm leading-relaxed text-muted">
-                    Use a personal Reton wallet with protected transfers while Business tools roll out — then upgrade
+                    Use a personal Reton wallet with protected transfers while Business tools roll out - then upgrade
                     when we invite you.
                   </p>
                   <Link href="/how-it-works" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-mint hover:underline">
@@ -181,7 +181,7 @@ export default function Business() {
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted">
               Buyers get Callback Protection. Sellers get cleaner settlement and fewer “I didn’t get it” arguments.
-              That’s Africa’s trust-first payments stack — merchant edition.
+              That’s Africa’s trust-first payments stack - merchant edition.
             </p>
           </div>
 
@@ -189,7 +189,7 @@ export default function Business() {
             {[
               ['Protected checkout', 'Buyers can hold funds until delivery is confirmed.'],
               ['Clear timelines', 'Every dispute leaves a visible audit trail.'],
-              ['Ledger certainty', 'Balances reconcile to the kobo — always.'],
+              ['Ledger certainty', 'Balances reconcile to the kobo - always.'],
             ].map(([title, body]) => (
               <div key={title} className="rounded-2xl border border-line bg-bg/80 p-5">
                 <p className="font-display text-base font-semibold text-text">{title}</p>

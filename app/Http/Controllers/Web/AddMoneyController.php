@@ -55,7 +55,7 @@ class AddMoneyController extends Controller
                 $pendingDeposit = (new DepositResource($deposit))->resolve();
             }
         } elseif (! $request->boolean('fresh') && count($openDeposits) === 1) {
-            // One open payment — resume automatically so reloads never lose context.
+            // One open payment - resume automatically so reloads never lose context.
             $pendingDeposit = $openDeposits[0];
         }
 
@@ -106,8 +106,8 @@ class AddMoneyController extends Controller
                     $request->session()->flash(
                         'success',
                         $credited === 1
-                            ? 'Deposit received — your balance is updated.'
-                            : "{$credited} deposits received — your balance is updated.",
+                            ? 'Deposit received - your balance is updated.'
+                            : "{$credited} deposits received - your balance is updated.",
                     );
                 }
             } catch (\Throwable $e) {
@@ -150,8 +150,8 @@ class AddMoneyController extends Controller
                 ->with(
                     'success',
                     $credited === 1
-                        ? 'Deposit received — your balance is updated.'
-                        : "{$credited} deposits received — your balance is updated.",
+                        ? 'Deposit received - your balance is updated.'
+                        : "{$credited} deposits received - your balance is updated.",
                 );
         }
 
@@ -248,7 +248,7 @@ class AddMoneyController extends Controller
     }
 
     /**
-     * Completed deposits always surface. Pending ones only when their funding rail is live —
+     * Completed deposits always surface. Pending ones only when their funding rail is live -
      * otherwise users get stuck on a dead Checkout "Continue" after Coming Soon is flipped on.
      */
     private function depositMaySurface(Deposit $deposit): bool

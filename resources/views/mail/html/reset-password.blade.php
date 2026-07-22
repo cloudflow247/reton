@@ -24,6 +24,6 @@
         {{ $resetUrl }}
     </p>
     <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#5c7368;">
-        If you didn't request a password reset, you can safely ignore this email — your password won't change.
+        If you didn't request a password reset, you can safely ignore this email - your password won't change.
     </p>
 @endsection

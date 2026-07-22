@@ -53,7 +53,7 @@ class WalletController extends Controller
 
     /**
      * Resolve a RETON ID to a wallet and its holder's name, so a sender can
-     * confirm the recipient before paying — like a bank name enquiry.
+     * confirm the recipient before paying - like a bank name enquiry.
      */
     public function lookup(Request $request): JsonResponse
     {

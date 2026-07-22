@@ -120,8 +120,8 @@ export default function Money() {
                       <td className="px-4 py-2.5">
                         <Pill tone="muted">{row.type}</Pill>
                       </td>
-                      <td className="px-4 py-2.5">{row.description ?? '—'}</td>
-                      <td className="px-4 py-2.5 font-mono text-xs text-muted">{row.idempotency_key ?? '—'}</td>
+                      <td className="px-4 py-2.5">{row.description ?? '-'}</td>
+                      <td className="px-4 py-2.5 font-mono text-xs text-muted">{row.idempotency_key ?? '-'}</td>
                       <td className="px-4 py-2.5 text-muted">{shortDate(row.created_at)}</td>
                     </tr>
                   ))}
@@ -157,11 +157,11 @@ export default function Money() {
                             <div className="text-xs text-muted">{row.user.email}</div>
                           </>
                         ) : (
-                          <span className="text-muted">—</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
                       <td className="px-4 py-2.5 font-num">{ngn(Number(row.amount))}</td>
-                      <td className="px-4 py-2.5 text-muted">{row.method || '—'}</td>
+                      <td className="px-4 py-2.5 text-muted">{row.method || '-'}</td>
                       <td className="px-4 py-2.5">
                         <Pill tone={statusTone(row.status)}>{row.status}</Pill>
                       </td>
@@ -201,16 +201,16 @@ export default function Money() {
                             <div className="text-xs text-muted">{row.user.email}</div>
                           </>
                         ) : (
-                          <span className="text-muted">—</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
                       <td className="px-4 py-2.5 font-num">{ngn(Number(row.amount))}</td>
                       <td className="px-4 py-2.5 font-mono text-xs text-muted">
                         {row.bank_code && row.account_number
                           ? `${row.bank_code} · ${row.account_number}`
-                          : row.account_number ?? '—'}
+                          : row.account_number ?? '-'}
                       </td>
-                      <td className="px-4 py-2.5 text-muted">{row.provider ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-muted">{row.provider ?? '-'}</td>
                       <td className="px-4 py-2.5">
                         <Pill tone={statusTone(row.status)}>{row.status}</Pill>
                       </td>

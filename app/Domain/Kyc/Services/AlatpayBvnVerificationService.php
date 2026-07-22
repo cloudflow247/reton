@@ -27,7 +27,7 @@ use Illuminate\Validation\ValidationException;
  * BVN verification via ALATPay Static Wallet OTP (Individual wallet provision).
  *
  * On successful OTP (or duplicate-BVN recovery), the Individual VA is linked to
- * the user's Reton wallet immediately — no separate "Open account" step.
+ * the user's Reton wallet immediately - no separate "Open account" step.
  *
  * @see https://docs.alatpay.ng/static-wallet
  */
@@ -61,7 +61,7 @@ class AlatpayBvnVerificationService
     }
 
     /**
-     * Step 1 — ALATPay validates the BVN and sends an OTP to the linked phone.
+     * Step 1 - ALATPay validates the BVN and sends an OTP to the linked phone.
      *
      * @return non-empty-string User-facing message
      */
@@ -119,7 +119,7 @@ class AlatpayBvnVerificationService
             $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
             $this->linkDepositAccountFromProvision($user, $response);
 
-            return 'BVN verified — your permanent deposit account is ready.';
+            return 'BVN verified - your permanent deposit account is ready.';
         }
 
         if ($response->staticWalletId === '' || $response->otpTrackingId === null) {
@@ -205,7 +205,7 @@ class AlatpayBvnVerificationService
             $this->finalizeTier2Record($user, $bvn, $dob, $ipAddress);
             $this->linkDepositAccountFromProvision($user, $response);
 
-            return 'BVN verified — your permanent deposit account is ready.';
+            return 'BVN verified - your permanent deposit account is ready.';
         }
 
         if ($response->staticWalletId === '' || $response->otpTrackingId === null) {
@@ -230,13 +230,13 @@ class AlatpayBvnVerificationService
         ]);
 
         if ($this->providerName() === 'alatpay_fake') {
-            return 'Demo mode: a new code was issued — still use 123456.';
+            return 'Demo mode: a new code was issued - still use 123456.';
         }
 
         return 'We sent a new verification code to the phone linked to your BVN.';
     }
 
-    /** Step 2 — confirm OTP, activate Tier 2, and link the deposit VA. */
+    /** Step 2 - confirm OTP, activate Tier 2, and link the deposit VA. */
     public function confirm(User $user, string $otp, ?string $ipAddress = null): UserKyc
     {
         $pending = Cache::get($this->cacheKey($user));
@@ -371,7 +371,7 @@ class AlatpayBvnVerificationService
 
         if (in_array($bvn, $sandboxBvns, true)) {
             throw ValidationException::withMessages([
-                'bvn' => ['That looks like a demo/test BVN. Enter your real 11-digit BVN — we will text the phone registered to it.'],
+                'bvn' => ['That looks like a demo/test BVN. Enter your real 11-digit BVN - we will text the phone registered to it.'],
             ]);
         }
     }

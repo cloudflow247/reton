@@ -17,7 +17,7 @@ use Illuminate\Console\Command;
 /**
  * Releases protected transfers whose hold window has elapsed to their receiver.
  *
- * A transfer is skipped while it has an open callback — the dispute governs the
+ * A transfer is skipped while it has an open callback - the dispute governs the
  * funds until it is resolved.
  */
 class AutoReleaseTransfers extends Command

@@ -110,7 +110,7 @@ class TransferService
 
             $transaction = $this->ledger->post(
                 PostingDraft::for(TransactionType::CallbackHold)
-                    ->describedAs('Protected transfer — pending for receiver')
+                    ->describedAs('Protected transfer - pending for receiver')
                     ->idempotentBy($idempotencyKey)
                     ->initiatedBy($sender)
                     ->withMetadata([
@@ -167,7 +167,7 @@ class TransferService
     /**
      * Release pending funds to the receiver's available balance.
      *
-     * @param  bool  $fromCallbackResolution  When true, an open callback is expected —
+     * @param  bool  $fromCallbackResolution  When true, an open callback is expected -
      *                                        used only by CallbackService after a dispute decision.
      */
     public function release(Transfer $transfer, bool $fromCallbackResolution = false): Transfer
@@ -209,7 +209,7 @@ class TransferService
                 $sender,
                 $this->holdMoney($transfer),
                 $transfer->idempotency_key ? 'refund:'.$transfer->idempotency_key : null,
-                $reason !== null ? 'Protected transfer refunded — '.$reason : null,
+                $reason !== null ? 'Protected transfer refunded - '.$reason : null,
             );
 
             $hold->update(['status' => HoldStatus::Refunded, 'reason' => $reason, 'resolved_at' => now()]);

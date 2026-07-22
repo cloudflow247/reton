@@ -13,7 +13,7 @@ export function buildAdminUrl(base: string, path = ''): string {
   return `${base}/${path.replace(/^\//, '')}`
 }
 
-/** @deprecated Prefer `useAdminBase()` + `buildAdminUrl()` — only call during render. */
+/** @deprecated Prefer `useAdminBase()` + `buildAdminUrl()` - only call during render. */
 export function adminUrl(path = ''): string {
   const base = useAdminBase()
   return buildAdminUrl(base, path)

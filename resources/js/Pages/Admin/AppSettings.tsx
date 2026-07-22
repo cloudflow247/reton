@@ -54,7 +54,7 @@ function SecretField({
         type={show ? 'text' : 'password'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={isSet && !show ? '•••••••• (saved — type to replace)' : 'Enter value'}
+        placeholder={isSet && !show ? '•••••••• (saved - type to replace)' : 'Enter value'}
         className="field w-full px-4 py-3 font-mono text-sm"
         autoComplete="off"
       />
@@ -116,7 +116,7 @@ export default function AppSettings() {
           <h2 className="font-display text-lg font-semibold">Admin panel URL</h2>
           <p className="mt-1 text-sm text-muted">
             Hide the control panel behind a custom path. The default <code className="text-text">/admin</code> is easy
-            to guess — change it to something only you know.
+            to guess - change it to something only you know.
           </p>
 
           <form onSubmit={submit} className="mt-5 space-y-5">
@@ -135,7 +135,7 @@ export default function AppSettings() {
                 />
               </div>
               <span className="mt-1 block text-xs text-muted">
-                3–48 characters: lowercase letters, numbers, and hyphens. Cannot match app routes like dashboard or
+                3-48 characters: lowercase letters, numbers, and hyphens. Cannot match app routes like dashboard or
                 login.
               </span>
               {form.errors.admin_path && (
@@ -175,7 +175,7 @@ export default function AppSettings() {
                 value={form.data.demo_pin}
                 isSet={app.demo_pin_set}
                 onChange={(v) => form.setData('demo_pin', v)}
-                hint="4–6 digits shared by demo accounts."
+                hint="4-6 digits shared by demo accounts."
               />
             </div>
 

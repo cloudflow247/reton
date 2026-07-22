@@ -136,7 +136,7 @@ export default function Dashboard() {
             <Link
               href="/protection"
               className="group flex shrink-0 items-center gap-2 rounded-2xl border border-mint/25 bg-mint/[0.06] px-2 py-1.5 transition hover:border-mint/40 hover:bg-mint/[0.1] sm:gap-2.5 sm:px-2.5 sm:py-2"
-              aria-label={`Trust score ${score} — open protection`}
+              aria-label={`Trust score ${score} - open protection`}
               title="Trust & protection"
             >
               <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-mint text-white shadow-sm ring-1 ring-mint/30 transition group-hover:scale-[1.03] sm:h-10 sm:w-10">
@@ -212,7 +212,7 @@ export default function Dashboard() {
                   <span className="block text-[10px] font-semibold uppercase tracking-wide text-mint">To do</span>
                   <span className="block text-sm font-semibold leading-snug text-text">
                     {todo.title}
-                    <span className="font-normal text-muted"> — {todo.detail}</span>
+                    <span className="font-normal text-muted"> - {todo.detail}</span>
                   </span>
                 </span>
                 <ChevronRightIcon size={16} className="shrink-0 text-mint transition group-hover:translate-x-0.5" />
@@ -413,7 +413,7 @@ function QuickAction({
       <Link
         href={to}
         prefetch
-        title={soon ? `${label} — coming soon` : hint}
+        title={soon ? `${label} - coming soon` : hint}
         className={`elevate relative flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2.5 text-center transition sm:min-h-[4.5rem] sm:gap-1.5 sm:px-2 sm:py-3 ${
           primary
             ? 'border-mint/30 bg-mint text-white shadow-[0_12px_28px_-16px_rgba(9,79,57,0.5)] hover:bg-mint-strong'

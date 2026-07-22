@@ -15,7 +15,7 @@ use RuntimeException;
  * An immutable double-entry accounting line.
  *
  * Once created, a ledger entry is a permanent fact. Any attempt to update or
- * delete a persisted entry is a programming error and is rejected outright —
+ * delete a persisted entry is a programming error and is rejected outright -
  * corrections are made by posting a compensating (reversal) transaction.
  */
 class LedgerEntry extends Model

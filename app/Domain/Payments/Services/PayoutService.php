@@ -130,7 +130,7 @@ class PayoutService
         return $event->refresh();
     }
 
-    /** @deprecated Use handleAlatpayWebhook — kept for existing call sites. */
+    /** @deprecated Use handleAlatpayWebhook - kept for existing call sites. */
     public function handleWebhook(string $rawPayload, ?string $signature): WebhookEvent
     {
         return $this->handleAlatpayWebhook($rawPayload, $signature);
@@ -233,7 +233,7 @@ class PayoutService
 
             $transaction = $this->ledger->post(
                 PostingDraft::for(TransactionType::Reversal)
-                    ->describedAs('Payout reversed — funds returned')
+                    ->describedAs('Payout reversed - funds returned')
                     ->idempotentBy($payout->reference.':reverse')
                     ->debit($this->system->resolve(SystemAccount::SettlementPayable, $payout->currency), $amount)
                     ->credit($walletAccountId, $amount)

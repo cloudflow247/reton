@@ -413,7 +413,7 @@ class DigitalMarketplaceService
 
     /**
      * Auto-refund when the seller misses the delivery deadline (scheduler).
-     * Skips orders with an open callback — the dispute flow handles those.
+     * Skips orders with an open callback - the dispute flow handles those.
      */
     public function refundOverdueUndelivered(DigitalOrder $order): bool
     {
@@ -424,7 +424,7 @@ class DigitalMarketplaceService
                 return false;
             }
 
-            // Physical orders with a booked shipment are in transit — do not
+            // Physical orders with a booked shipment are in transit - do not
             // auto-refund as "undelivered"; hub/dispute flows own those cases.
             if ($order->isPhysical() && $order->shipment()->exists()) {
                 return false;

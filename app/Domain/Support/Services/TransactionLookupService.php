@@ -14,7 +14,7 @@ use App\Domain\Transfers\Models\Transfer;
 use App\Models\User;
 
 /**
- * Scoped transaction lookup — only returns records the user owns or participates in.
+ * Scoped transaction lookup - only returns records the user owns or participates in.
  */
 class TransactionLookupService
 {
@@ -54,7 +54,7 @@ class TransactionLookupService
                 currency: $transfer->currency,
                 status: $transfer->status->value,
                 summary: sprintf(
-                    '%s transfer — %s',
+                    '%s transfer - %s',
                     ucfirst($transfer->type->value),
                     $transfer->status->value,
                 ),
@@ -78,7 +78,7 @@ class TransactionLookupService
                 amountMinor: $deposit->amount,
                 currency: $deposit->currency,
                 status: $deposit->status->value,
-                summary: 'Wallet deposit — '.$deposit->status->value,
+                summary: 'Wallet deposit - '.$deposit->status->value,
                 actions: [
                     ['label' => 'Add money', 'href' => '/add-money'],
                     ['label' => 'View activity', 'href' => '/activity'],
@@ -99,7 +99,7 @@ class TransactionLookupService
                 amountMinor: $callback->transfer->amount,
                 currency: $callback->transfer->currency,
                 status: $callback->status->value,
-                summary: 'Callback dispute — '.$callback->status->value,
+                summary: 'Callback dispute - '.$callback->status->value,
                 actions: [
                     ['label' => 'Open protection center', 'href' => '/protection'],
                 ],
@@ -119,7 +119,7 @@ class TransactionLookupService
                 amountMinor: $recovery->amount,
                 currency: $recovery->currency,
                 status: $recovery->status->value,
-                summary: 'Wrong-transfer recovery — '.$recovery->status->value,
+                summary: 'Wrong-transfer recovery - '.$recovery->status->value,
                 actions: [
                     ['label' => 'Open protection center', 'href' => '/protection'],
                 ],
@@ -139,7 +139,7 @@ class TransactionLookupService
                 amountMinor: $bill->amount,
                 currency: $bill->currency,
                 status: $bill->status->value,
-                summary: sprintf('Bill payment — %s (%s)', $bill->biller_name, $bill->status->value),
+                summary: sprintf('Bill payment - %s (%s)', $bill->biller_name, $bill->status->value),
                 actions: [
                     ['label' => 'View activity', 'href' => '/activity'],
                     ['label' => 'Pay a bill', 'href' => '/bills'],
@@ -160,7 +160,7 @@ class TransactionLookupService
                 amountMinor: $payout->amount,
                 currency: $payout->currency,
                 status: $payout->status->value,
-                summary: 'Bank withdrawal — '.$payout->status->value,
+                summary: 'Bank withdrawal - '.$payout->status->value,
                 actions: [
                     ['label' => 'Withdraw', 'href' => '/withdraw'],
                     ['label' => 'View activity', 'href' => '/activity'],

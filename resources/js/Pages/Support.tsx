@@ -186,7 +186,7 @@ export default function Support() {
       {flash?.support_ticket && (
         <Card className="mb-4 border-mint/30 bg-mint/5 p-4">
           <p className="text-sm text-text">
-            Ticket <strong>{flash.support_ticket}</strong> opened — we will email you shortly.
+            Ticket <strong>{flash.support_ticket}</strong> opened - we will email you shortly.
           </p>
         </Card>
       )}

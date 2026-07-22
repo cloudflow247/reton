@@ -108,7 +108,7 @@ export function BalanceHeroCard({
 
       {!hidden && hasPending && settledCheck !== totalBalance && (
         <p className="relative mt-2 rounded-lg bg-amber-400/20 px-2.5 py-1.5 text-[11px] font-medium text-white">
-          Balance check pending — contact support if this persists.
+          Balance check pending - contact support if this persists.
         </p>
       )}
 
@@ -136,7 +136,7 @@ export function BalanceHeroCard({
           {receiveTab === 'reton' ? (
             <ReceivePanel
               eyebrow="Receive on Reton"
-              hint="For Reton users only — not a bank account"
+              hint="For Reton users only - not a bank account"
               value={retonId}
               copied={copied}
               onCopy={onCopyAccount}
@@ -291,7 +291,7 @@ export function ComplianceStrip({ compact = false }: { compact?: boolean }) {
     <div className="rounded-2xl border border-line/80 bg-surface/80 px-4 py-3 backdrop-blur-sm">
       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Security posture</p>
       <p className="mt-1 text-xs leading-relaxed text-muted">
-        Built to PCI DSS and ISO 27001 control principles — encryption in transit & at rest, least-privilege
+        Built to PCI DSS and ISO 27001 control principles - encryption in transit & at rest, least-privilege
         access, and verification audit trails. Reton is not a certified PCI DSS Level 1 processor; settlement
         runs on licensed bank rails.
       </p>

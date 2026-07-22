@@ -152,7 +152,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <div className="space-y-4">
               <Wordmark />
               <p className="max-w-xs text-sm leading-relaxed text-muted">
-                Trust-first digital banking for Africa — payments you can take back.
+                Trust-first digital banking for Africa - payments you can take back.
               </p>
               <p className="max-w-xs text-sm leading-relaxed text-muted">
                 7, Greenland Estate, Ikorodu, Lagos State, Nigeria

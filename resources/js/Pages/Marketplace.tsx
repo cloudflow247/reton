@@ -31,7 +31,7 @@ const tabSpring = { type: 'spring', stiffness: 400, damping: 34 } as const
 
 const flowSteps = [
   { n: '1', title: 'Share', desc: 'Send your buyer the link or item code' },
-  { n: '2', title: 'Pay', desc: 'Buyer locks terms — escrow holds funds' },
+  { n: '2', title: 'Pay', desc: 'Buyer locks terms - escrow holds funds' },
   { n: '3', title: 'Verify', desc: 'Hub checks physical items' },
   { n: '4', title: 'Deliver', desc: 'Confirm or dispute with fair rules' },
 ]
@@ -151,7 +151,7 @@ export default function Marketplace() {
                   <h2 className="font-semibold text-text">Open a shared item</h2>
                   <p className="mt-1 text-sm text-muted">
                     Sellers share a link or a short code like <span className="font-mono text-text">RTN-7K3M9P</span>.
-                    There is no public catalog — you can only shop what was shared with you.
+                    There is no public catalog - you can only shop what was shared with you.
                   </p>
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default function Marketplace() {
               <EmptyBlock
                 icon={GridIcon}
                 title="You haven't listed anything"
-                desc="Publish a digital or physical item — Reton verifies descriptions and protects every sale."
+                desc="Publish a digital or physical item - Reton verifies descriptions and protects every sale."
                 action={{ label: 'Create listing', onClick: () => setShowCreate(true) }}
               />
             ) : (
@@ -454,7 +454,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
 
           <RhfField
             label="Title"
-            placeholder={itemType === 'physical' ? 'e.g. iPhone 13 — 128GB blue' : 'e.g. Lightroom presets (50)'}
+            placeholder={itemType === 'physical' ? 'e.g. iPhone 13 - 128GB blue' : 'e.g. Lightroom presets (50)'}
             error={errors.title?.message}
             {...register('title')}
           />
@@ -464,7 +464,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
             <textarea
               className="field w-full px-3 py-3 text-sm sm:px-4"
               rows={3}
-              placeholder="What the buyer gets — be specific and honest."
+              placeholder="What the buyer gets - be specific and honest."
               {...register('description')}
             />
             {errors.description && <p className="mt-1 text-sm text-danger">{errors.description.message}</p>}
@@ -482,7 +482,7 @@ function CreateListingModal({ onClose }: { onClose: () => void }) {
             <div className="rounded-xl border border-line bg-surface-2 px-3 py-2.5">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Buyer pays</p>
               <p className="mt-1 font-num text-lg font-bold text-mint">
-                {priceMinor && priceMinor >= 100 ? ngn(priceMinor) : '—'}
+                {priceMinor && priceMinor >= 100 ? ngn(priceMinor) : '-'}
               </p>
             </div>
           </div>

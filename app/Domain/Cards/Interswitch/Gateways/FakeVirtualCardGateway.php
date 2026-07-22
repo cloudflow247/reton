@@ -10,7 +10,7 @@ use App\Domain\Cards\Data\IssuedVirtualCard;
 use App\Domain\Cards\Data\VirtualCardBalance;
 
 /**
- * @deprecated Virtual cards moved to Bridgecard — kept for reference only.
+ * @deprecated Virtual cards moved to Bridgecard - kept for reference only.
  */
 final class FakeVirtualCardGateway implements VirtualCardGateway
 {
@@ -21,17 +21,17 @@ final class FakeVirtualCardGateway implements VirtualCardGateway
 
     public function createPrepaid(CreateVirtualCardPayload $payload, string $cardholderId): IssuedVirtualCard
     {
-        throw new \RuntimeException('Interswitch virtual cards are deprecated — use Bridgecard.');
+        throw new \RuntimeException('Interswitch virtual cards are deprecated - use Bridgecard.');
     }
 
     public function fetchDetails(string $providerCardId): IssuedVirtualCard
     {
-        throw new \RuntimeException('Interswitch virtual cards are deprecated — use Bridgecard.');
+        throw new \RuntimeException('Interswitch virtual cards are deprecated - use Bridgecard.');
     }
 
     public function fund(string $providerCardId, int $amountMinor, string $currency, string $reference): void
     {
-        throw new \RuntimeException('Interswitch virtual cards are deprecated — use Bridgecard.');
+        throw new \RuntimeException('Interswitch virtual cards are deprecated - use Bridgecard.');
     }
 
     public function block(string $providerCardId): void {}

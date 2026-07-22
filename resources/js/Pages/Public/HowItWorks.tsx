@@ -11,7 +11,7 @@ const flows = [
     name: 'Callback protection',
     steps: [
       'Pick Protected when you send. The money moves into escrow, not to the recipient.',
-      'They see a pending payment. You can release it — or raise a callback to recall it.',
+      'They see a pending payment. You can release it - or raise a callback to recall it.',
       'If you recall, they accept (you’re refunded) or reject (a Reton agent reviews and decides).',
     ],
   },
@@ -21,14 +21,14 @@ const flows = [
     steps: [
       'Sent a normal transfer to the wrong account? Report it from the Protection tab.',
       'If eligible, we freeze that amount in the recipient’s wallet and notify them.',
-      'They return it, or dispute — and if they go quiet, it escalates for review.',
+      'They return it, or dispute - and if they go quiet, it escalates for review.',
     ],
   },
   {
     Icon: ShareIcon,
     name: 'Sell with protection (listings)',
     steps: [
-      'Create a listing and share the link — WhatsApp, Instagram, or in person. Buyers don’t browse a public mall; they need your link.',
+      'Create a listing and share the link - WhatsApp, Instagram, or in person. Buyers don’t browse a public mall; they need your link.',
       'They pay with Callback Protection. Funds stay held until you deliver and they confirm.',
       'If something’s off, they can dispute. Every step sits on the same protection timeline as a normal transfer.',
     ],
@@ -37,7 +37,7 @@ const flows = [
     Icon: ScanIcon,
     name: 'Adding money & cash out',
     steps: [
-      'Fund your wallet with a dedicated deposit account — credits land when the bank confirms.',
+      'Fund your wallet with a dedicated deposit account - credits land when the bank confirms.',
       'Send protected or instant transfers to any Reton user with a full timeline on every move.',
       'Bank withdrawals are coming soon. Until then, your balance stays safe inside Reton.',
     ],
@@ -60,7 +60,7 @@ export default function HowItWorks() {
             Clear flows. <span className="gradient-text">Safer money.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            Reton protects transfers before they finalize, helps recover mistakes, and watches every payment for fraud —
+            Reton protects transfers before they finalize, helps recover mistakes, and watches every payment for fraud -
             so speed never costs you your money.
           </p>
         </div>

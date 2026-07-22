@@ -9,7 +9,7 @@ use App\Models\User;
 
 /**
  * Immutable audit trail for identity verification (PCI / ISO 27001 control).
- * Never stores raw BVN/NIN — only outcome metadata.
+ * Never stores raw BVN/NIN - only outcome metadata.
  */
 class KycAuditService
 {

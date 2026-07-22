@@ -55,7 +55,7 @@ class WalletService
 
             $account = new LedgerAccount([
                 'code' => 'wallet:'.Str::lower((string) Str::ulid()).':'.$currency,
-                'name' => 'Wallet '.$currency.' — '.class_basename($owner).' '.$owner->getKey(),
+                'name' => 'Wallet '.$currency.' - '.class_basename($owner).' '.$owner->getKey(),
                 'type' => AccountType::Liability,
                 'currency' => $currency,
                 'is_system' => false,

@@ -228,7 +228,7 @@ class BillPaymentService
 
             $transaction = $this->ledger->post(
                 PostingDraft::for(TransactionType::BillPayment)
-                    ->describedAs('Bill paid — '.$bill->biller_name)
+                    ->describedAs('Bill paid - '.$bill->biller_name)
                     ->idempotentBy($bill->reference.':settle')
                     ->debit($this->system->resolve(SystemAccount::SettlementPayable, $bill->currency), $amount)
                     ->credit($this->system->resolve(SystemAccount::Cash, $bill->currency), $amount)
@@ -250,7 +250,7 @@ class BillPaymentService
 
             $transaction = $this->ledger->post(
                 PostingDraft::for(TransactionType::Reversal)
-                    ->describedAs('Bill payment reversed — funds returned')
+                    ->describedAs('Bill payment reversed - funds returned')
                     ->idempotentBy($bill->reference.':reverse')
                     ->debit($this->system->resolve(SystemAccount::SettlementPayable, $bill->currency), $amount)
                     ->credit($walletAccountId, $amount)

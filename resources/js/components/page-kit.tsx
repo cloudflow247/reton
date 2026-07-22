@@ -19,7 +19,7 @@ export const pageItem = {
 
 type IconCmp = ComponentType<{ size?: number; className?: string }>
 
-/** Staggered page wrapper — use on every authenticated screen. */
+/** Staggered page wrapper - use on every authenticated screen. */
 export function Page({
   children,
   className = '',
@@ -42,7 +42,7 @@ export function Page({
 }
 
 /**
- * Portable page header — title + subtitle + optional balance.
+ * Portable page header - title + subtitle + optional balance.
  * Matches Add Money: clean, no icon card, no gradient panel.
  */
 export function PageHeader({
@@ -75,7 +75,7 @@ export function PageHeader({
   )
 }
 
-/** Prefer PageHeader — kept for callers that still pass icon/tone. */
+/** Prefer PageHeader - kept for callers that still pass icon/tone. */
 export function PageHero({
   icon: _Icon,
   title,
@@ -103,7 +103,7 @@ export function BalanceChip({ balance }: { balance: number }) {
   )
 }
 
-/** Morphing step indicator — clear progress on multi-step flows. */
+/** Morphing step indicator - clear progress on multi-step flows. */
 export function PageSteps({ steps, current }: { steps: string[]; current: number }) {
   return (
     <motion.div variants={pageItem} className="flex items-center gap-2 px-0.5">
@@ -133,7 +133,7 @@ export function PageSteps({ steps, current }: { steps: string[]; current: number
   )
 }
 
-/** Segmented control with layoutId morph — tabs, filters, modes. */
+/** Segmented control with layoutId morph - tabs, filters, modes. */
 export function MorphTabs<T extends string>({
   tabs,
   value,
@@ -180,7 +180,7 @@ export function MorphTabs<T extends string>({
   )
 }
 
-/** Security / info strip — one clear sentence. */
+/** Security / info strip - one clear sentence. */
 export function InfoStrip({
   tone = 'amber',
   title,
@@ -204,7 +204,7 @@ export function InfoStrip({
   )
 }
 
-/** Primary form surface — consistent padding, glow, spacing. */
+/** Primary form surface - consistent padding, glow, spacing. */
 export function FormPanel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <motion.div variants={pageItem} className={`panel space-y-4 p-4 ${className}`}>
@@ -298,7 +298,7 @@ export function SuccessScreen({
   )
 }
 
-/** Numbered instruction row — getting started, how-it-works. */
+/** Numbered instruction row - getting started, how-it-works. */
 export function StepRow({
   step,
   title,
@@ -357,7 +357,7 @@ export function EmptyState({
   )
 }
 
-/** PIN input — consistent styling everywhere. */
+/** PIN input - consistent styling everywhere. */
 export function PinField({
   id = 'pin',
   value,

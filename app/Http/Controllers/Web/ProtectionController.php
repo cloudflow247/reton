@@ -131,7 +131,7 @@ class ProtectionController extends Controller
 
         $this->callbacks->accept($callback, $user);
 
-        return back()->with('success', 'Callback accepted — funds returned.');
+        return back()->with('success', 'Callback accepted - funds returned.');
     }
 
     public function rejectCallback(RejectCallbackRequest $request, Callback $callback): RedirectResponse
@@ -144,7 +144,7 @@ class ProtectionController extends Controller
 
         $this->callbacks->reject($callback, $user, $reason);
 
-        return back()->with('success', 'Callback rejected — sent for review.');
+        return back()->with('success', 'Callback rejected - sent for review.');
     }
 
     public function storeRecovery(ReportRecoveryRequest $request, Transfer $transfer): RedirectResponse
@@ -183,6 +183,6 @@ class ProtectionController extends Controller
 
         $this->recoveries->dispute($recovery, $user, $reason);
 
-        return back()->with('success', 'Recovery disputed — sent for review.');
+        return back()->with('success', 'Recovery disputed - sent for review.');
     }
 }

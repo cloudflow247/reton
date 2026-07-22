@@ -10,7 +10,7 @@ use App\Models\User;
  * Contact email registered with ALATPay/Wema for customer deposit accounts.
  *
  * Wema bank alerts go to whatever address the provider stores. Those alerts are
- * for Reton operations (CEO / merchant inbox) — never the end customer.
+ * for Reton operations (CEO / merchant inbox) - never the end customer.
  *
  * Prefer a plus-alias of the ALATPay merchant email so every VA stays unique for
  * duplicate-BVN recovery while all bank mail still lands in the CEO inbox.

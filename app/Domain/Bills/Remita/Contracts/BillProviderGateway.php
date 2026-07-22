@@ -11,7 +11,7 @@ use App\Domain\Bills\Remita\Data\RrrInquiry;
 
 /**
  * The dedicated bill-payment provider layer (Remita and friends). All bill
- * provider traffic flows through an implementation of this contract — no
+ * provider traffic flows through an implementation of this contract - no
  * controller or domain service talks to a provider directly.
  */
 interface BillProviderGateway

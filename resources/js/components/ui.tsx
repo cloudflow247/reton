@@ -59,7 +59,7 @@ export function Modal({
   }
 
   // Portal to body so z-index is not trapped under AppShell's main (z-0) while the
-  // mobile dock sits at z-40 as a sibling — that stacking bug hid submit/PIN buttons.
+  // mobile dock sits at z-40 as a sibling - that stacking bug hid submit/PIN buttons.
   return createPortal(
     <motion.div
       initial={{ opacity: 0 }}

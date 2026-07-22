@@ -97,10 +97,10 @@ class GiglogisticsWebhookService
         return match ($event) {
             'shipment.at_hub' => 'Package received at Giglogistics verification hub.',
             'shipment.verifying' => 'Hub staff inspecting item against Reton listing snapshot.',
-            'shipment.verification_passed' => 'Item matches the locked order description — shipping to buyer.',
-            'shipment.verification_failed' => 'Item did not match the listing — buyer will be refunded.',
+            'shipment.verification_passed' => 'Item matches the locked order description - shipping to buyer.',
+            'shipment.verification_failed' => 'Item did not match the listing - buyer will be refunded.',
             'shipment.in_transit' => 'Verified package en route to buyer.',
-            'shipment.delivered' => 'Delivered — proof of delivery captured.',
+            'shipment.delivered' => 'Delivered - proof of delivery captured.',
             default => 'Giglogistics status update.',
         };
     }

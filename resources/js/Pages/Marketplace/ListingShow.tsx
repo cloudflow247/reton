@@ -75,7 +75,7 @@ export default function ListingShow() {
             )}
             {listing.verification_score !== undefined && (
               <p className="text-xs text-muted">
-                Listing clarity score {listing.verification_score}/100 — detailed enough for fair hub inspection.
+                Listing clarity score {listing.verification_score}/100 - detailed enough for fair hub inspection.
               </p>
             )}
           </div>
@@ -92,7 +92,7 @@ export default function ListingShow() {
 
         {isPhysical && listing.status === 'active' && (
           <p className="mt-3 rounded-lg border border-mint/25 bg-mint/5 px-3 py-2 text-xs text-muted">
-            After you pay, the seller takes the item to a verification hub. Reton locks this description — the partner
+            After you pay, the seller takes the item to a verification hub. Reton locks this description - the partner
             verifies the physical item matches before it ships to you.
           </p>
         )}
@@ -111,8 +111,8 @@ export default function ListingShow() {
           <p className="text-sm font-semibold">Buy with protection</p>
           <p className="mt-1 text-xs text-muted">
             {isPhysical
-              ? 'Payment is held until the hub verifies the item, delivers to you, and you confirm — or you are auto-refunded if verification fails or delivery is missed.'
-              : 'Payment is held until the seller delivers and you confirm — or you are auto-refunded if they miss the deadline.'}
+              ? 'Payment is held until the hub verifies the item, delivers to you, and you confirm - or you are auto-refunded if verification fails or delivery is missed.'
+              : 'Payment is held until the seller delivers and you confirm - or you are auto-refunded if they miss the deadline.'}
           </p>
           <PurchaseForm listing={listing} className="mt-4" />
         </Card>
@@ -198,7 +198,7 @@ function PurchaseForm({ listing, className }: { listing: DigitalListing; classNa
           <RhfField label="Phone" error={errors.shipping_phone?.message as string} {...register('shipping_phone')} />
           <label className="flex items-start gap-2 rounded-xl border border-line bg-surface-2 p-3 text-sm">
             <input type="checkbox" className="mt-1" {...register('buyer_accepts_description')} />
-            <span>I have read and accept this item description — it will be locked for fair dispute resolution.</span>
+            <span>I have read and accept this item description - it will be locked for fair dispute resolution.</span>
           </label>
           {errors.buyer_accepts_description && (
             <p className="text-sm text-danger">{errors.buyer_accepts_description.message as string}</p>

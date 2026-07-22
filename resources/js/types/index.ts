@@ -47,7 +47,7 @@ export type SharedProps = {
     wallets: Wallet[]
   }
   demo: DemoInfo | null
-  /** Secret admin panel base path — only set for platform administrators. */
+  /** Secret admin panel base path - only set for platform administrators. */
   adminPath: string | null
   features: FeatureFlags
   flash: {

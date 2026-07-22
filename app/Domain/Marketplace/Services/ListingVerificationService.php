@@ -11,7 +11,7 @@ use App\Domain\Marketplace\Models\DigitalOrder;
 
 /**
  * Scores listing descriptions for completeness and honesty signals before
- * buyers commit — the basis for fair escrow judgement later.
+ * buyers commit - the basis for fair escrow judgement later.
  */
 class ListingVerificationService
 {

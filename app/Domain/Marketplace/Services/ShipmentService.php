@@ -32,7 +32,7 @@ class ShipmentService
     ) {}
 
     /**
-     * Seller schedules a hub drop-off — item must be taken to Giglogistics for verification.
+     * Seller schedules a hub drop-off - item must be taken to Giglogistics for verification.
      *
      * @param  array<string, string>  $sellerContact
      */

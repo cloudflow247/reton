@@ -82,7 +82,7 @@ export function BvnVerificationGate({
     otpForm.post('/profile/kyc/tier-2/confirm', {
       preserveScroll: true,
       onSuccess: () => {
-        toast.success('BVN verified — your deposit account is ready', 4000)
+        toast.success('BVN verified - your deposit account is ready', 4000)
       },
     })
   }
@@ -104,7 +104,7 @@ export function BvnVerificationGate({
         preserveScroll: true,
         onSuccess: () => {
           setResendCooldown(RESEND_COOLDOWN_SECONDS)
-          toast.success(demoMode ? 'New demo code ready — still use 123456' : 'New code sent', 3500)
+          toast.success(demoMode ? 'New demo code ready - still use 123456' : 'New code sent', 3500)
         },
         onError: (errors) => {
           const message = errors.otp ?? 'Could not resend the code. Try again shortly.'
@@ -148,7 +148,7 @@ export function BvnVerificationGate({
                     : 'We sent a one-time code to the phone linked to your BVN. Enter it below to unlock wallet funding.')
                 : usesAlatpay
                   ? demoMode
-                    ? 'Demo BVN check — you will confirm with code 123456 (no SMS).'
+                    ? 'Demo BVN check - you will confirm with code 123456 (no SMS).'
                     : 'We verify your BVN and send a one-time code to your registered phone. Your BVN is encrypted at rest.'
                   : 'Verify your identity before funding your wallet. Your BVN is encrypted at rest.'}
             </p>
@@ -192,7 +192,7 @@ export function BvnVerificationGate({
                   ? `${bvnDigits}/11 digits`
                   : demoMode
                     ? 'Demo: any valid-looking 11 digits works with code 123456'
-                    : 'Must be your real BVN — we text the phone on that record'
+                    : 'Must be your real BVN - we text the phone on that record'
               }
             />
 

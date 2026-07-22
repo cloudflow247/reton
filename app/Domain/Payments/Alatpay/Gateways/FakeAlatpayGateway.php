@@ -192,7 +192,7 @@ class FakeAlatpayGateway implements AlatpayGateway
                     ))));
 
                     if ($existingEmail !== '' && in_array($existingEmail, $candidates, true)) {
-                        // Still awaiting OTP — allow a fresh tracking id (resend).
+                        // Still awaiting OTP - allow a fresh tracking id (resend).
                         if (($existing['otpTrackingId'] ?? null) !== null) {
                             $otpTrackingId = 'OTP-RESEND-'.substr(preg_replace('/\D/', '', (string) Str::ulid()).'000000', 0, 12);
                             $existing['otpTrackingId'] = $otpTrackingId;

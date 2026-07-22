@@ -19,7 +19,7 @@ enum DepositMethod: string
         };
     }
 
-    /** ALAT Pay channel code — null omits the field (all channels on hosted checkout). */
+    /** ALAT Pay channel code - null omits the field (all channels on hosted checkout). */
     public function alatpayChannel(): ?string
     {
         return match ($this) {

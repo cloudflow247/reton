@@ -52,7 +52,7 @@ class FakeGiglogisticsGateway implements GiglogisticsGateway
             externalId: $externalId,
             trackingNumber: $tracking,
             dropoffCode: $dropoff,
-            hubName: (string) config('reton.physical.default_hub_name', 'Giglogistics Verification Hub — Lekki'),
+            hubName: (string) config('reton.physical.default_hub_name', 'Giglogistics Verification Hub - Lekki'),
             hubAddress: (array) config('reton.physical.default_hub_address', [
                 'line1' => '12 Admiralty Way',
                 'city' => 'Lekki',
@@ -198,11 +198,11 @@ class FakeGiglogisticsGateway implements GiglogisticsGateway
                 'status' => $stage->value,
                 'at' => $created->copy()->addMinutes($step * $i)->toIso8601String(),
                 'note' => match ($stage) {
-                    ShipmentStatus::AwaitingDropoff => 'Drop-off scheduled — seller brings item to Giglogistics hub.',
+                    ShipmentStatus::AwaitingDropoff => 'Drop-off scheduled - seller brings item to Giglogistics hub.',
                     ShipmentStatus::AtHub => 'Package received at verification hub.',
                     ShipmentStatus::Verifying => 'Inspecting item against Reton locked description.',
-                    ShipmentStatus::VerificationPassed => 'Verified — matches buyer order snapshot.',
-                    ShipmentStatus::VerificationFailed => 'Failed verification — does not match listing.',
+                    ShipmentStatus::VerificationPassed => 'Verified - matches buyer order snapshot.',
+                    ShipmentStatus::VerificationFailed => 'Failed verification - does not match listing.',
                     ShipmentStatus::InTransit => 'Released to courier for buyer delivery.',
                     ShipmentStatus::OutForDelivery => 'With last-mile courier.',
                     ShipmentStatus::Delivered => 'Delivered to buyer address.',

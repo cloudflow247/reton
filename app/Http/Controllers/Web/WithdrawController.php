@@ -37,7 +37,7 @@ class WithdrawController extends Controller
     {
         if ($soon = $this->comingSoonIfDisabled('withdraw', [
             'title' => 'Withdraw to bank',
-            'description' => 'Cash out to your own Nigerian bank account is almost ready. Your balance stays safe — send money and Callback Protection work today.',
+            'description' => 'Cash out to your own Nigerian bank account is almost ready. Your balance stays safe - send money and Callback Protection work today.',
         ])) {
             return $soon;
         }

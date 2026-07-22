@@ -82,7 +82,7 @@ export default function UserShow() {
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Phone</dt>
-                <dd>{user.phone ?? '—'}</dd>
+                <dd>{user.phone ?? '-'}</dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Email</dt>
@@ -94,11 +94,11 @@ export default function UserShow() {
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Last login</dt>
-                <dd>{user.last_login_at ? shortDate(user.last_login_at) : '—'}</dd>
+                <dd>{user.last_login_at ? shortDate(user.last_login_at) : '-'}</dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Joined</dt>
-                <dd>{user.created_at ? shortDate(user.created_at) : '—'}</dd>
+                <dd>{user.created_at ? shortDate(user.created_at) : '-'}</dd>
               </div>
             </dl>
           </Card>
@@ -113,7 +113,7 @@ export default function UserShow() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">BVN</dt>
-                  <dd>{kyc.bvn_last4 ? `••••${kyc.bvn_last4}` : '—'}</dd>
+                  <dd>{kyc.bvn_last4 ? `••••${kyc.bvn_last4}` : '-'}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">BVN verified</dt>
@@ -121,7 +121,7 @@ export default function UserShow() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">NIN</dt>
-                  <dd>{kyc.nin_last4 ? `••••${kyc.nin_last4}` : '—'}</dd>
+                  <dd>{kyc.nin_last4 ? `••••${kyc.nin_last4}` : '-'}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">NIN verified</dt>
@@ -129,7 +129,7 @@ export default function UserShow() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">Location</dt>
-                  <dd>{[kyc.city, kyc.state].filter(Boolean).join(', ') || '—'}</dd>
+                  <dd>{[kyc.city, kyc.state].filter(Boolean).join(', ') || '-'}</dd>
                 </div>
               </dl>
             ) : (
@@ -188,7 +188,7 @@ export default function UserShow() {
                     <td>{t.type}</td>
                     <td>{t.status}</td>
                     <td>{ngn(t.amount)}</td>
-                    <td className="text-muted">{t.created_at ? shortDate(t.created_at) : '—'}</td>
+                    <td className="text-muted">{t.created_at ? shortDate(t.created_at) : '-'}</td>
                   </tr>
                 ))
               )}

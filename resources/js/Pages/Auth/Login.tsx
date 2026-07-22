@@ -177,7 +177,7 @@ export default function Login() {
             <SparkleIcon size={14} /> Try it instantly
           </div>
           <p className="mt-1.5 text-xs leading-relaxed text-muted">
-            Tap a demo account — PIN for payments is{' '}
+            Tap a demo account - PIN for payments is{' '}
             <span className="font-num font-semibold text-text">{demo.pin}</span>.
           </p>
           <div className="mt-3 space-y-2">

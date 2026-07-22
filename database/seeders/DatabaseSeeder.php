@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      *
-     * Note: model events must remain enabled during seeding — domain models
+     * Note: model events must remain enabled during seeding - domain models
      * assign their UUID primary keys on the `creating` event.
      */
     public function run(): void

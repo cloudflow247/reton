@@ -1,21 +1,21 @@
-## Reton — Trust-First FinTech
+## Reton - Trust-First FinTech
 
-Reton is Africa's trust-first payment platform (ALATPay Buildathon MVP). Real money flows through this system — never generate demo or placeholder payment code.
+Reton is Africa's trust-first payment platform (ALATPay Buildathon MVP). Real money flows through this system - never generate demo or placeholder payment code.
 
 ### Architecture (required)
 
 - Business logic lives in `app/Domain/*` using DDD: Actions, Services, Repositories (when warranted), DTOs, Events/Listeners, Policies.
 - Controllers are HTTP-only: validate, authorize, delegate, respond.
-- Every payment operation must be **atomic** (DB transactions) and ledger-backed via `LedgerService` — never mutate balances without ledger entries.
+- Every payment operation must be **atomic** (DB transactions) and ledger-backed via `LedgerService` - never mutate balances without ledger entries.
 - External providers (ALATPay, Termii, Dojah, Interswitch, Bridgecard, Remita) are accessed only through domain gateways/services, never from controllers.
 
 ### Flagship features (demo-polished)
 
-1. **Callback Protection** — protected transfers, release/callback flows, receiver accept/reject/evidence, admin intervention, full timeline.
-2. **Wrong Transfer Recovery** — use `app/Domain/Recovery/*` patterns.
-3. **Wallet** — double-entry ledger, beneficiaries, statements, transaction timeline on every movement.
-4. **Fraud** — extend `app/Domain/Fraud/*` rule engine; surface alerts in admin.
-5. **Merchant verification** — trust score, blue badge, business profile.
+1. **Callback Protection** - protected transfers, release/callback flows, receiver accept/reject/evidence, admin intervention, full timeline.
+2. **Wrong Transfer Recovery** - use `app/Domain/Recovery/*` patterns.
+3. **Wallet** - double-entry ledger, beneficiaries, statements, transaction timeline on every movement.
+4. **Fraud** - extend `app/Domain/Fraud/*` rule engine; surface alerts in admin.
+5. **Merchant verification** - trust score, blue badge, business profile.
 
 ### Stack
 

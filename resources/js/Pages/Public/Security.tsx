@@ -13,7 +13,7 @@ import {
 } from '@/components/icons'
 
 const pillars = [
-  [ShieldIcon, 'Double-entry ledger', 'Every kobo is tracked in an immutable, balanced ledger. No balance changes outside it — ever.'],
+  [ShieldIcon, 'Double-entry ledger', 'Every kobo is tracked in an immutable, balanced ledger. No balance changes outside it - ever.'],
   [ScanIcon, 'Real-time fraud scoring', 'Each transaction is scored on velocity, device, amount and beneficiary; high-risk moves are blocked before they settle.'],
   [LockIcon, 'Transaction PIN', 'A separate PIN authorises every payment, with lockout after repeated failures.'],
   [UndoIcon, 'Idempotent money movement', 'Retries and duplicate webhooks can never double-spend or double-credit.'],
@@ -40,7 +40,7 @@ export default function Security() {
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
             Every payment is ledger-backed, PIN-authorised, fraud-scored, and fully audited. Reton is engineered so
-            regulators — and you — can trust what the balance says.
+            regulators - and you - can trust what the balance says.
           </p>
         </div>
       </section>
@@ -71,7 +71,7 @@ export default function Security() {
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80">
             Balances reconcile to the kobo, every action is timestamped, and money moves on a licensed bank rail.
-            Security isn’t a feature here — it’s the foundation.
+            Security isn’t a feature here - it’s the foundation.
           </p>
         </div>
 

@@ -43,7 +43,7 @@ type NavItem = {
   feature?: keyof SharedProps['features']
 }
 
-/** Always visible on desktop — core money actions with labels. */
+/** Always visible on desktop - core money actions with labels. */
 const primaryNav: NavItem[] = [
   { to: '/dashboard', label: 'Home', end: true, Icon: HomeIcon, hint: 'Wallet & overview' },
   { to: '/send', label: 'Send', Icon: SendIcon, hint: 'Transfer money' },
@@ -52,7 +52,7 @@ const primaryNav: NavItem[] = [
   { to: '/cards', label: 'Cards', Icon: CardIcon, hint: 'Virtual cards', feature: 'cards' },
 ]
 
-/** Nested under More — still labeled, keeps the bar readable. */
+/** Nested under More - still labeled, keeps the bar readable. */
 const moreNav: NavItem[] = [
   { to: '/activity', label: 'Activity', Icon: ActivityIcon, hint: 'Transaction history' },
   { to: '/marketplace', label: 'Shop', Icon: GiftIcon, hint: 'Protected marketplace' },
@@ -307,7 +307,7 @@ function NavLink({ item, on, soon }: { item: NavItem; on: boolean; soon?: boolea
     <Link
       href={to}
       prefetch
-      title={soon ? `${label} — coming soon` : (item.hint ?? label)}
+      title={soon ? `${label} - coming soon` : (item.hint ?? label)}
       className="relative shrink-0 rounded-full px-3 py-2 text-sm font-medium"
     >
       {on && (
@@ -355,7 +355,7 @@ function DockItem({
       className={`relative flex min-w-[3.5rem] flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[10px] font-semibold transition-colors ${
         on ? 'text-mint' : 'text-muted'
       }`}
-      title={soon ? `${label} — coming soon` : label}
+      title={soon ? `${label} - coming soon` : label}
     >
       <span
         className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition ${

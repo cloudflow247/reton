@@ -38,7 +38,7 @@ export function PasswordStrength({ password }: { password: string }) {
       </div>
       <p className={`text-xs font-medium ${s >= 3 ? 'text-mint' : s >= 2 ? 'text-amber' : 'text-danger'}`}>
         {label}
-        {s < 2 && ' — use 8+ characters with letters and numbers'}
+        {s < 2 && ' - use 8+ characters with letters and numbers'}
       </p>
     </motion.div>
   )

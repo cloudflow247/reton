@@ -99,7 +99,7 @@ class MarketplaceController extends Controller
 
         return redirect()
             ->route('marketplace.listings.show', $listing)
-            ->with('success', 'Listing published — share the link or item code with your buyer.');
+            ->with('success', 'Listing published - share the link or item code with your buyer.');
     }
 
     public function show(Request $request, DigitalListing $listing): Response
@@ -154,8 +154,8 @@ class MarketplaceController extends Controller
         );
 
         $message = $listing->isPhysical()
-            ? 'Purchase protected — seller will ship via Giglogistics. Review the locked description in Protection.'
-            : 'Purchase protected — funds held until you confirm delivery.';
+            ? 'Purchase protected - seller will ship via Giglogistics. Review the locked description in Protection.'
+            : 'Purchase protected - funds held until you confirm delivery.';
 
         return redirect()
             ->route('protection')
@@ -181,7 +181,7 @@ class MarketplaceController extends Controller
             true,
         );
 
-        return back()->with('success', 'Hub drop-off scheduled — take the item to Giglogistics with your drop-off code.');
+        return back()->with('success', 'Hub drop-off scheduled - take the item to Giglogistics with your drop-off code.');
     }
 
     public function deliver(DeliverDigitalOrderRequest $request, DigitalOrder $order): RedirectResponse
@@ -193,7 +193,7 @@ class MarketplaceController extends Controller
 
         $this->marketplace->deliver($order, $user, true);
 
-        return back()->with('success', 'Digital item delivered — buyer can now review and confirm.');
+        return back()->with('success', 'Digital item delivered - buyer can now review and confirm.');
     }
 
     public function confirm(ConfirmDigitalOrderRequest $request, DigitalOrder $order): RedirectResponse
@@ -208,7 +208,7 @@ class MarketplaceController extends Controller
 
         return redirect()
             ->route('protection')
-            ->with('success', 'Item confirmed — payment released to the seller.');
+            ->with('success', 'Item confirmed - payment released to the seller.');
     }
 
     public function dispute(RaiseDigitalDisputeRequest $request, DigitalOrder $order): RedirectResponse
@@ -230,6 +230,6 @@ class MarketplaceController extends Controller
 
         return redirect()
             ->route('protection')
-            ->with('success', 'Dispute opened — the seller has been notified to respond.');
+            ->with('success', 'Dispute opened - the seller has been notified to respond.');
     }
 }

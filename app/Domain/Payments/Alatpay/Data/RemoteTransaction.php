@@ -33,7 +33,7 @@ final readonly class RemoteTransaction
     public function fundingDescription(): string
     {
         if (filled($this->narration)) {
-            return 'Bank transfer — '.$this->narration;
+            return 'Bank transfer - '.$this->narration;
         }
 
         if (filled($this->payerName) && filled($this->bankName)) {

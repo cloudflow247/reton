@@ -98,7 +98,7 @@ export default function Home() {
               <Stat value="72h" label="callback window" />
             </div>
 
-            {/* Partner trust line — money settles on a real bank rail. */}
+            {/* Partner trust line - money settles on a real bank rail. */}
             <div className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-line bg-surface px-3.5 py-2 shadow-sm">
               <AlatMark size={26} />
               <span className="text-sm text-muted">
@@ -133,7 +133,7 @@ export default function Home() {
           <SectionHead
             eyebrow="Why Reton"
             title="Built to protect every transfer."
-            lead="Three layers of safety work on every payment — so a mistake or a scam doesn’t have to be final."
+            lead="Three layers of safety work on every payment - so a mistake or a scam doesn’t have to be final."
           />
           <motion.div
             variants={{ show: { transition: { staggerChildren: 0.1 } } }}
@@ -162,9 +162,9 @@ export default function Home() {
           />
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
             {[
-              ['Send protected', 'Choose Protected when you pay. The money moves into escrow — not to the recipient yet.'],
+              ['Send protected', 'Choose Protected when you pay. The money moves into escrow - not to the recipient yet.'],
               ['Hold or recall', 'They see it as pending. You can release it, or raise a callback to pull it back.'],
-              ['Settled or returned', 'Confirm and it settles instantly. Dispute, and our engine decides — every step logged.'],
+              ['Settled or returned', 'Confirm and it settles instantly. Dispute, and our engine decides - every step logged.'],
             ].map(([title, body], i) => (
               <motion.div
                 key={title}
@@ -183,7 +183,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Sell with protection — light marketplace teaser */}
+        {/* Sell with protection - light marketplace teaser */}
         <section className="py-16 sm:py-20">
           <div className="card elevate relative overflow-hidden p-8 sm:p-10">
             <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-mint/10 blur-3xl" />
@@ -191,17 +191,17 @@ export default function Home() {
               <div>
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-mint">Shop &amp; listings</span>
                 <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                  Sell something. Get paid — <span className="gradient-text">safely</span>.
+                  Sell something. Get paid - <span className="gradient-text">safely</span>.
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">
                   List an item, share the link on WhatsApp, and let Callback Protection hold the buyer’s money until you
-                  deliver. Same undo button for money — now for real sales.
+                  deliver. Same undo button for money - now for real sales.
                 </p>
                 <ul className="mt-6 space-y-2.5 text-sm text-muted">
                   {[
                     'Buyer pays → funds stay protected',
                     'You deliver → they confirm',
-                    'Money releases — or a dispute opens with a full timeline',
+                    'Money releases - or a dispute opens with a full timeline',
                   ].map((line) => (
                     <li key={line} className="flex items-start gap-2.5">
                       <CheckIcon size={16} className="mt-0.5 shrink-0 text-mint" />
@@ -242,7 +242,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="mt-4 text-xs leading-relaxed text-muted">
-                  Share one link. No public shop browse — buyers need your listing to find you.
+                  Share one link. No public shop browse - buyers need your listing to find you.
                 </p>
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Powered by ALAT by Wema — the licensed bank rail */}
+        {/* Powered by ALAT by Wema - the licensed bank rail */}
         <section className="py-12">
           <PoweredByAlat />
         </section>
@@ -302,7 +302,7 @@ export default function Home() {
                 href="/register"
                 className="btn inline-flex items-center gap-1.5 bg-mint px-7 py-3.5 text-white shadow-sm hover:bg-mint-strong"
               >
-                Get started — it’s free <ArrowRightIcon size={17} />
+                Get started - it’s free <ArrowRightIcon size={17} />
               </Link>
               <Link href="/login" className="btn border border-line bg-surface px-7 py-3.5 hover:border-mint/40">
                 Sign in
@@ -371,7 +371,7 @@ function HeroPreview() {
         </div>
         <div className="mt-3 font-num text-4xl font-bold">₦ 248,500.00</div>
         <div className="mt-5 space-y-2.5">
-          <Line who="To Ada — protected" amount="−₦ 40,000" held />
+          <Line who="To Ada - protected" amount="−₦ 40,000" held />
           <Line who="From AlatPay" amount="+₦ 100,000" />
         </div>
       </div>

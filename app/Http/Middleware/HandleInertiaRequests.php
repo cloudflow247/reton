@@ -41,7 +41,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             // Lazy: controllers may credit wallets (static VA poll) before the
-            // Inertia response is built — eager share() would freeze balance at ₦0.
+            // Inertia response is built - eager share() would freeze balance at ₦0.
             'auth' => fn (): array => [
                 'user' => $request->user()
                     ? (new UserResource($request->user()))->resolve()
@@ -50,7 +50,7 @@ class HandleInertiaRequests extends Middleware
                     ? WalletResource::collection($request->user()->wallets()->get())->resolve()
                     : [],
             ],
-            // Demo helper for reviewers — only present when explicitly enabled
+            // Demo helper for reviewers - only present when explicitly enabled
             // (RETON_DEMO_MODE), so production never exposes credentials.
             'demo' => config('reton.demo.enabled') ? [
                 'password' => (string) config('reton.demo.password'),
