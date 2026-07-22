@@ -203,7 +203,7 @@ function PlatformForm({ group, initial }: { group: PlatformGroup; initial: Group
               label="Receiver response (hours)"
               type="number"
               min={1}
-              value={String(form.data.response_hours ?? 24)}
+              value={String(form.data.response_hours ?? 72)}
               onChange={(e) => form.setData('response_hours', Number(e.target.value))}
             />
           </div>

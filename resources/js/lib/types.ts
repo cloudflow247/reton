@@ -81,6 +81,8 @@ export type Transfer = {
   note: string | null
   sender_wallet_id: string
   receiver_wallet_id: string
+  sender?: { name: string | null; reton_id: string | null } | null
+  receiver?: { name: string | null; reton_id: string | null } | null
   metadata?: {
     purpose?: string
     order_id?: string

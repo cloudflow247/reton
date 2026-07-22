@@ -11,7 +11,7 @@ import {
   ShieldIcon,
 } from '@/components/icons'
 import { Page, pageItem } from '@/components/page-kit'
-import { Button } from '@/components/ui'
+import { Button, CopyRow } from '@/components/ui'
 import { ngn, shortDate } from '@/lib/format'
 import { paintReceiptPng, shareOrDownloadPng } from '@/lib/receipt-export'
 import type { StatementEntry, Transfer } from '@/lib/types'
@@ -78,6 +78,7 @@ export default function ActivityShow() {
   const isCredit = entry.direction === 'credit'
   const title = entry.transaction?.description ?? entry.transaction?.type ?? 'Wallet movement'
   const reference = entry.transaction?.reference ?? entry.id
+  const transactionId = entry.transaction?.id ?? null
   const amountLabel = `${isCredit ? '+' : '−'}${ngn(entry.amount)}`
   const safeFileRef = reference.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 48)
 
@@ -210,7 +211,14 @@ export default function ActivityShow() {
           )}
 
           <dl className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            <Detail label="Reference" value={reference} mono />
+            <div className="rounded-2xl border border-line/80 bg-surface-2/50 px-3.5 py-1 sm:col-span-2">
+              <CopyRow label="Reference" value={reference} mono wrap />
+            </div>
+            {transactionId && (
+              <div className="rounded-2xl border border-line/80 bg-surface-2/50 px-3.5 py-1 sm:col-span-2">
+                <CopyRow label="Transaction ID" value={transactionId} mono wrap />
+              </div>
+            )}
             <Detail label="Status" value={entry.transaction?.status ?? 'posted'} />
             <Detail label="Type" value={entry.transaction?.type ?? 'movement'} />
             <Detail label="Currency" value={entry.currency} />

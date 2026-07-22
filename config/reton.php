@@ -124,8 +124,9 @@ return [
     'callback' => [
         'hold_hours' => (int) env('RETON_CALLBACK_HOLD_HOURS', 72),
 
-        // How long the receiver has to respond to a raised callback.
-        'response_hours' => (int) env('RETON_CALLBACK_RESPONSE_HOURS', 24),
+        // How long the receiver has to accept or reject a raised callback.
+        // After this window with no response, funds return to the sender.
+        'response_hours' => (int) env('RETON_CALLBACK_RESPONSE_HOURS', 72),
 
         // Outcome when a callback expires unanswered: 'refund' (protect the
         // sender who raised it) or 'release' (protect the receiver).
@@ -136,8 +137,8 @@ return [
         'fairness' => [
             'hold_hours_min' => (int) env('RETON_CALLBACK_HOLD_HOURS_MIN', 24),
             'hold_hours_max' => (int) env('RETON_CALLBACK_HOLD_HOURS_MAX', 120),
-            'response_hours_min' => (int) env('RETON_CALLBACK_RESPONSE_HOURS_MIN', 12),
-            'response_hours_max' => (int) env('RETON_CALLBACK_RESPONSE_HOURS_MAX', 48),
+            'response_hours_min' => (int) env('RETON_CALLBACK_RESPONSE_HOURS_MIN', 48),
+            'response_hours_max' => (int) env('RETON_CALLBACK_RESPONSE_HOURS_MAX', 120),
             'large_amount_minor' => (int) env('RETON_CALLBACK_FAIRNESS_LARGE_AMOUNT', 500_000),
             'max_open_callbacks' => (int) env('RETON_CALLBACK_MAX_OPEN', 3),
             'max_callbacks_per_week' => (int) env('RETON_CALLBACK_MAX_PER_WEEK', 5),

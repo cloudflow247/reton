@@ -138,7 +138,7 @@ class PlatformSettingsService
         ],
         'callback' => [
             'hold_hours' => 72,
-            'response_hours' => 24,
+            'response_hours' => 72,
             'unanswered_resolution' => 'refund',
         ],
         'digital' => [
@@ -593,7 +593,7 @@ class PlatformSettingsService
             ]),
             'callback' => config([
                 'reton.callback.hold_hours' => (int) ($values['hold_hours'] ?? 72),
-                'reton.callback.response_hours' => (int) ($values['response_hours'] ?? 24),
+                'reton.callback.response_hours' => (int) ($values['response_hours'] ?? 72),
                 'reton.callback.unanswered_resolution' => (string) ($values['unanswered_resolution'] ?? 'refund'),
             ]),
             'digital' => config([

@@ -53,7 +53,7 @@ class ProtectionController extends Controller
 
         $transfers = Transfer::query()
             ->where(fn ($q) => $q->whereIn('sender_wallet_id', $walletIds)->orWhereIn('receiver_wallet_id', $walletIds))
-            ->with('hold')
+            ->with(['hold', 'senderWallet.owner', 'receiverWallet.owner'])
             ->latest()
             ->get();
 

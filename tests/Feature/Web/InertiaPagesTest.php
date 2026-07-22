@@ -195,6 +195,28 @@ it('passes transfers, callbacks and recoveries to the protection page', function
             ->has('walletId'));
 });
 
+it('includes recipient full name on held protected transfers for release confirmation', function () {
+    [$sender, $from] = webUser(1_000_00);
+    [$recipient, $to] = webUser();
+    $recipient->forceFill(['name' => 'Adaobi Okeke'])->save();
+
+    app(\App\Domain\Transfers\Services\TransferService::class)->sendProtected(
+        $sender,
+        $from,
+        $to,
+        \App\Support\Money\Money::of(250_00, 'NGN'),
+        'Name check',
+        null,
+    );
+
+    $this->actingAs($sender)->get('/protection')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Protection')
+            ->where('transfers.0.receiver.name', 'Adaobi Okeke')
+            ->has('transfers.0.receiver.reton_id'));
+});
+
 /*
 |--------------------------------------------------------------------------
 | Mutations: transfer, deposit, pin, lookup

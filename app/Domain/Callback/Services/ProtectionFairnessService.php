@@ -166,9 +166,9 @@ class ProtectionFairnessService
 
     public function responseHoursFor(User $sender, User $receiver): int
     {
-        $base = (int) config('reton.callback.response_hours', 24);
-        $min = (int) config('reton.callback.fairness.response_hours_min', 12);
-        $max = (int) config('reton.callback.fairness.response_hours_max', 48);
+        $base = (int) config('reton.callback.response_hours', 72);
+        $min = (int) config('reton.callback.fairness.response_hours_min', 48);
+        $max = (int) config('reton.callback.fairness.response_hours_max', 120);
 
         $hours = $base;
         $receiverScore = $this->scoreUser($receiver);
@@ -248,65 +248,35 @@ class ProtectionFairnessService
         $receiverScore = $receiver instanceof User ? $this->scoreUser($receiver) : 50;
         $category = $this->classifyReason((string) ($callback->reason ?? ''));
         $evidence = $this->latestEvidenceScore($callback);
-        $reasons = [];
 
         $senderHigh = $sender instanceof User && $this->userIsHighRisk($sender, $transfer, 'callback_expiry');
         $receiverHigh = $receiver instanceof User && $this->userIsHighRisk($receiver, $transfer, 'callback_expiry');
 
+        // Product rule: unanswered callbacks resolve by config (default refund to sender).
+        // Fairness scores stay on the timeline for audit. Only override when paying out
+        // to a high-risk receiver would violate trust-first payout safety.
+        $resolution = $this->configuredDefault();
+        $reasons = [
+            $resolution === CallbackResolution::Refund
+                ? 'Unanswered callback window elapsed - funds returned to the sender.'
+                : 'Unanswered callback window elapsed - funds released to the receiver.',
+            'Dispute category: '.$category.'.',
+        ];
+
         if ($receiverHigh) {
-            $reasons[] = 'Receiver scored high-risk - funds returned to sender.';
-
-            return new FairnessAssessment(
-                senderScore: $senderScore,
-                receiverScore: $receiverScore,
-                category: $category,
-                resolution: CallbackResolution::Refund,
-                reasons: $reasons,
-                evidenceScore: $evidence,
-            );
+            $reasons[] = 'Receiver scored high-risk at expiry.';
+            if ($resolution === CallbackResolution::Release) {
+                $resolution = CallbackResolution::Refund;
+                $reasons[] = 'High-risk receiver blocked automatic release - funds returned to sender.';
+            }
         }
 
-        if ($senderHigh && $receiverScore >= 60) {
-            $reasons[] = 'Sender scored high-risk while receiver trust is healthy - funds released.';
-
-            return new FairnessAssessment(
-                senderScore: $senderScore,
-                receiverScore: $receiverScore,
-                category: $category,
-                resolution: CallbackResolution::Release,
-                reasons: $reasons,
-                evidenceScore: $evidence,
-            );
+        if ($senderHigh) {
+            $reasons[] = 'Sender scored high-risk at expiry.';
         }
 
-        $delta = $receiverScore - $senderScore;
-
-        if ($delta >= 20) {
-            $reasons[] = 'Receiver fairness score is meaningfully higher than sender.';
-            $resolution = CallbackResolution::Release;
-        } elseif ($delta <= -20) {
-            $reasons[] = 'Sender fairness score is meaningfully higher than receiver.';
-            $resolution = CallbackResolution::Refund;
-        } else {
-            $resolution = $this->configuredDefault();
-            $reasons[] = $resolution === CallbackResolution::Refund
-                ? 'Scores are close - default protects the party who raised the callback.'
-                : 'Scores are close - default releases held funds to the receiver.';
-        }
-
-        if ($category === 'suspected_fraud' && $resolution === CallbackResolution::Release && $senderScore >= 50) {
-            $resolution = CallbackResolution::Refund;
-            $reasons[] = 'Suspected-fraud category tipped the decision toward refund.';
-        }
-
-        if ($evidence !== null && $evidence >= 70 && $resolution === CallbackResolution::Release && $senderScore >= 55) {
-            $resolution = CallbackResolution::Refund;
-            $reasons[] = 'Strong evidence package supported the sender on expiry.';
-        }
-
-        if ($evidence !== null && $evidence < 25 && $resolution === CallbackResolution::Refund && $receiverScore >= 70 && ! $senderHigh) {
-            $resolution = CallbackResolution::Release;
-            $reasons[] = 'Weak evidence with a strong receiver tipped toward release.';
+        if ($evidence !== null) {
+            $reasons[] = 'Evidence score at expiry: '.$evidence.'.';
         }
 
         return new FairnessAssessment(
@@ -327,7 +297,7 @@ class ProtectionFairnessService
         $category = $this->classifyReason($reason);
         $responseHours = $receiver instanceof User
             ? $this->responseHoursFor($sender, $receiver)
-            : (int) config('reton.callback.response_hours', 24);
+            : (int) config('reton.callback.response_hours', 72);
 
         return new FairnessAssessment(
             senderScore: $senderScore,

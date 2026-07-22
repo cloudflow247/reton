@@ -21,6 +21,8 @@ it('shows a statement receipt the wallet owner can open', function () {
             ->where('entry.id', $entryId)
             ->where('entry.amount', 250_00)
             ->where('entry.direction', 'credit')
+            ->has('entry.transaction.id')
+            ->has('entry.transaction.reference')
             ->has('receipt.app')
             ->has('wallet.account_number'));
 });

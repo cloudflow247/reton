@@ -61,7 +61,7 @@ class CallbackService
         $this->fairness->assertCanInitiate($transfer, $sender, $reason);
         $snapshot = $this->fairness->initiationSnapshot($transfer, $sender, $reason);
         $responseHours = $snapshot->responseHours
-            ?? (int) config('reton.callback.response_hours', 24);
+            ?? (int) config('reton.callback.response_hours', 72);
 
         return DB::transaction(function () use ($transfer, $sender, $reason, $snapshot, $responseHours): Callback {
             $callback = Callback::create([

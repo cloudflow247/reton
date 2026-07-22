@@ -23,6 +23,8 @@ type ActionDef = {
   title: string
   blurb: string
   confirm: string
+  warning?: string
+  recipientName?: string
   needPin?: boolean
   needReason?: boolean
   reasonLabel?: string
@@ -266,7 +268,10 @@ export default function Protection() {
                           onClick={() =>
                             setAction({
                               title: 'Release to recipient',
-                              blurb: `Pay ${ngn(t.amount)} to the recipient.`,
+                              blurb: `Pay ${ngn(t.amount)} to ${t.receiver?.name?.trim() || 'the recipient'}.`,
+                              warning:
+                                'Final warning: this release is permanent. Once confirmed, the funds leave protection and cannot be recalled through Callback Protection.',
+                              recipientName: t.receiver?.name?.trim() || undefined,
                               confirm: 'Release funds',
                               needPin: true,
                               path: `/transfers/${t.id}/release`,
@@ -300,7 +305,10 @@ export default function Protection() {
                         onClick={() =>
                           setAction({
                             title: 'Release to seller',
-                            blurb: `Pay ${ngn(t.amount)} to the seller. This confirms you received the digital item.`,
+                            blurb: `Pay ${ngn(t.amount)} to ${t.receiver?.name?.trim() || 'the seller'}. This confirms you received the digital item.`,
+                            warning:
+                              'Final warning: this release is permanent. Once confirmed, the funds leave protection and cannot be recalled through Callback Protection.',
+                            recipientName: t.receiver?.name?.trim() || undefined,
                             confirm: 'Release funds',
                             needPin: true,
                             path: `/transfers/${t.id}/release`,
@@ -587,6 +595,17 @@ function ActionDialog({ action, onClose }: { action: ActionDef; onClose: () => v
   return (
     <Modal title={action.title} onClose={onClose}>
       <p className="text-sm text-muted">{action.blurb}</p>
+      {action.recipientName && (
+        <div className="mt-3 rounded-2xl border border-line bg-surface-2/70 px-3.5 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">Recipient</p>
+          <p className="mt-1 text-sm font-bold text-text">{action.recipientName}</p>
+        </div>
+      )}
+      {action.warning && (
+        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] px-3.5 py-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
+          {action.warning}
+        </div>
+      )}
       <form onSubmit={handleSubmit(submit)} className="mt-4 space-y-3">
         {action.needReason && (
           <RhfField

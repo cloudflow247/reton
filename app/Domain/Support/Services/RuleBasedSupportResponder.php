@@ -130,7 +130,7 @@ class RuleBasedSupportResponder
     private function explainProtection(): SupportReply
     {
         $holdHours = (int) config('reton.callback.hold_hours', 72);
-        $responseHours = (int) config('reton.callback.response_hours', 24);
+        $responseHours = (int) config('reton.callback.response_hours', 72);
 
         return new SupportReply(
             body: "Protected transfers keep money in a hold until you confirm. The sender can **release** payment to you, or **raise a callback** to pull it back within {$holdHours} hours. If there's a dispute, the receiver has {$responseHours} hours to respond with evidence - every step is logged on your timeline.\n\nUse a protected transfer when you want a safety net before the recipient gets spendable funds.",

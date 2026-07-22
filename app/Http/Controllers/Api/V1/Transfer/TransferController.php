@@ -43,7 +43,7 @@ class TransferController extends Controller
                 $query->whereIn('sender_wallet_id', $walletIds)
                     ->orWhereIn('receiver_wallet_id', $walletIds);
             })
-            ->with('hold')
+            ->with(['hold', 'senderWallet.owner', 'receiverWallet.owner'])
             ->latest()
             ->paginate(20);
 
@@ -93,14 +93,14 @@ class TransferController extends Controller
             ? $this->transfers->sendProtected($user, $from, $to, $amount, $note, $key)
             : $this->transfers->sendNormal($user, $from, $to, $amount, $note, $key);
 
-        return ApiResponse::created(new TransferResource($transfer->load('hold')), 'Transfer created.');
+        return ApiResponse::created(new TransferResource($transfer->load(['hold', 'senderWallet.owner', 'receiverWallet.owner'])), 'Transfer created.');
     }
 
     public function show(Request $request, Transfer $transfer): JsonResponse
     {
         $this->authorize('view', $transfer);
 
-        return ApiResponse::success(new TransferResource($transfer->load('hold')));
+        return ApiResponse::success(new TransferResource($transfer->load(['hold', 'senderWallet.owner', 'receiverWallet.owner'])));
     }
 
     public function release(ReleaseTransferRequest $request, Transfer $transfer): JsonResponse
@@ -113,6 +113,6 @@ class TransferController extends Controller
 
         $released = $this->transfers->release($transfer);
 
-        return ApiResponse::success(new TransferResource($released), 'Transfer released.');
+        return ApiResponse::success(new TransferResource($released->load(['hold', 'senderWallet.owner', 'receiverWallet.owner'])), 'Transfer released.');
     }
 }

@@ -76,10 +76,10 @@ it('blocks serial callback abuse under fair-usage limits', function () {
         ->toThrow(\App\Domain\Callback\Exceptions\CannotInitiateCallbackException::class);
 });
 
-it('uses two-sided fairness to release when an abusive high-risk sender expires', function () {
+it('refunds the sender when an unanswered callback expires, even if the sender is high-risk', function () {
     config(['reton.callback.unanswered_resolution' => 'refund']);
 
-    [$sender, $receiver, $transfer] = fairnessHeld();
+    [$sender, , $transfer] = fairnessHeld();
     config(['reton.fraud.failed_pin_threshold' => 1, 'reton.fraud.failed_pin_points' => 90]);
     $sender->forceFill(['pin_attempts' => 3])->save();
 
@@ -91,10 +91,25 @@ it('uses two-sided fairness to release when an abusive high-risk sender expires'
 
     $resolved = app(CallbackService::class)->expire($callback->fresh());
 
-    expect($resolved->status)->toBe(CallbackStatus::Released)
-        ->and($resolved->metadata['fairness']['resolution'] ?? null)->toBe('release')
-        ->and($transfer->receiverWallet->fresh()->held_balance)->toBe(0)
-        ->and($transfer->receiverWallet->fresh()->balance)->toBe(40000);
+    expect($resolved->status)->toBe(CallbackStatus::Refunded)
+        ->and($resolved->metadata['fairness']['resolution'] ?? null)->toBe('refund')
+        ->and($transfer->senderWallet->fresh()->balance)->toBe(500000)
+        ->and($transfer->receiverWallet->fresh()->held_balance)->toBe(0);
+});
+
+it('uses a 72-hour default callback response window', function () {
+    [$sender, , $transfer] = fairnessHeld();
+
+    $callback = app(CallbackService::class)->initiate(
+        $transfer,
+        $sender,
+        'Sent to the wrong person by mistake',
+    );
+
+    $hours = now()->diffInHours($callback->responds_by, false);
+
+    expect($hours)->toBeGreaterThanOrEqual(70)
+        ->and($hours)->toBeLessThanOrEqual(84);
 });
 
 it('lengthens hold windows for large protected amounts', function () {
