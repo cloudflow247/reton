@@ -22,7 +22,7 @@ Live product: [retonpay.com](https://retonpay.com)
 4. Follow the **timeline** on the case.
 5. Open **Activity → receipt** and copy Reference / Transaction ID.
 
-Pitch materials: [presentations/](presentations/) · Engineering deep-dive: [docs/ENGINEERING.md](docs/ENGINEERING.md)
+Pitch materials stay local (not published in this repository). Engineering deep-dive: [docs/ENGINEERING.md](docs/ENGINEERING.md)
 
 ---
 
@@ -195,7 +195,6 @@ Treat every environment that can move real money as production.
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Laravel Cloud deploy guide |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 | [roadmap.md](roadmap.md) | Product and compliance roadmap |
-| [presentations/](presentations/) | Buildathon pitch materials |
 
 ---
 

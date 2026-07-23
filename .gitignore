@@ -12,6 +12,7 @@
 /.phpunit.cache
 /coverage
 /docs
+/presentations
 
 # Environment
 .env
