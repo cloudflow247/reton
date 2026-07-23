@@ -2,13 +2,27 @@
 
 **Payments you can take back.**
 
-Reton is a trust-first digital banking platform for Africa. We help people send, receive, and recover money with clarity - not just speed.
+Reton is Africa’s trust-first digital banking platform. We help people send, receive, and recover money with clarity - not just speed.
 
-Our flagship idea is **Callback Protection**: hold a payment until the sender is ready to release it, with a full timeline at every step.
+Flagship product: **Callback Protection**. Hold a payment until the sender is ready to release it, with a full timeline at every step. If something goes wrong, the money still has a path back.
 
-Built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Founder: **Aina Christana Olajumoke**) for the [ALATPay Buildathon](https://alatpay.ng/), on licensed rails (ALAT by Wema).
+Built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Founder: **Aina Christana Olajumoke**) for the [ALATPay Buildathon](https://alatpay.ng/), settling on licensed rails via **ALAT by Wema**.
 
-> This repository is proprietary. It is public so buildathon judges can review the code. See [LICENSE](LICENSE).
+Live product: [retonpay.com](https://retonpay.com)
+
+> This repository is proprietary. It is public so buildathon judges can review production-minded code. See [LICENSE](LICENSE).
+
+---
+
+## Judge demo path (90 seconds)
+
+1. Open [retonpay.com](https://retonpay.com) (or local demo via `composer demo` below).
+2. Fund or use a sandbox wallet, then send a **Protected** transfer.
+3. On **Protection**, confirm the recipient’s full name and the final warning, then release - or raise a callback.
+4. Follow the **timeline** on the case.
+5. Open **Activity → receipt** and copy Reference / Transaction ID.
+
+Pitch materials: [presentations/](presentations/) · Engineering deep-dive: [docs/ENGINEERING.md](docs/ENGINEERING.md)
 
 ---
 
@@ -16,13 +30,34 @@ Built by **RETON PTE LTD** (Founder & CEO: **Gabriel Rotimi Mogaji** · Co-Found
 
 Most wallets optimise for “send and forget.” We optimise for the moment something goes wrong:
 
-- **Callback Protection** - protected transfers stay pending until release or recall
-- **Wrong-transfer recovery** - report a mistake, hold funds when eligible, track the case
-- **Fraud signals** - rule-based scoring with admin visibility
-- **KYC tiers** - CBN-aligned limits; BVN verification for funding unlocks
-- **Double-entry wallet** - every movement is ledger-backed
+| Capability | What judges should see |
+|------------|------------------------|
+| **Callback Protection** | Protected transfers stay pending until release or recall - with recipient confirmation and a hard final warning before release |
+| **Wrong-transfer recovery** | Eligible mistakes can be held, tracked, and resolved with a visible case timeline |
+| **Fraud signals** | Rule-based scoring on risky moves; alerts surface in admin |
+| **KYC tiers** | CBN-aligned limits; BVN verification unlocks funding |
+| **Double-entry wallet** | Every balance change is ledger-backed - never a silent mutate |
 
-We are not cloning Opay, Kuda, or Moniepoint. The product should feel like a serious fintech - calm, clear, and careful with real money.
+We are not cloning Opay, Kuda, or Moniepoint. Reton is built to feel like a funded fintech: calm, clear, and careful with real money.
+
+---
+
+## Trust engineering
+
+Architecture choices are judged by how they protect money - not by how many patterns we name.
+
+| Principle | How Reton applies it |
+|-----------|----------------------|
+| **Domain-driven design** | Payment, wallet, callback, recovery, fraud, and KYC logic live in `app/Domain/*`. Controllers only validate, authorize, delegate, and respond. |
+| **SOLID (applied, not recited)** | Single-purpose services and actions; payment providers behind gateway interfaces (live vs fake); new rails extend the domain without rewriting controllers; policies keep authorization closed for modification. |
+| **Double-entry ledger** | `LedgerService` posts balanced entries for every money movement. Wallet balances are projections of the ledger - not free-hand updates. |
+| **Atomic money ops** | Transfer, release, refund, deposit, and payout paths run inside database transactions. Partial money states are not allowed to stick. |
+| **Idempotent payments** | Payment APIs accept idempotency keys so retries cannot double-credit or double-debit. |
+| **Protected-transfer state machine** | Held → released / refunded / completed, with open callbacks blocking unsafe release. Expiry jobs enforce the 72-hour windows. |
+| **Signed external rails** | ALATPay (and other providers) are reached only through domain gateways. Webhooks are signature-validated and replay-safe. |
+| **Auditability** | Financial state changes produce timelines and audit trails judges can follow in Protection and Activity. |
+
+Deeper layout notes for code reviewers: [docs/ENGINEERING.md](docs/ENGINEERING.md).
 
 ---
 
@@ -38,19 +73,18 @@ We are not cloning Opay, Kuda, or Moniepoint. The product should feel like a ser
 | Realtime | Laravel Reverb |
 | Deploy | Laravel Cloud |
 
-Domain logic lives under `app/Domain/*`. Controllers stay thin: validate, authorize, delegate, respond.
-
 ---
 
 ## Repository layout
 
 ```
-app/                 Domain services, HTTP, providers
-resources/js/        Inertia React pages and UI
-routes/              Web and API routes
+app/Domain/          Bounded contexts (Wallet, Transfers, Callback, Recovery, Fraud, Payments, …)
+app/Http/            Thin controllers, form requests, API resources
+resources/js/        Inertia React product UI
+routes/              Web, API, admin, console schedule
 infra/               Docker Compose and container definitions
-docs/                Deploy guide and release notes
-tests/               Pest feature and unit tests
+docs/                Deploy + engineering notes
+tests/               Pest coverage focused on money paths
 ```
 
 ---
@@ -69,7 +103,7 @@ composer dev           # app, queue, Reverb, Vite
 
 Open [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login).
 
-Sandbox credentials are defined only in your local `.env` (see `.env.example` for `RETON_DEMO_*`). **Never enable demo mode on a public production site.**
+Sandbox credentials live only in local `.env` (see `.env.example` for `RETON_DEMO_*`). **Never enable demo mode on a public production site.**
 
 ### Standard setup
 
@@ -122,7 +156,7 @@ Integration credentials and business rules can be managed from the **admin dashb
 | Payment rails | Live HTTP driver for production; fake drivers for local/demo |
 | KYC / BVN | Configured via admin Integrations and `KYC_BVN_PROVIDER` |
 | Demo mode | Keep `RETON_DEMO_MODE=false` in production |
-| SMS / alerts | Reton’s own messaging stack for auth and alerts |
+| SMS / alerts | Reton’s messaging stack for auth and alerts |
 
 See `.env.example` and [docs/DEPLOY.md](docs/DEPLOY.md). **Never commit real API keys, webhook secrets, or `.env` files.**
 
@@ -134,18 +168,7 @@ See `.env.example` and [docs/DEPLOY.md](docs/DEPLOY.md). **Never commit real API
 php artisan test
 ```
 
-We focus coverage on money paths: happy path, auth denial, validation, idempotency, webhook replay, and state transitions.
-
----
-
-## Documentation
-
-| Doc | Purpose |
-|-----|---------|
-| [LICENSE](LICENSE) | Proprietary copyright notice |
-| [docs/DEPLOY.md](docs/DEPLOY.md) | Laravel Cloud deploy guide |
-| [CHANGELOG.md](CHANGELOG.md) | Release history |
-| [roadmap.md](roadmap.md) | Product & compliance roadmap |
+Priority coverage is money: happy path, authorization denial, validation failure, idempotency, webhook replay, and state-machine transitions (protected hold → release / callback / auto-expiry).
 
 ---
 
@@ -155,20 +178,35 @@ We focus coverage on money paths: happy path, auth denial, validation, idempoten
 - Rate limits on auth and payment endpoints
 - Idempotency keys on payment APIs
 - Webhook signature validation
-- Encrypted sensitive fields at rest
-- Audit logs for financial state changes
+- Encrypted sensitive fields at rest (including BVN and integration secrets)
+- Policies on financial resources; audit logs on financial state changes
+- Callback Protection release shows the recipient’s full name and a final irreversible warning
 
 Treat every environment that can move real money as production.
 
 ---
 
-## Company & contact
+## Documentation
+
+| Doc | Purpose |
+|-----|---------|
+| [LICENSE](LICENSE) | Proprietary copyright notice |
+| [docs/ENGINEERING.md](docs/ENGINEERING.md) | Domain layout and money-path architecture for reviewers |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Laravel Cloud deploy guide |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
+| [roadmap.md](roadmap.md) | Product and compliance roadmap |
+| [presentations/](presentations/) | Buildathon pitch materials |
+
+---
+
+## Company and contact
 
 | | |
 |--|--|
 | Legal entity | **RETON PTE LTD** |
-| Founder & CEO | **Gabriel Rotimi Mogaji** |
+| Founder and CEO | **Gabriel Rotimi Mogaji** |
 | Co-Founder | **Aina Christana Olajumoke** |
+| Product | [retonpay.com](https://retonpay.com) |
 | Support | support@retonpay.com |
 | Office | 7, Greenland Estate, Ikorodu, Lagos State, Nigeria |
 
