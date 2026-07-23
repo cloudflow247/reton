@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web\Admin;
 
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Rules\ValidAdminPath;
 use App\Support\Admin\AdminPath;
 use Illuminate\Http\RedirectResponse;
@@ -62,7 +63,13 @@ class AdminAppSettingsController extends Controller
         $previousPath = AdminPath::current();
         $validated['admin_path'] = AdminPath::normalize($validated['admin_path']);
 
-        $this->settings->updateGroup('app', $validated, $request->user(), $request->ip());
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
+        $this->settings->updateGroup('app', $validated, $admin, $request->ip());
 
         $message = 'Application settings saved.';
         if ($validated['admin_path'] !== $previousPath) {

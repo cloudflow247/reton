@@ -174,8 +174,14 @@ class PaymentRequestService
                 ['payment_request_id' => $request->id, 'provider' => self::PROVIDER],
             );
 
+            $freshWallet = $wallet->fresh();
+
+            if ($freshWallet === null) {
+                throw new \RuntimeException('Wallet missing after refresh.');
+            }
+
             $this->fees->chargeWallet(
-                $wallet->fresh(),
+                $freshWallet,
                 FeeRail::Deposit,
                 $credited,
                 'fee:deposit:'.$request->reference,

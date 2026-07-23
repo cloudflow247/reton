@@ -8,6 +8,7 @@ use App\Domain\Callback\Models\Callback;
 use App\Domain\Marketplace\Models\DigitalOrder;
 use App\Domain\Recovery\Models\Recovery;
 use App\Domain\Settings\Services\PlatformSettingsService;
+use App\Domain\Transfers\Models\Transfer;
 use App\Domain\Wallet\Models\Wallet;
 use App\Domain\Wallet\Services\WalletService;
 use App\Models\User;
@@ -59,7 +60,13 @@ class UserAdminService
                 'email' => $email,
             ], $ip);
 
-            return $user->fresh();
+            $fresh = $user->fresh();
+
+            if ($fresh === null) {
+                throw new \RuntimeException('User missing after create.');
+            }
+
+            return $fresh;
         });
     }
 
@@ -115,7 +122,13 @@ class UserAdminService
             'changes' => array_keys($changes),
         ], $ip);
 
-        return $target->fresh();
+        $fresh = $target->fresh();
+
+        if ($fresh === null) {
+            throw new \RuntimeException('User missing after update.');
+        }
+
+        return $fresh;
     }
 
     public function delete(User $admin, User $target, ?string $ip = null): void
@@ -186,7 +199,7 @@ class UserAdminService
         $kyc = $target->kyc;
 
         $walletIds = $target->wallets->pluck('id');
-        $transfers = \App\Domain\Transfers\Models\Transfer::query()
+        $transfers = array_values(Transfer::query()
             ->when($walletIds->isNotEmpty(), function ($query) use ($walletIds): void {
                 $query->where(function ($inner) use ($walletIds): void {
                     $inner->whereIn('sender_wallet_id', $walletIds)
@@ -205,7 +218,7 @@ class UserAdminService
                 'currency' => $transfer->currency,
                 'created_at' => $transfer->created_at?->toIso8601String(),
             ])
-            ->all();
+            ->all());
 
         return [
             'user' => [
@@ -220,9 +233,9 @@ class UserAdminService
                 'last_login_at' => $target->last_login_at?->toIso8601String(),
                 'created_at' => $target->created_at?->toIso8601String(),
             ],
-            'wallets' => $wallets,
+            'wallets' => array_values($wallets),
             'kyc' => $kyc === null ? null : [
-                'tier' => $kyc->tier?->value ?? $kyc->tier,
+                'tier' => $kyc->tier->value,
                 'bvn_last4' => $kyc->bvn_last4,
                 'nin_last4' => $kyc->nin_last4,
                 'bvn_verified_at' => $kyc->bvn_verified_at?->toIso8601String(),

@@ -50,6 +50,12 @@ final class HeldBalanceReconciler
 
     public function isConsistent(Wallet $wallet): bool
     {
-        return (int) $wallet->fresh()->held_balance === $this->expectedHeldMinor($wallet);
+        $fresh = $wallet->fresh();
+
+        if ($fresh === null) {
+            throw new \RuntimeException('Wallet missing after refresh.');
+        }
+
+        return (int) $fresh->held_balance === $this->expectedHeldMinor($wallet);
     }
 }

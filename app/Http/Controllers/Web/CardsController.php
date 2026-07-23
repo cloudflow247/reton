@@ -95,7 +95,7 @@ class CardsController extends Controller
             'pin' => ['required', 'string'],
         ]);
 
-        $wallet = Wallet::findOrFail($validated['wallet_id']);
+        $wallet = Wallet::query()->findOrFail((string) $validated['wallet_id']);
         $this->authorize('operate', $wallet);
         $this->verifyPin($this->pins, $user, $validated['pin']);
 
@@ -133,7 +133,7 @@ class CardsController extends Controller
         $this->authorize('operate', $card);
         $this->verifyPin($this->pins, $user, $validated['pin']);
 
-        $wallet = Wallet::findOrFail($validated['wallet_id']);
+        $wallet = Wallet::query()->findOrFail((string) $validated['wallet_id']);
         $this->authorize('operate', $wallet);
 
         try {

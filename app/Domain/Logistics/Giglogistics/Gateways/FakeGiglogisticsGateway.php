@@ -134,7 +134,10 @@ class FakeGiglogisticsGateway implements GiglogisticsGateway
         );
     }
 
-    /** @param  array<string, mixed>  $snapshot */
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return array{weight_grams: mixed, condition: mixed, brand: mixed, detail: mixed, item_label: string, notes: string}
+     */
     private function hubFindings(array $snapshot, bool $fail): array
     {
         if ($fail) {
@@ -206,7 +209,6 @@ class FakeGiglogisticsGateway implements GiglogisticsGateway
                     ShipmentStatus::InTransit => 'Released to courier for buyer delivery.',
                     ShipmentStatus::OutForDelivery => 'With last-mile courier.',
                     ShipmentStatus::Delivered => 'Delivered to buyer address.',
-                    default => $stage->label(),
                 },
             ];
             $i++;

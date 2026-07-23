@@ -33,8 +33,8 @@ final class StatementMoneyFlow
                 $direction = $entry->direction;
                 $amount = (int) $entry->amount;
             } else {
-                $direction = (string) ($entry['direction'] ?? '');
-                $amount = (int) ($entry['amount'] ?? 0);
+                $direction = $entry['direction'];
+                $amount = $entry['amount'];
             }
 
             $isCredit = $direction === EntryDirection::Credit

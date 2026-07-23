@@ -24,18 +24,11 @@ class TransferResource extends JsonResource
             return [];
         }
 
-        $type = $this->type;
-        $status = $this->status;
-
         return [
             'id' => $this->id,
             'reference' => $this->reference,
-            'type' => is_object($type) && isset($type->value)
-                ? $type->value
-                : (string) ($this->resource->getRawOriginal('type') ?? ''),
-            'status' => is_object($status) && isset($status->value)
-                ? $status->value
-                : (string) ($this->resource->getRawOriginal('status') ?? ''),
+            'type' => $this->type->value,
+            'status' => $this->status->value,
             'currency' => $this->currency,
             'amount' => $this->amount,
             'note' => $this->note,

@@ -8,6 +8,7 @@ use App\Domain\Support\Models\SupportTicket;
 use App\Mail\PlatformTestMail;
 use App\Mail\SupportTicketOpenedMail;
 use App\Models\User;
+use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -44,7 +45,7 @@ class PlatformMailService
         Mail::to($recipient->email)->send(new PlatformTestMail($recipient));
     }
 
-    private function sendSafely(string $to, object $mailable): void
+    private function sendSafely(string $to, Mailable $mailable): void
     {
         try {
             Mail::to($to)->send($mailable);

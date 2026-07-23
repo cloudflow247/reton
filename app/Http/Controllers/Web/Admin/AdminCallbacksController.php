@@ -10,6 +10,7 @@ use App\Domain\Callback\Models\Callback;
 use App\Domain\Callback\Services\CallbackService;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -72,14 +73,20 @@ class AdminCallbacksController extends Controller
             return back()->with('error', 'This callback is no longer pending.');
         }
 
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
         $this->callbacks->resolve(
             $callback,
             CallbackResolution::from($validated['resolution']),
-            $request->user(),
+            $admin,
         );
 
         $this->settings->audit(
-            $request->user(),
+            $admin,
             'callback.admin_resolved',
             'callback',
             ['callback_id' => $callback->id, 'resolution' => $validated['resolution']],

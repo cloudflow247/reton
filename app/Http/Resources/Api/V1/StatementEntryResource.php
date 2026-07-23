@@ -21,14 +21,7 @@ class StatementEntryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        try {
-            $direction = $this->direction;
-            $directionValue = is_object($direction) && isset($direction->value)
-                ? $direction->value
-                : (string) ($this->resource->getRawOriginal('direction') ?? '');
-        } catch (\Throwable) {
-            $directionValue = (string) ($this->resource->getRawOriginal('direction') ?? '');
-        }
+        $directionValue = $this->direction->value;
 
         return [
             'id' => $this->id,

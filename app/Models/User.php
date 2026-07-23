@@ -64,23 +64,17 @@ class User extends Authenticatable implements MustVerifyEmail
         'transaction_pin',
     ];
 
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'phone_verified_at' => 'datetime',
-            'last_login_at' => 'datetime',
-            'pin_locked_until' => 'datetime',
-            'pin_attempts' => 'integer',
-            'is_admin' => 'boolean',
-            'notify_email' => 'boolean',
-            'notify_sms' => 'boolean',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'pin_locked_until' => 'datetime',
+        'pin_attempts' => 'integer',
+        'is_admin' => 'boolean',
+        'notify_email' => 'boolean',
+        'notify_sms' => 'boolean',
+        'password' => 'hashed',
+    ];
 
     public function wantsEmailAlerts(): bool
     {

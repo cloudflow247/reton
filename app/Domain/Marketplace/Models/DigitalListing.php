@@ -92,7 +92,7 @@ class DigitalListing extends Model
 
     public function isDigital(): bool
     {
-        return $this->item_type === ItemType::Digital || $this->item_type === null;
+        return $this->item_type !== ItemType::Physical;
     }
 
     /** @return array<string, mixed> */

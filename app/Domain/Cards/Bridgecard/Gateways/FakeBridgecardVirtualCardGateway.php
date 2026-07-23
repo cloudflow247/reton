@@ -49,7 +49,7 @@ final class FakeBridgecardVirtualCardGateway implements VirtualCardGateway
             'brand' => 'Mastercard',
         ]);
 
-        $card = $this->getCard($providerCardId);
+        $card = $this->resolveCard($providerCardId);
 
         return new IssuedVirtualCard(
             pan: $card['pan'],
@@ -149,8 +149,36 @@ final class FakeBridgecardVirtualCardGateway implements VirtualCardGateway
     /** @return array{blocked: bool, balance: int, currency: string, pan: string, cvv: string, expiry: string, billing: array<string, string>, brand: string}|null */
     private function getCard(string $providerCardId): ?array
     {
-        /** @var array{blocked: bool, balance: int, currency: string, pan: string, cvv: string, expiry: string, billing: array<string, string>, brand: string}|null */
-        return Cache::get(self::CACHE_PREFIX.'card:'.$providerCardId);
+        $cached = Cache::get(self::CACHE_PREFIX.'card:'.$providerCardId);
+
+        if (! is_array($cached)) {
+            return null;
+        }
+
+        if (
+            ! isset($cached['blocked'], $cached['balance'], $cached['currency'], $cached['pan'], $cached['cvv'], $cached['expiry'], $cached['billing'], $cached['brand'])
+            || ! is_bool($cached['blocked'])
+            || ! is_int($cached['balance'])
+            || ! is_string($cached['currency'])
+            || ! is_string($cached['pan'])
+            || ! is_string($cached['cvv'])
+            || ! is_string($cached['expiry'])
+            || ! is_array($cached['billing'])
+            || ! is_string($cached['brand'])
+        ) {
+            return null;
+        }
+
+        return [
+            'blocked' => $cached['blocked'],
+            'balance' => $cached['balance'],
+            'currency' => $cached['currency'],
+            'pan' => $cached['pan'],
+            'cvv' => $cached['cvv'],
+            'expiry' => $cached['expiry'],
+            'billing' => $cached['billing'],
+            'brand' => $cached['brand'],
+        ];
     }
 
     /** @param  array{blocked: bool, balance: int, currency: string, pan: string, cvv: string, expiry: string, billing: array<string, string>, brand: string}  $card */

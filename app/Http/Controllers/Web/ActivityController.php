@@ -83,7 +83,7 @@ class ActivityController extends Controller
         $transferPayload = null;
         $transactionId = $ledgerEntry->transaction_id;
 
-        if (is_string($transactionId) && $transactionId !== '' && $wallet instanceof Wallet) {
+        if ($transactionId !== '' && $wallet instanceof Wallet) {
             $transfer = Transfer::query()
                 ->where('transaction_id', $transactionId)
                 ->where(function ($query) use ($wallet): void {

@@ -48,6 +48,10 @@ class SmsNotificationService
 
     private function sendSafely(string $phone, string $message, string $channel): void
     {
+        if ($phone === '') {
+            return;
+        }
+
         try {
             $this->gateway->send($phone, $message, $channel);
         } catch (\Throwable $e) {

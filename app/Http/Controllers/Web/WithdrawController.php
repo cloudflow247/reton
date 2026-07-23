@@ -79,7 +79,7 @@ class WithdrawController extends Controller
             'pin' => ['required', 'string'],
         ]);
 
-        $wallet = Wallet::findOrFail($validated['wallet_id']);
+        $wallet = Wallet::query()->findOrFail((string) $validated['wallet_id']);
         $this->authorize('operate', $wallet);
         $this->verifyPin($pins, $user, $validated['pin']);
 

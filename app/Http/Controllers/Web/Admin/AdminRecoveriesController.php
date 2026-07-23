@@ -9,6 +9,7 @@ use App\Domain\Recovery\Models\Recovery;
 use App\Domain\Recovery\Services\RecoveryService;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -72,14 +73,20 @@ class AdminRecoveriesController extends Controller
             return back()->with('error', 'This recovery is no longer open.');
         }
 
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
         $this->recoveries->resolve(
             $recovery,
             RecoveryResolution::from($validated['resolution']),
-            $request->user(),
+            $admin,
         );
 
         $this->settings->audit(
-            $request->user(),
+            $admin,
             'recovery.admin_resolved',
             'recovery',
             ['recovery_id' => $recovery->id, 'resolution' => $validated['resolution']],

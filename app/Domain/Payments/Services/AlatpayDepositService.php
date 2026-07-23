@@ -11,6 +11,7 @@ use App\Domain\Kyc\Services\KycService;
 use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Data\CollectionRequest;
 use App\Domain\Payments\Alatpay\Data\PaymentLinkRequest;
+use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Enums\DepositMethod;
 use App\Domain\Payments\Enums\DepositStatus;
@@ -263,7 +264,7 @@ class AlatpayDepositService
     /**
      * @param  array<string, mixed>  $webhookData
      */
-    private function creditDeposit(Deposit $deposit, ?\App\Domain\Payments\Alatpay\Data\RemoteTransaction $remote = null, array $webhookData = []): void
+    private function creditDeposit(Deposit $deposit, ?RemoteTransaction $remote = null, array $webhookData = []): void
     {
         DB::transaction(function () use ($deposit, $remote, $webhookData): void {
             $wallet = Wallet::findOrFail($deposit->wallet_id);
@@ -290,8 +291,14 @@ class AlatpayDepositService
                 $description,
             );
 
+            $freshWallet = $wallet->fresh();
+
+            if ($freshWallet === null) {
+                throw new \RuntimeException('Wallet missing after refresh.');
+            }
+
             $this->fees->chargeWallet(
-                $wallet->fresh(),
+                $freshWallet,
                 FeeRail::Deposit,
                 $credited,
                 'fee:deposit:'.$deposit->reference,

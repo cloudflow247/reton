@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Admin;
 use App\Domain\Fraud\Models\FraudAlert;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,9 +34,9 @@ class AdminFraudController extends Controller
             'alerts' => $alerts->through(fn (FraudAlert $alert): array => [
                 'id' => $alert->id,
                 'score' => $alert->score,
-                'level' => $alert->level?->value ?? (string) $alert->level,
+                'level' => $alert->level->value,
                 'action' => $alert->action_context,
-                'recommended_action' => $alert->recommended_action?->value ?? (string) $alert->recommended_action,
+                'recommended_action' => $alert->recommended_action->value,
                 'status' => $alert->status,
                 'amount' => $alert->amount,
                 'currency' => $alert->currency,
@@ -63,15 +64,21 @@ class AdminFraudController extends Controller
             return back()->with('success', 'Alert already resolved.');
         }
 
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
         $alert->update([
             'status' => 'resolved',
-            'resolved_by' => $request->user()?->getKey(),
+            'resolved_by' => $admin->getKey(),
             'resolved_at' => now(),
         ]);
 
         $froze = false;
         if (($validated['freeze_user'] ?? false) && $alert->user_id) {
-            $target = \App\Models\User::query()->find($alert->user_id);
+            $target = User::query()->find($alert->user_id);
             if ($target !== null && ! $target->is_admin && $target->status === 'active') {
                 $target->update(['status' => 'frozen']);
                 $froze = true;
@@ -79,7 +86,7 @@ class AdminFraudController extends Controller
         }
 
         $this->settings->audit(
-            $request->user(),
+            $admin,
             'fraud.resolved',
             'fraud',
             ['alert_id' => $alert->id, 'score' => $alert->score, 'froze_user' => $froze],

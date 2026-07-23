@@ -62,7 +62,7 @@ class TransactionLookupService
                     ['label' => 'View activity', 'href' => '/activity'],
                     ['label' => 'Protection center', 'href' => '/protection'],
                 ],
-                relatedId: $transfer->id,
+                relatedId: (string) $transfer->id,
             );
         }
 
@@ -83,27 +83,34 @@ class TransactionLookupService
                     ['label' => 'Add money', 'href' => '/add-money'],
                     ['label' => 'View activity', 'href' => '/activity'],
                 ],
-                relatedId: $deposit->id,
+                relatedId: (string) $deposit->id,
             );
         }
 
         $callback = Callback::query()
             ->where('reference', $reference)
             ->whereHas('transfer', $transferScope)
+            ->with('transfer')
             ->first();
 
         if ($callback instanceof Callback) {
+            $callbackTransfer = $callback->transfer;
+
+            if ($callbackTransfer === null) {
+                return null;
+            }
+
             return new TransactionLookupResult(
                 kind: 'callback',
                 reference: $callback->reference,
-                amountMinor: $callback->transfer->amount,
-                currency: $callback->transfer->currency,
+                amountMinor: $callbackTransfer->amount,
+                currency: $callbackTransfer->currency,
                 status: $callback->status->value,
                 summary: 'Callback dispute - '.$callback->status->value,
                 actions: [
                     ['label' => 'Open protection center', 'href' => '/protection'],
                 ],
-                relatedId: $callback->id,
+                relatedId: (string) $callback->id,
             );
         }
 
@@ -123,7 +130,7 @@ class TransactionLookupService
                 actions: [
                     ['label' => 'Open protection center', 'href' => '/protection'],
                 ],
-                relatedId: $recovery->id,
+                relatedId: (string) $recovery->id,
             );
         }
 
@@ -144,7 +151,7 @@ class TransactionLookupService
                     ['label' => 'View activity', 'href' => '/activity'],
                     ['label' => 'Pay a bill', 'href' => '/bills'],
                 ],
-                relatedId: $bill->id,
+                relatedId: (string) $bill->id,
             );
         }
 
@@ -165,7 +172,7 @@ class TransactionLookupService
                     ['label' => 'Withdraw', 'href' => '/withdraw'],
                     ['label' => 'View activity', 'href' => '/activity'],
                 ],
-                relatedId: $payout->id,
+                relatedId: (string) $payout->id,
             );
         }
 

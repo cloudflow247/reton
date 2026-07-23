@@ -123,7 +123,11 @@ class CallbackService
 
             TrustProtectionBroadcaster::callbackChanged($callback->refresh(), 'callback.escalated');
 
-            $this->marketplace->markDisputed($callback->transfer);
+            $transfer = $callback->transfer;
+
+            if ($transfer !== null) {
+                $this->marketplace->markDisputed($transfer);
+            }
 
             return $callback->refresh();
         });

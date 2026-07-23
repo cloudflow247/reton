@@ -42,7 +42,7 @@ final class FundingAccountName
 
             $tail = end($parts);
 
-            if (is_string($tail) && $tail !== '' && AccountNameMatcher::matches($tail, $profile)) {
+            if (is_string($tail) && AccountNameMatcher::matches($tail, $profile)) {
                 return $preferred;
             }
         }

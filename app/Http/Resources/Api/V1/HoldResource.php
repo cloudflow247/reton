@@ -22,15 +22,11 @@ class HoldResource extends JsonResource
             return [];
         }
 
-        $status = $this->status;
-
         return [
             'id' => $this->id,
             'amount' => $this->amount,
             'currency' => $this->currency,
-            'status' => is_object($status) && isset($status->value)
-                ? $status->value
-                : (string) ($this->resource->getRawOriginal('status') ?? ''),
+            'status' => $this->status->value,
             'reason' => $this->reason,
             'expires_at' => $this->expires_at,
             'resolved_at' => $this->resolved_at,

@@ -211,7 +211,13 @@ class WalletService
             ->decrement('held_balance', $amount->amount);
 
         if ($updated === 0) {
-            throw InsufficientFundsException::heldFor((string) $wallet->getKey(), $wallet->fresh()->available(), $amount);
+            $fresh = $wallet->fresh();
+
+            if ($fresh === null) {
+                throw new \RuntimeException('Wallet missing after refresh.');
+            }
+
+            throw InsufficientFundsException::heldFor((string) $wallet->getKey(), $fresh->available(), $amount);
         }
     }
 

@@ -6,8 +6,8 @@ namespace App\Domain\Notifications\Services;
 
 use App\Domain\Fees\Enums\FeeRail;
 use App\Domain\Fees\Services\PlatformFeeService;
-use App\Domain\Ledger\Models\Transaction;
 use App\Domain\Ledger\Enums\TransactionType;
+use App\Domain\Ledger\Models\Transaction;
 use App\Domain\Wallet\Models\Wallet;
 use App\Events\Wallet\WalletFundsMoved;
 use App\Mail\WalletTransactionMail;
@@ -59,7 +59,13 @@ class TransactionAlertService
         string $direction,
         Money $amount,
     ): void {
-        $balance = Money::of((int) $wallet->fresh()->balance, $wallet->currency);
+        $freshWallet = $wallet->fresh();
+
+        if ($freshWallet === null) {
+            throw new \RuntimeException('Wallet missing after refresh.');
+        }
+
+        $balance = Money::of((int) $freshWallet->balance, $wallet->currency);
 
         if ($user->wantsEmailAlerts()) {
             $this->sendEmail($user, $wallet, $transaction, $direction, $amount, $balance);
@@ -124,7 +130,13 @@ class TransactionAlertService
                     Money::zero($wallet->currency),
                     'fee:sms_alert:'.$transaction->getKey(),
                 );
-                $balance = Money::of((int) $wallet->fresh()->balance, $wallet->currency);
+                $refreshed = $wallet->fresh();
+
+                if ($refreshed === null) {
+                    throw new \RuntimeException('Wallet missing after refresh.');
+                }
+
+                $balance = Money::of((int) $refreshed->balance, $wallet->currency);
             } catch (\Throwable $e) {
                 Log::info('transaction_alert.sms_skipped_no_fee_funds', [
                     'user_id' => $user->getKey(),

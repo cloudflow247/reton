@@ -255,7 +255,7 @@ class StaticAccountService
             'account_number' => $response->accountNumber,
             'account_name' => FundingAccountName::display(
                 $response->accountName,
-                (string) ($account->user?->name ?? ''),
+                $account->user !== null ? (string) $account->user->name : '',
             ),
             'bank_name' => $response->bankName,
             'status' => StaticAccountStatus::Active,
@@ -497,8 +497,14 @@ class StaticAccountService
                 $description,
             );
 
+            $freshWallet = $wallet->fresh();
+
+            if ($freshWallet === null) {
+                throw new \RuntimeException('Wallet missing after refresh.');
+            }
+
             $this->fees->chargeWallet(
-                $wallet->fresh(),
+                $freshWallet,
                 FeeRail::Deposit,
                 $amount,
                 'fee:deposit:'.$deposit->reference,

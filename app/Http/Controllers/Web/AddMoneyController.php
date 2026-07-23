@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Domain\Kyc\Services\KycService;
-use App\Domain\Payments\Alatpay\Contracts\AlatpayGateway;
 use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Alatpay\Gateways\FakeAlatpayGateway;
 use App\Domain\Payments\Enums\DepositMethod;
@@ -228,16 +227,25 @@ class AddMoneyController extends Controller
     {
         $this->authorize('view', $deposit);
 
-        if ($deposit->status->value !== 'pending' || config('services.alatpay.driver') !== 'fake') {
+        if ($deposit->status->value !== 'pending'
+            || config('services.alatpay.driver') !== 'fake'
+            || $deposit->provider_reference === null) {
             return redirect()->route('add-money', ['reference' => $deposit->reference]);
         }
 
-        $gateway = app(AlatpayGateway::class);
+        app(FakeAlatpayGateway::class)->markPaid(
+            $deposit->provider_reference,
+            $deposit->amount,
+            $deposit->currency,
+        );
 
-        if ($gateway instanceof FakeAlatpayGateway && $deposit->provider_reference !== null) {
-            $gateway->markPaid($deposit->provider_reference, $deposit->amount, $deposit->currency);
-            $this->deposits->reconcile($deposit->fresh());
+        $fresh = $deposit->fresh();
+
+        if ($fresh === null) {
+            throw new \RuntimeException('Deposit missing after refresh.');
         }
+
+        $this->deposits->reconcile($fresh);
 
         return redirect()->route('add-money', ['reference' => $deposit->reference]);
     }

@@ -75,6 +75,7 @@ class DigitalMarketplaceService
 
     /**
      * @param  array<string, string>  $specs
+     * @param  array{length?: float|int|string, width?: float|int|string, height?: float|int|string}|null  $dimensionsCm
      */
     public function createPhysicalListing(
         User $seller,
@@ -121,6 +122,9 @@ class DigitalMarketplaceService
         return $listing->refresh();
     }
 
+    /**
+     * @param  array{line1: string, line2?: string|null, city: string, state?: string, postal_code?: string, country?: string, phone?: string}|null  $shippingAddress
+     */
     public function purchase(
         User $buyer,
         DigitalListing $listing,
@@ -221,8 +225,14 @@ class DigitalMarketplaceService
             $order->update(['transfer_id' => $transfer->id]);
             $listing->update(['status' => ListingStatus::Sold]);
 
+            $freshWallet = $buyerWallet->fresh();
+
+            if ($freshWallet === null) {
+                throw new \RuntimeException('Buyer wallet missing after refresh.');
+            }
+
             $this->fees->chargeWallet(
-                $buyerWallet->fresh(),
+                $freshWallet,
                 FeeRail::MarketplaceSale,
                 $amount,
                 'fee:marketplace_sale:'.$order->id,
@@ -258,7 +268,7 @@ class DigitalMarketplaceService
             }
 
             $listing = $order->listing;
-            $payload = (string) ($listing?->delivery_payload ?? '');
+            $payload = $listing !== null ? (string) $listing->delivery_payload : '';
 
             $order->update([
                 'status' => DigitalOrderStatus::Delivered,
@@ -495,7 +505,7 @@ class DigitalMarketplaceService
         }
 
         $listing = $order->listing;
-        $content = (string) ($listing?->delivery_payload ?? '');
+        $content = $listing !== null ? (string) $listing->delivery_payload : '';
         $checksumMatches = $order->payload_checksum === null
             || $order->payload_checksum === $this->escrow->payloadChecksum($content);
 

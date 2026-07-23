@@ -13,8 +13,10 @@ use App\Domain\Payments\Contracts\PayoutGateway;
 use App\Domain\Payments\Services\StaticAccountService;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -94,6 +96,12 @@ class AdminIntegrationsController extends Controller
 
         $group = (string) $request->input('integration');
 
+        if (! in_array($group, ['alatpay', 'paystack', 'interswitch', 'bridgecard', 'giglogistics', 'dojah', 'remita', 'termii'], true)) {
+            throw ValidationException::withMessages([
+                'integration' => ['Invalid integration.'],
+            ]);
+        }
+
         $rules = match ($group) {
             'alatpay' => [
                 'driver' => ['required', 'in:fake,http'],
@@ -170,7 +178,13 @@ class AdminIntegrationsController extends Controller
 
         unset($validated['integration']);
 
-        $this->settings->updateGroup($group, $validated, $request->user(), $request->ip());
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
+        $this->settings->updateGroup($group, $validated, $admin, $request->ip());
 
         if ($group === 'interswitch') {
             $this->interswitchTokens->bustCache();

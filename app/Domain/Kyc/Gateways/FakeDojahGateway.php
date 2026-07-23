@@ -17,13 +17,13 @@ use Illuminate\Support\Carbon;
  */
 class FakeDojahGateway implements KycVerificationGateway
 {
-    /** @var array<string, array{first: string, last: string, middle?: string, dob: string, phone?: string}> */
+    /** @var array<int|string, array{first: string, last: string, middle?: string, dob: string, phone?: string}> */
     private array $bvns = [
         '22222222222' => ['first' => 'JOHN', 'last' => 'MUSA', 'middle' => 'DOE', 'dob' => '1997-05-16', 'phone' => '08012345678'],
         '22334455667' => ['first' => 'RETON', 'last' => 'TEST', 'middle' => 'USER', 'dob' => '1990-05-15'],
     ];
 
-    /** @var array<string, array{first: string, last: string, middle?: string, dob: string}> */
+    /** @var array<int|string, array{first: string, last: string, middle?: string, dob: string}> */
     private array $nins = [
         '70123456789' => ['first' => 'RETON', 'last' => 'TEST', 'middle' => 'USER', 'dob' => '1990-05-15'],
         '12345678901' => ['first' => 'RETON', 'last' => 'TEST', 'middle' => 'USER', 'dob' => '1990-05-15'],

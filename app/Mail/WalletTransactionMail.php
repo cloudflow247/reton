@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Models\User;
 use App\Support\Money\Money;
+use Carbon\CarbonInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -13,7 +14,6 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Carbon;
 
 class WalletTransactionMail extends Mailable implements ShouldQueue
 {
@@ -26,7 +26,7 @@ class WalletTransactionMail extends Mailable implements ShouldQueue
         public Money $balance,
         public string $reference,
         public string $description,
-        public Carbon $occurredAt,
+        public CarbonInterface $occurredAt,
         public string $walletAccountNumber = '',
     ) {}
 

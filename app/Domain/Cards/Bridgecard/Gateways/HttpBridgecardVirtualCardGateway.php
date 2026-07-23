@@ -191,7 +191,6 @@ final class HttpBridgecardVirtualCardGateway implements VirtualCardGateway
             ->withHeaders([
                 'token' => 'Bearer '.$token,
                 'Content-Type' => 'application/json',
-            ])
-            ->throw(false);
+            ]);
     }
 }

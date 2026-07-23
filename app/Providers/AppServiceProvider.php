@@ -128,6 +128,17 @@ class AppServiceProvider extends ServiceProvider
             ? new FakeAlatpayGateway
             : new HttpAlatpayGateway);
 
+        // Same fake instance as AlatpayGateway when driver=fake (demo simulate-pay).
+        $this->app->singleton(FakeAlatpayGateway::class, function ($app): FakeAlatpayGateway {
+            $gateway = $app->make(AlatpayGateway::class);
+
+            if (! $gateway instanceof FakeAlatpayGateway) {
+                throw new \RuntimeException('Fake ALATPay gateway is not active.');
+            }
+
+            return $gateway;
+        });
+
         // Outbound payouts: Paystack Transfers (default) or ALATPay Debit Wallet adapter.
         $this->app->singleton(PayoutGateway::class, function ($app) {
             $provider = (string) config('reton.payouts.provider', 'paystack');

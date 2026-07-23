@@ -95,6 +95,11 @@ class PlatformFeeService
         }
 
         $wallet = $wallet->fresh();
+
+        if ($wallet === null) {
+            throw new \RuntimeException('Wallet missing after refresh.');
+        }
+
         if ($fee->amount > $wallet->availableMinor()) {
             throw InsufficientFundsException::for(
                 (string) $wallet->getKey(),

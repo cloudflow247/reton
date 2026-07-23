@@ -24,7 +24,7 @@ class DigitalListingResource extends JsonResource
             'item_code' => $this->item_code,
             'seller_id' => $this->seller_id,
             'seller_name' => $this->whenLoaded('seller', fn () => $this->seller?->name),
-            'item_type' => ($this->item_type?->value) ?? 'digital',
+            'item_type' => $this->item_type->value,
             'title' => $this->title,
             'description' => $this->description,
             'condition' => $this->condition?->value,

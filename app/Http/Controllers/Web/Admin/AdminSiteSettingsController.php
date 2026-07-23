@@ -7,8 +7,10 @@ namespace App\Http\Controllers\Web\Admin;
 use App\Domain\Notifications\Services\PlatformMailService;
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,6 +42,12 @@ class AdminSiteSettingsController extends Controller
         ]);
 
         $group = (string) $request->input('group');
+
+        if (! in_array($group, ['mail', 'sms', 'seo', 'security'], true)) {
+            throw ValidationException::withMessages([
+                'group' => ['Invalid settings group.'],
+            ]);
+        }
 
         $rules = match ($group) {
             'mail' => [
@@ -95,21 +103,33 @@ class AdminSiteSettingsController extends Controller
 
         unset($validated['group']);
 
-        $this->settings->updateGroup($group, $validated, $request->user(), $request->ip());
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
+        $this->settings->updateGroup($group, $validated, $admin, $request->ip());
 
         return back()->with('success', ucfirst($group).' settings saved.');
     }
 
     public function testMail(Request $request): RedirectResponse
     {
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
         try {
-            $this->mail->sendTestEmail($request->user());
+            $this->mail->sendTestEmail($admin);
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Throwable $e) {
             return back()->with('error', 'Test email failed: '.$e->getMessage());
         }
 
-        return back()->with('success', 'Test email sent to '.$request->user()->email.'.');
+        return back()->with('success', 'Test email sent to '.$admin->email.'.');
     }
 }

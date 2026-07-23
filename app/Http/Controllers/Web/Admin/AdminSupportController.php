@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Admin;
 
+use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Domain\Support\Enums\SupportTicketStatus;
 use App\Domain\Support\Models\SupportTicket;
-use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -58,17 +59,23 @@ class AdminSupportController extends Controller
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
         $ticket->update([
             'status' => SupportTicketStatus::Resolved,
             'resolved_at' => now(),
             'metadata' => array_merge((array) $ticket->metadata, [
-                'resolved_by' => $request->user()?->getKey(),
+                'resolved_by' => $admin->getKey(),
                 'admin_note' => $validated['note'] ?? null,
             ]),
         ]);
 
         $this->settings->audit(
-            $request->user(),
+            $admin,
             'support.resolved',
             'support',
             ['ticket_id' => $ticket->id, 'reference' => $ticket->reference],

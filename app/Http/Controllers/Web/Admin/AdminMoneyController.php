@@ -26,10 +26,10 @@ class AdminMoneyController extends Controller
             ->map(fn (Deposit $deposit): array => [
                 'id' => $deposit->id,
                 'reference' => $deposit->reference,
-                'status' => $deposit->status?->value ?? (string) $deposit->status,
+                'status' => $deposit->status->value,
                 'amount' => $deposit->amount,
                 'currency' => $deposit->currency,
-                'method' => $deposit->method?->value ?? (string) ($deposit->method ?? ''),
+                'method' => (string) (is_array($deposit->metadata) ? ($deposit->metadata['method'] ?? '') : ''),
                 'user' => $deposit->user ? [
                     'name' => $deposit->user->name,
                     'email' => $deposit->user->email,
@@ -45,7 +45,7 @@ class AdminMoneyController extends Controller
             ->map(fn (Payout $payout): array => [
                 'id' => $payout->id,
                 'reference' => $payout->reference,
-                'status' => $payout->status?->value ?? (string) $payout->status,
+                'status' => $payout->status->value,
                 'amount' => $payout->amount,
                 'currency' => $payout->currency,
                 'provider' => $payout->provider,
@@ -64,7 +64,7 @@ class AdminMoneyController extends Controller
             ->get()
             ->map(fn (Transaction $txn): array => [
                 'id' => $txn->id,
-                'type' => $txn->type?->value ?? (string) $txn->type,
+                'type' => $txn->type->value,
                 'description' => $txn->description,
                 'idempotency_key' => $txn->idempotency_key,
                 'created_at' => $txn->created_at?->toIso8601String(),

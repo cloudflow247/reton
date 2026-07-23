@@ -285,6 +285,10 @@ class AlatpayBvnVerificationService
                 ['tier' => KycTier::Tier1],
             )->fresh();
 
+            if ($kyc === null) {
+                throw new \RuntimeException('KYC profile missing after refresh.');
+            }
+
             if ($kyc->tier->isAtLeast(KycTier::Tier2)) {
                 return $kyc;
             }

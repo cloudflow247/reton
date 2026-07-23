@@ -92,7 +92,10 @@ class DigitalOrder extends Model
 
     public function isPhysical(): bool
     {
-        $type = $this->listing_snapshot['item_type'] ?? $this->listing?->item_type?->value ?? ItemType::Digital->value;
+        $listing = $this->listing;
+        $type = $this->listing_snapshot['item_type']
+            ?? ($listing !== null ? $listing->item_type->value : null)
+            ?? ItemType::Digital->value;
 
         return $type === ItemType::Physical->value;
     }

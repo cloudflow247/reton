@@ -48,7 +48,7 @@ class KycService
         $profile = $this->forUser($user);
         $bvn = $profile->decryptedBvn();
 
-        if ($bvn === null || $profile->bvn_verified_at === null) {
+        if ($bvn === null || $bvn === '' || $profile->bvn_verified_at === null) {
             throw ValidationException::withMessages([
                 'bvn' => ['Verify your BVN before funding your wallet or opening a deposit account.'],
             ]);
@@ -118,6 +118,10 @@ class KycService
         return DB::transaction(function () use ($user, $bvn, $dob, $ipAddress): UserKyc {
             $kyc = $this->forUser($user)->fresh();
 
+            if ($kyc === null) {
+                throw new \RuntimeException('KYC profile missing after refresh.');
+            }
+
             if ($kyc->tier->isAtLeast(KycTier::Tier2)) {
                 return $kyc;
             }
@@ -182,6 +186,10 @@ class KycService
 
         return DB::transaction(function () use ($user, $kyc, $nin, $addressLine1, $city, $state, $ipAddress): UserKyc {
             $kyc = $kyc->fresh();
+
+            if ($kyc === null) {
+                throw new \RuntimeException('KYC profile missing after refresh.');
+            }
 
             if ($kyc->tier === KycTier::Tier3) {
                 return $kyc;

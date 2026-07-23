@@ -48,15 +48,11 @@ class VirtualCard extends Model
         'card_pin_encrypted',
     ];
 
-    /** @return array<string, string> */
-    protected function casts(): array
-    {
-        return [
-            'status' => VirtualCardStatus::class,
-            'metadata' => 'array',
-            'activated_at' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'status' => VirtualCardStatus::class,
+        'metadata' => 'array',
+        'activated_at' => 'datetime',
+    ];
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo

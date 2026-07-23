@@ -13,6 +13,7 @@ use App\Domain\Payments\Alatpay\Data\RemoteTransaction;
 use App\Domain\Payments\Alatpay\Data\StaticAccountProvisionResponse;
 use App\Domain\Payments\Alatpay\Data\StaticAccountRequest;
 use App\Domain\Payments\Alatpay\Data\StaticAccountResponse;
+use App\Domain\Payments\Alatpay\Data\StaticAccountSummary;
 use App\Domain\Payments\Alatpay\Data\StaticAccountTransaction;
 use App\Domain\Payments\Alatpay\Data\StaticAccountVerifyRequest;
 use App\Domain\Payments\Alatpay\Data\TransferRequest;
@@ -32,10 +33,10 @@ class FakeAlatpayGateway implements AlatpayGateway
 
     private const STATIC_WALLETS_TTL_SECONDS = 7200;
 
-    /** @var array<string, array{currency: string, amount: int, status: string}> */
+    /** @var array<string, array{currency: string, amount: int, status: string, narration?: string, payer_name?: string, bank_name?: string, channel?: string, paid_at?: string}> */
     private array $transactions = [];
 
-    /** @var array<string, array{currency: string, amount: int, status: string}> */
+    /** @var array<string, array{currency: string, amount: int, status: string, narration?: string, payer_name?: string, bank_name?: string, channel?: string, paid_at?: string}> */
     private array $transfers = [];
 
     private bool $provisionImmediate = false;
@@ -112,15 +113,23 @@ class FakeAlatpayGateway implements AlatpayGateway
     /**
      * Test/dev helper: simulate AlatPay confirming a payment.
      *
-     * @param  array<string, mixed>  $extra
+     * @param  array{narration?: string, payer_name?: string, bank_name?: string, channel?: string, paid_at?: string}  $extra
      */
     public function markPaid(string $providerReference, int $amount, string $currency = 'NGN', array $extra = []): void
     {
-        $this->transactions[$providerReference] = array_merge([
+        $record = [
             'currency' => $currency,
             'amount' => $amount,
             'status' => 'completed',
-        ], $extra);
+        ];
+
+        foreach (['narration', 'payer_name', 'bank_name', 'channel', 'paid_at'] as $key) {
+            if (isset($extra[$key]) && $extra[$key] !== '') {
+                $record[$key] = $extra[$key];
+            }
+        }
+
+        $this->transactions[$providerReference] = $record;
     }
 
     public function supportsOutboundTransfers(): bool
@@ -258,7 +267,7 @@ class FakeAlatpayGateway implements AlatpayGateway
     }
 
     /**
-     * @return list<\App\Domain\Payments\Alatpay\Data\StaticAccountSummary>
+     * @return list<StaticAccountSummary>
      */
     public function listStaticAccounts(int $page = 1, int $limit = 50, int $status = 1): array
     {
@@ -267,11 +276,7 @@ class FakeAlatpayGateway implements AlatpayGateway
         $summaries = [];
 
         foreach ($this->cachedStaticWallets() + $this->staticWallets as $id => $wallet) {
-            if (! is_array($wallet)) {
-                continue;
-            }
-
-            $summaries[] = new \App\Domain\Payments\Alatpay\Data\StaticAccountSummary(
+            $summaries[] = new StaticAccountSummary(
                 id: (string) $id,
                 walletType: (int) ($wallet['walletType'] ?? 1),
                 status: 1,
@@ -355,11 +360,49 @@ class FakeAlatpayGateway implements AlatpayGateway
     /**
      * @return array<string, array{accountNumber: ?string, otpTrackingId: ?string, email?: ?string, walletType?: int, bvn?: string}>
      */
+    /**
+     * @return array<string, array{accountNumber: ?string, otpTrackingId: ?string, email?: ?string, walletType?: int, bvn?: string}>
+     */
     private function cachedStaticWallets(): array
     {
         $cached = Cache::get(self::STATIC_WALLETS_CACHE_KEY, []);
 
-        return is_array($cached) ? $cached : [];
+        if (! is_array($cached)) {
+            return [];
+        }
+
+        $wallets = [];
+
+        foreach ($cached as $id => $wallet) {
+            if (! is_array($wallet)) {
+                continue;
+            }
+
+            $entry = [
+                'accountNumber' => isset($wallet['accountNumber']) && is_string($wallet['accountNumber'])
+                    ? $wallet['accountNumber']
+                    : null,
+                'otpTrackingId' => isset($wallet['otpTrackingId']) && is_string($wallet['otpTrackingId'])
+                    ? $wallet['otpTrackingId']
+                    : null,
+            ];
+
+            if (isset($wallet['email']) && is_string($wallet['email'])) {
+                $entry['email'] = $wallet['email'];
+            }
+
+            if (isset($wallet['walletType']) && is_numeric($wallet['walletType'])) {
+                $entry['walletType'] = (int) $wallet['walletType'];
+            }
+
+            if (isset($wallet['bvn']) && is_string($wallet['bvn'])) {
+                $entry['bvn'] = $wallet['bvn'];
+            }
+
+            $wallets[(string) $id] = $entry;
+        }
+
+        return $wallets;
     }
 
     /**

@@ -358,6 +358,11 @@ class ProtectionFairnessService
     private function userIsHighRisk(User $user, ?Transfer $transfer, string $action): bool
     {
         $wallet = $user->wallets()->first();
+
+        if ($wallet === null) {
+            return false;
+        }
+
         $amount = $transfer !== null
             ? Money::of($transfer->amount, $transfer->currency)
             : Money::of(0, 'NGN');

@@ -68,9 +68,22 @@ class AdminUsersController extends Controller
     {
         $this->authorize('create', User::class);
 
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
         $this->users->create(
-            $request->user(),
-            $request->validated(),
+            $admin,
+            [
+                'name' => (string) $request->validated('name'),
+                'email' => (string) $request->validated('email'),
+                'phone' => $request->validated('phone'),
+                'password' => (string) $request->validated('password'),
+                'status' => (string) $request->validated('status'),
+                'is_admin' => (bool) $request->validated('is_admin'),
+            ],
             $request->ip(),
         );
 
@@ -83,10 +96,21 @@ class AdminUsersController extends Controller
 
         $this->authorize('update', $user);
 
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
         $this->users->update(
-            $request->user(),
+            $admin,
             $user,
-            $request->validated(),
+            [
+                'name' => (string) $request->validated('name'),
+                'phone' => $request->validated('phone'),
+                'status' => (string) $request->validated('status'),
+                'is_admin' => (bool) $request->validated('is_admin'),
+            ],
             $request->ip(),
         );
 
@@ -99,7 +123,17 @@ class AdminUsersController extends Controller
 
         $this->authorize('delete', $user);
 
-        $this->users->delete($request->user(), $user, $request->ip());
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
+        $this->users->delete(
+            $admin,
+            $user,
+            $request->ip(),
+        );
 
         return back()->with('success', 'User removed and access revoked.');
     }

@@ -13,6 +13,7 @@ final readonly class SupportReply
 {
     /**
      * @param  list<SupportAction>  $actions
+     * @param  array<string, mixed>|null  $metadata
      */
     public function __construct(
         public string $body,

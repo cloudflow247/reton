@@ -150,7 +150,13 @@ class TransferService
                 'expires_at' => now()->addHours($holdHours),
             ]);
 
-            $this->heldBalances->sync($to->fresh());
+            $freshTo = $to->fresh();
+
+            if ($freshTo === null) {
+                throw new \RuntimeException('Receiver wallet missing after refresh.');
+            }
+
+            $this->heldBalances->sync($freshTo);
 
             $this->fees->chargeWallet(
                 $from->refresh(),

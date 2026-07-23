@@ -68,15 +68,15 @@ class ShipmentService
             }
 
             $listing = $order->listing;
-            $snapshot = (array) ($order->listing_snapshot ?? $listing?->toSnapshot() ?? []);
-            $weight = max(100, (int) ($snapshot['weight_grams'] ?? $listing?->weight_grams ?? 500));
+            $snapshot = (array) ($order->listing_snapshot ?? ($listing !== null ? $listing->toSnapshot() : []));
+            $weight = max(100, (int) ($snapshot['weight_grams'] ?? ($listing !== null ? $listing->weight_grams : null) ?? 500));
 
             $response = $this->giglogistics->createShipment(new CreateShipmentRequest(
                 reference: (string) $order->id,
                 weightGrams: $weight,
                 origin: $sellerContact,
                 destination: $destination,
-                description: (string) ($snapshot['title'] ?? $listing?->title ?? 'Physical item'),
+                description: (string) ($snapshot['title'] ?? ($listing !== null ? $listing->title : null) ?? 'Physical item'),
                 listingSnapshot: $snapshot,
             ));
 
@@ -119,11 +119,21 @@ class ShipmentService
                 ]);
             }
 
-            return $shipment->fresh();
+            $fresh = $shipment->fresh();
+
+            if ($fresh === null) {
+                throw new \RuntimeException('Shipment missing after create.');
+            }
+
+            return $fresh;
         });
     }
 
-    /** @deprecated Alias for scheduleHubDropoff */
+    /**
+     * @param  array{line1?: string, line2?: string, city?: string, state?: string, postal_code?: string, country?: string, phone?: string}  $pickupAddress
+     *
+     * @deprecated Alias for scheduleHubDropoff
+     */
     public function bookShipment(DigitalOrder $order, User $seller, array $pickupAddress, bool $attestMatchesListing): MarketplaceShipment
     {
         return $this->scheduleHubDropoff($order, $seller, $pickupAddress, $attestMatchesListing);
@@ -262,7 +272,10 @@ class ShipmentService
         });
     }
 
-    /** @param  array<string, mixed>  $report */
+    /**
+     * @param  array<string, mixed>  $report
+     * @return array{weight_grams: mixed, condition: mixed, brand: mixed, detail: mixed, notes: mixed}
+     */
     private function findingsFromReport(array $report): array
     {
         $checks = (array) ($report['checks'] ?? []);

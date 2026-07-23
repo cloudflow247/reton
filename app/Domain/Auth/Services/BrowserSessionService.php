@@ -26,7 +26,7 @@ class BrowserSessionService
     public function start(Request $request, User $user, string $password, bool $remember = false): void
     {
         Auth::guard('web')->login($user, remember: $remember);
-        Auth::guard('web')->logoutOtherDevices($password);
+        Auth::logoutOtherDevices($password);
 
         $request->session()->regenerate();
         $this->forgetOtherDatabaseSessions($user, $request->session()->getId());

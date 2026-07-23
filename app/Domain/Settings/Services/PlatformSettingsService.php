@@ -916,6 +916,10 @@ class PlatformSettingsService
         config(['reton.fees' => $fees]);
 
         // Keep legacy recovery + SMS fee keys in sync for existing call sites.
+        if (! array_key_exists('recovery_bps', $fees) || ! array_key_exists('sms_alert_flat_minor', $fees)) {
+            throw new \RuntimeException('Fee settings missing recovery_bps or sms_alert_flat_minor.');
+        }
+
         config([
             'reton.recovery.fee_bps' => $fees['recovery_bps'],
             'reton.sms.alert_fee_minor' => $fees['sms_alert_flat_minor'],

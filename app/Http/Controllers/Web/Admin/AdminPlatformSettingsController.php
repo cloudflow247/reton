@@ -6,8 +6,10 @@ namespace App\Http\Controllers\Web\Admin;
 
 use App\Domain\Settings\Services\PlatformSettingsService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,6 +48,12 @@ class AdminPlatformSettingsController extends Controller
         ]);
 
         $group = (string) $request->input('group');
+
+        if (! in_array($group, ['kyc', 'pin', 'callback', 'recovery', 'digital', 'physical', 'fraud', 'fx', 'cards', 'bills', 'payouts', 'features', 'fees', 'horizon'], true)) {
+            throw ValidationException::withMessages([
+                'group' => ['Invalid settings group.'],
+            ]);
+        }
 
         $feeField = fn (string $key): array => [$key => ['required', 'integer', 'min:0', 'max:10000000']];
 
@@ -163,7 +171,13 @@ class AdminPlatformSettingsController extends Controller
 
         unset($validated['group']);
 
-        $this->settings->updateGroup($group, $validated, $request->user(), $request->ip());
+        $admin = $request->user();
+
+        if (! $admin instanceof User) {
+            abort(403);
+        }
+
+        $this->settings->updateGroup($group, $validated, $admin, $request->ip());
 
         return back()->with('success', ucfirst($group).' settings saved and applied.');
     }

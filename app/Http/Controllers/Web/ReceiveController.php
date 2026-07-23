@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Domain\Kyc\Services\KycService;
+use App\Domain\Payments\Alatpay\Exceptions\AlatpayException;
 use App\Domain\Payments\Models\StaticAccount;
 use App\Domain\Payments\Services\StaticAccountService;
 use App\Domain\Wallet\Models\Wallet;
@@ -62,7 +63,7 @@ class ReceiveController extends Controller
             'wallet_id' => ['required', 'uuid', 'exists:wallets,id'],
         ]);
 
-        $wallet = Wallet::findOrFail($validated['wallet_id']);
+        $wallet = Wallet::query()->findOrFail((string) $validated['wallet_id']);
         $this->authorize('operate', $wallet);
 
         $account = $this->staticAccounts->provisionForWallet($user, $wallet);
@@ -84,7 +85,7 @@ class ReceiveController extends Controller
 
         try {
             $this->staticAccounts->verify($staticAccount, $validated['otp']);
-        } catch (\App\Domain\Payments\Alatpay\Exceptions\AlatpayException $e) {
+        } catch (AlatpayException $e) {
             return back()->withErrors([
                 'otp' => $e->userFacingMessage('Invalid or expired code. Try again.'),
             ]);

@@ -17,22 +17,20 @@ use App\Models\User;
  * Builds human-readable From / To parties for statement receipts.
  *
  * Channels: Reton→Reton transfers, bank→wallet deposits, wallet→bank payouts.
+ *
+ * @phpstan-type ReceiptParty array{kind: string, label: string, name: string|null, reton_id: string|null, bank_name: string|null, account_number: string|null, detail: string|null}
+ * @phpstan-type ReceiptParties array{channel: string, channel_label: string, from: ReceiptParty, to: ReceiptParty, funding_account?: string|null}
  */
 final class ReceiptPartiesResolver
 {
     /**
-     * @return array{
-     *     channel: string,
-     *     channel_label: string,
-     *     from: array{kind: string, label: string, name: string|null, reton_id: string|null, bank_name: string|null, account_number: string|null, detail: string|null},
-     *     to: array{kind: string, label: string, name: string|null, reton_id: string|null, bank_name: string|null, account_number: string|null, detail: string|null}
-     * }|null
+     * @return ReceiptParties|null
      */
     public function forEntry(LedgerEntry $entry, Wallet $viewerWallet): ?array
     {
         $transactionId = $entry->transaction_id;
 
-        if (! is_string($transactionId) || $transactionId === '') {
+        if ($transactionId === '') {
             return null;
         }
 
@@ -68,7 +66,7 @@ final class ReceiptPartiesResolver
     }
 
     /**
-     * @return array<string, mixed>
+     * @return ReceiptParties
      */
     private function fromTransfer(Transfer $transfer): array
     {
@@ -84,7 +82,7 @@ final class ReceiptPartiesResolver
     }
 
     /**
-     * @return array<string, mixed>
+     * @return ReceiptParties
      */
     private function fromDeposit(Deposit $deposit, Wallet $viewerWallet): array
     {
@@ -145,7 +143,7 @@ final class ReceiptPartiesResolver
     }
 
     /**
-     * @return array<string, mixed>
+     * @return ReceiptParties
      */
     private function fromPayout(Payout $payout, Wallet $viewerWallet): array
     {
@@ -165,7 +163,7 @@ final class ReceiptPartiesResolver
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return ReceiptParties|null
      */
     private function fromTransactionMetadata(?Transaction $transaction, Wallet $viewerWallet): ?array
     {
@@ -180,7 +178,7 @@ final class ReceiptPartiesResolver
         if (is_string($fromWalletId) && is_string($toWalletId)) {
             $fromWallet = Wallet::query()->find($fromWalletId);
             $toWallet = Wallet::query()->find($toWalletId);
-            $type = (string) ($transaction->getRawOriginal('type') ?? $transaction->type?->value ?? '');
+            $type = (string) ($transaction->getRawOriginal('type') ?? $transaction->type->value);
             $isRefund = str_contains(strtolower($type), 'refund')
                 || str_contains(strtolower((string) $transaction->description), 'refund');
 
@@ -219,7 +217,7 @@ final class ReceiptPartiesResolver
     }
 
     /**
-     * @return array{kind: string, label: string, name: string|null, reton_id: string|null, bank_name: string|null, account_number: string|null, detail: string|null}
+     * @return ReceiptParty
      */
     private function walletParty(?Wallet $wallet, string $fallbackName, string $label): array
     {
@@ -247,7 +245,7 @@ final class ReceiptPartiesResolver
     }
 
     /**
-     * @return array{kind: string, label: string, name: string|null, reton_id: string|null, bank_name: string|null, account_number: string|null, detail: string|null}
+     * @return ReceiptParty
      */
     private function party(
         string $kind,

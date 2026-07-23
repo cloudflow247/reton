@@ -233,19 +233,21 @@ class RuleBasedSupportResponder
         $lines = ['Here are your open protection cases:'];
 
         foreach ($callbacks as $callback) {
+            $transfer = $callback->transfer;
             $lines[] = sprintf(
                 '• Callback **%s** on transfer %s - %s',
                 $callback->reference,
-                $callback->transfer->reference,
+                $transfer !== null ? $transfer->reference : 'unknown',
                 $callback->status->value,
             );
         }
 
         foreach ($recoveries as $recovery) {
+            $transfer = $recovery->transfer;
             $lines[] = sprintf(
                 '• Recovery **%s** on transfer %s - %s',
                 $recovery->reference,
-                $recovery->transfer->reference,
+                $transfer !== null ? $transfer->reference : 'unknown',
                 $recovery->status->value,
             );
         }

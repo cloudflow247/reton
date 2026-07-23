@@ -168,8 +168,9 @@ class DigitalEscrowJudgementService
         $sellerTrust = $seller instanceof User ? $this->sellerTrustScore($seller) : 70;
         $buyerTrust = $buyer instanceof User ? $this->buyerTrustScore($buyer) : 75;
         $descriptionMatch = $this->verification->descriptionMatchScore($order);
-        $hubScore = (int) ($order->shipment?->hub_verification_score ?? 0);
-        $hubPassed = $order->shipment?->isHubVerified() ?? false;
+        $shipment = $order->shipment;
+        $hubScore = $shipment === null ? 0 : (int) $shipment->hub_verification_score;
+        $hubPassed = $shipment !== null && $shipment->isHubVerified();
         $isPhysical = $this->itemType($order) === ItemType::Physical;
 
         if ($sellerHighRisk) {
@@ -200,29 +201,23 @@ class DigitalEscrowJudgementService
             return CallbackResolution::Refund;
         }
 
-        if (in_array($category, [DigitalDisputeCategory::NotAsDescribed, DigitalDisputeCategory::DamagedInTransit, DigitalDisputeCategory::WrongItem], true)) {
-            if ($isPhysical && $hubPassed && $hubScore >= 85) {
-                if ($category === DigitalDisputeCategory::WrongItem) {
-                    return CallbackResolution::Refund;
-                }
+        // Physical DamagedInTransit / WrongItem already returned above. Hub path refines NotAsDescribed.
+        if ($category === DigitalDisputeCategory::NotAsDescribed
+            && $isPhysical
+            && $hubPassed
+            && $hubScore >= 85) {
+            if ($buyerHighRisk && $sellerTrust >= 70) {
+                return CallbackResolution::Release;
+            }
 
-                if ($buyerHighRisk && $sellerTrust >= 70) {
-                    return CallbackResolution::Release;
-                }
-
-                if ($category === DigitalDisputeCategory::DamagedInTransit) {
-                    return CallbackResolution::Refund;
-                }
-
-                if ($descriptionMatch >= 70 && $sellerTrust >= 60) {
-                    return CallbackResolution::Release;
-                }
+            if ($descriptionMatch >= 70 && $sellerTrust >= 60) {
+                return CallbackResolution::Release;
             }
         }
 
         if (in_array($category, [DigitalDisputeCategory::NotAsDescribed, DigitalDisputeCategory::InvalidItem], true)) {
             if ($category === DigitalDisputeCategory::InvalidItem) {
-                if ($sellerTrust >= 80 && $buyerHighRisk && ! $sellerHighRisk) {
+                if ($sellerTrust >= 80 && $buyerHighRisk) {
                     return CallbackResolution::Release;
                 }
 
@@ -233,7 +228,7 @@ class DigitalEscrowJudgementService
                 return CallbackResolution::Release;
             }
 
-            if ($buyerHighRisk && $sellerTrust >= 70 && ! $sellerHighRisk) {
+            if ($buyerHighRisk && $sellerTrust >= 70) {
                 return CallbackResolution::Release;
             }
 
@@ -381,7 +376,13 @@ class DigitalEscrowJudgementService
         }
 
         $onTime = $delivered->filter(
-            fn (DigitalOrder $order) => $order->delivered_at?->lte($order->delivery_deadline_at),
+            function (DigitalOrder $order): bool {
+                if ($order->delivered_at === null || $order->delivery_deadline_at === null) {
+                    return false;
+                }
+
+                return $order->delivered_at->lte($order->delivery_deadline_at);
+            },
         )->count();
 
         $onTimeRate = $onTime / $delivered->count();
@@ -426,7 +427,9 @@ class DigitalEscrowJudgementService
 
     private function itemType(DigitalOrder $order): ItemType
     {
-        $value = $order->listing_snapshot['item_type'] ?? $order->listing?->item_type?->value ?? ItemType::Digital->value;
+        $snapshotType = $order->listing_snapshot['item_type'] ?? null;
+        $listing = $order->listing;
+        $value = $snapshotType ?? ($listing !== null ? $listing->item_type->value : null) ?? ItemType::Digital->value;
 
         return ItemType::tryFrom((string) $value) ?? ItemType::Digital;
     }

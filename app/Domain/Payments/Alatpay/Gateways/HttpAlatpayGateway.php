@@ -24,6 +24,7 @@ use GuzzleHttp\Cookie\SetCookie;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -470,7 +471,7 @@ class HttpAlatpayGateway implements AlatpayGateway
             'id' => $staticWalletId,
             'staticWalletId' => $staticWalletId,
             'email' => $email,
-        ], static fn (mixed $value): bool => $value !== null && $value !== '');
+        ], static fn (mixed $value): bool => $value !== '');
 
         $attempts = [
             ['method' => 'put', 'path' => '/alatpay-wallet/api/v1/staticaccount'],
@@ -506,7 +507,7 @@ class HttpAlatpayGateway implements AlatpayGateway
                 $data = $this->unwrapPayload($body);
                 $root = is_array($body) ? $body : [];
 
-                if (! $this->looksLikeSoftFailure($root, is_array($data) ? $data : [])) {
+                if (! $this->looksLikeSoftFailure($root, $data)) {
                     Log::info('ALATPay updateStaticAccountEmail succeeded', [
                         'static_wallet_id' => $staticWalletId,
                         'path' => $attempt['path'],
@@ -768,7 +769,7 @@ class HttpAlatpayGateway implements AlatpayGateway
     /**
      * @return list<array<string, mixed>>
      */
-    private function extractCollectionHistoryRows(\Illuminate\Http\Client\Response $response): array
+    private function extractCollectionHistoryRows(Response $response): array
     {
         $payload = $response->json();
 
@@ -792,8 +793,15 @@ class HttpAlatpayGateway implements AlatpayGateway
                 continue;
             }
 
-            /** @var list<array<string, mixed>> $candidate */
-            return array_values(array_filter($candidate, static fn (mixed $row): bool => is_array($row)));
+            /** @var list<mixed> $candidate */
+            $rows = [];
+            foreach ($candidate as $row) {
+                if (is_array($row)) {
+                    $rows[] = $row;
+                }
+            }
+
+            return $rows;
         }
 
         $data = $payload['data'] ?? null;
@@ -801,8 +809,14 @@ class HttpAlatpayGateway implements AlatpayGateway
         if (is_array($data) && array_is_list($data) && $data !== []) {
             $first = $data[0] ?? null;
             if (is_array($first) && (isset($first['amount']) || isset($first['accountNumber']) || isset($first['staticAccountTransactionId']))) {
-                /** @var list<array<string, mixed>> $data */
-                return array_values(array_filter($data, static fn (mixed $row): bool => is_array($row)));
+                $rows = [];
+                foreach ($data as $row) {
+                    if (is_array($row)) {
+                        $rows[] = $row;
+                    }
+                }
+
+                return $rows;
             }
         }
 
@@ -868,14 +882,25 @@ class HttpAlatpayGateway implements AlatpayGateway
             $cached = Cache::get($cacheKey);
 
             if (is_array($cached)
-                && ! empty($cached['cookies'])
+                && isset($cached['cookies'])
                 && is_array($cached['cookies'])
+                && array_is_list($cached['cookies'])
+                && $cached['cookies'] !== []
                 && filled($cached['subscription_key'] ?? null)
             ) {
-                $this->cookieJar = $this->cookieJarFromArray($cached['cookies']);
-                $this->sessionSubscriptionKey = (string) $cached['subscription_key'];
+                $cookieList = [];
+                foreach ($cached['cookies'] as $cookie) {
+                    if (is_array($cookie)) {
+                        $cookieList[] = $cookie;
+                    }
+                }
 
-                return;
+                if ($cookieList !== []) {
+                    $this->cookieJar = $this->cookieJarFromArray($cookieList);
+                    $this->sessionSubscriptionKey = (string) $cached['subscription_key'];
+
+                    return;
+                }
             }
         }
 
@@ -996,9 +1021,9 @@ class HttpAlatpayGateway implements AlatpayGateway
     }
 
     /**
-     * @param  callable(): \Illuminate\Http\Client\Response  $request
+     * @param  callable(): Response  $request
      */
-    private function sendWithSessionRetry(callable $request): \Illuminate\Http\Client\Response
+    private function sendWithSessionRetry(callable $request): Response
     {
         $response = $request();
 
@@ -1028,9 +1053,7 @@ class HttpAlatpayGateway implements AlatpayGateway
         $jar = new CookieJar;
 
         foreach ($cookies as $cookie) {
-            if (is_array($cookie)) {
-                $jar->setCookie(new SetCookie($cookie));
-            }
+            $jar->setCookie(new SetCookie($cookie));
         }
 
         return $jar;

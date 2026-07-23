@@ -181,7 +181,7 @@ class VirtualCardService
 
         if (str_contains($card->pan(), '*')) {
             $details = $this->gateway->fetchDetails($card->providerCardId());
-            $metadata = $card->metadata ?? [];
+            $metadata = is_array($card->metadata) ? $card->metadata : [];
 
             if ($details->billingAddress !== null) {
                 $metadata['billing_address'] = $details->billingAddress->toArray();
@@ -207,7 +207,7 @@ class VirtualCardService
             'expiry' => $card->expiryDisplay(),
             'name_on_card' => $card->name_on_card,
             'currency' => $card->currency,
-            'brand' => (string) ($card->metadata['brand'] ?? 'Mastercard'),
+            'brand' => is_array($card->metadata) ? (string) ($card->metadata['brand'] ?? 'Mastercard') : 'Mastercard',
             'card_type' => 'virtual',
             'billing_address' => $card->billingAddress(),
         ];
@@ -233,17 +233,19 @@ class VirtualCardService
     {
         try {
             $balance = $this->gateway->balance($card->providerCardId());
-            $metadata = $card->metadata ?? [];
-            $metadata['card_balance_minor'] = $balance->availableMinor;
-            $metadata['card_balance_synced_at'] = now()->toIso8601String();
+            $metadata = is_array($card->metadata) ? $card->metadata : [];
+            $billing = is_array($metadata['billing_address'] ?? null) ? $metadata['billing_address'] : null;
 
-            if (empty($metadata['billing_address']['line1'])) {
+            if ($billing === null || ($billing['line1'] ?? '') === '') {
                 $details = $this->gateway->fetchDetails($card->providerCardId());
 
                 if ($details->billingAddress !== null) {
                     $metadata['billing_address'] = $details->billingAddress->toArray();
                 }
             }
+
+            $metadata['card_balance_minor'] = $balance->availableMinor;
+            $metadata['card_balance_synced_at'] = now()->toIso8601String();
 
             $card->update(['metadata' => $metadata]);
         } catch (\Throwable) {

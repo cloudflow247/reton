@@ -20,7 +20,7 @@ class ListingVerificationService
      */
     public function verifyListing(DigitalListing $listing): array
     {
-        if ($listing->item_type === ItemType::Digital || $listing->item_type === null) {
+        if ($listing->item_type !== ItemType::Physical) {
             return $this->verifyDigitalListing($listing);
         }
 

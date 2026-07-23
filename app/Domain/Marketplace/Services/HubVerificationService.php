@@ -51,7 +51,7 @@ class HubVerificationService
         $checks['title'] = ['expected' => $listingSnapshot['title'] ?? null, 'found' => $hubFindings['item_label'] ?? null, 'passed' => $titleMatch];
         $score += $titleMatch ? 10 : 0;
 
-        $normalized = $max > 0 ? (int) round(($score / $max) * 100) : 0;
+        $normalized = (int) round(($score / $max) * 100);
         $passThreshold = (int) config('reton.physical.hub_verification_pass_score', 80);
 
         $status = $normalized >= $passThreshold ? HubVerificationStatus::Passed : HubVerificationStatus::Failed;
