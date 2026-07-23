@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Cross-platform dev stack launcher.
  *
- * Windows PHP lacks pcntl/posix, so Horizon cannot run — we use queue:work instead.
+ * Windows PHP lacks pcntl/posix, so Horizon cannot run - we use queue:work instead.
  * Redis is optional on Windows; the database queue driver works with SQLite.
  */
 $isWindows = PHP_OS_FAMILY === 'Windows';

@@ -66,7 +66,7 @@ it('compares equality by amount and currency', function () {
         ->and(Money::of(100, 'NGN')->equals(Money::of(100, 'USD')))->toBeFalse();
 });
 
-it('is immutable — operations return new instances', function () {
+it('is immutable - operations return new instances', function () {
     $original = Money::of(100, 'NGN');
     $original->plus(Money::of(50, 'NGN'));
 

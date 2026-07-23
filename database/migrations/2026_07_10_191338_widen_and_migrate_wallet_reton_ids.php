@@ -7,7 +7,7 @@ use Illuminate\Database\Migrations\Migration;
 
 /**
  * Re-issue every legacy numeric wallet number as a RETON ID (R + 9 digits).
- * Column width stays 10+ chars — no schema change required for the new format.
+ * Column width stays 10+ chars - no schema change required for the new format.
  */
 return new class extends Migration
 {

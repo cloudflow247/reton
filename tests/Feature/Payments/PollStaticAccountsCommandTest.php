@@ -52,7 +52,7 @@ it('continues polling other accounts when one credit fails', function () {
         '123456',
     );
 
-    // Tier 1 single-tx max is ₦20k — this credit fails KYC and must not abort the command.
+    // Tier 1 single-tx max is ₦20k - this credit fails KYC and must not abort the command.
     $gateway->markStaticFunded($accountBlocked->account_number, 25_000.00, 'txn-blocked');
     $gateway->markStaticFunded($accountOk->account_number, 80.00, 'txn-ok');
 

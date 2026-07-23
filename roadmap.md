@@ -11,7 +11,7 @@ Status: ALATPay Buildathon MVP → production hardening
 
 Reton is not another generic wallet. The product thesis is **trust when money moves**: Callback Protection, wrong-transfer recovery, fraud signals, merchant verification, and a visible timeline on every payment.
 
-This roadmap sequences work from **buildathon demo** → **licensed soft launch** → **compliance-ready operations** → **scale**, aligned with Nigeria’s regulatory reality (CBN KYC tiers, NFIU AML expectations, licensed rails via ALAT / Wema).
+This roadmap sequences work from **buildathon demo** → **licensed soft launch** → **compliance-ready operations** → **scale**, aligned with Nigeria's regulatory reality (CBN KYC tiers, NFIU AML expectations, licensed rails via ALAT / Wema).
 
 | Horizon | Goal | Primary audience |
 |---------|------|------------------|
@@ -71,7 +71,7 @@ This roadmap sequences work from **buildathon demo** → **licensed soft launch*
 
 1. Sign in with a seeded sandbox account (local demo mode only)
 2. Dashboard - balance, KYC badge, pending protected funds
-3. Send a **protected transfer** - receiver sees “Payment Protected”
+3. Send a **protected transfer** - receiver sees "Payment Protected"
 4. Callback Protection - request callback; show the timeline
 5. Wrong-transfer recovery - open a recovery case
 6. Fraud alert - show admin visibility
@@ -188,9 +188,9 @@ Use language that is accurate and defensible:
 
 > Reton implements the customer-facing trust layer: CBN-aligned KYC tiers, identity verification, real-time transaction monitoring, fraud holds, full audit trails, and case export for our licensed banking partner. Settlement and regulatory reporting operate on partner rails. We do not claim standalone AML licensure; we build AML-ready infrastructure that satisfies partner due diligence.
 
-**Do not say:** “We are fully AML compliant” or “We are licensed by the CBN” unless that is literally true.
+**Do not say:** "We are fully AML compliant" or "We are licensed by the CBN" unless that is literally true.
 
-**Do say:** “KYC-tiered limits, identity verification, transaction monitoring, and partner-bank settlement.”
+**Do say:** "KYC-tiered limits, identity verification, transaction monitoring, and partner-bank settlement."
 
 ---
 
@@ -210,7 +210,7 @@ Sandbox identity shortcuts belong in local test config only - never in productio
 
 | Phase | Targets |
 |-------|---------|
-| Phase 0 | Demo completes live; judge questions answered without “we’ll build that later” |
+| Phase 0 | Demo completes live; judge questions answered without "we'll build that later" |
 | Phase 1 | Protected transfer adoption > 30% of P2P; webhook success > 99.9% |
 | Phase 2 | Partner DDQ passed; open AML/fraud cases > 7 days = 0 |
 | Phase 3 | Meaningful GMV; merchant API partners live |

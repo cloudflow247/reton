@@ -2,7 +2,7 @@
 
 **Payments you can take back.**
 
-Reton is Africa’s trust-first digital banking platform. We help people send, receive, and recover money with clarity - not just speed.
+Reton is Africa's trust-first digital banking platform. We help people send, receive, and recover money with clarity - not just speed.
 
 Flagship product: **Callback Protection**. Hold a payment until the sender is ready to release it, with a full timeline at every step. If something goes wrong, the money still has a path back.
 
@@ -18,7 +18,7 @@ Live product: [retonpay.com](https://retonpay.com)
 
 1. Open [retonpay.com](https://retonpay.com) (or local demo via `composer demo` below).
 2. Fund or use a sandbox wallet, then send a **Protected** transfer.
-3. On **Protection**, confirm the recipient’s full name and the final warning, then release - or raise a callback.
+3. On **Protection**, confirm the recipient's full name and the final warning, then release - or raise a callback.
 4. Follow the **timeline** on the case.
 5. Open **Activity → receipt** and copy Reference / Transaction ID.
 
@@ -28,7 +28,7 @@ Pitch materials stay local (not published in this repository). Engineering deep-
 
 ## Why Reton
 
-Most wallets optimise for “send and forget.” We optimise for the moment something goes wrong:
+Most wallets optimise for "send and forget." We optimise for the moment something goes wrong:
 
 | Capability | What judges should see |
 |------------|------------------------|
@@ -156,7 +156,7 @@ Integration credentials and business rules can be managed from the **admin dashb
 | Payment rails | Live HTTP driver for production; fake drivers for local/demo |
 | KYC / BVN | Configured via admin Integrations and `KYC_BVN_PROVIDER` |
 | Demo mode | Keep `RETON_DEMO_MODE=false` in production |
-| SMS / alerts | Reton’s messaging stack for auth and alerts |
+| SMS / alerts | Reton's messaging stack for auth and alerts |
 
 See `.env.example` and [docs/DEPLOY.md](docs/DEPLOY.md). **Never commit real API keys, webhook secrets, or `.env` files.**
 
@@ -180,7 +180,7 @@ Priority coverage is money: happy path, authorization denial, validation failure
 - Webhook signature validation
 - Encrypted sensitive fields at rest (including BVN and integration secrets)
 - Policies on financial resources; audit logs on financial state changes
-- Callback Protection release shows the recipient’s full name and a final irreversible warning
+- Callback Protection release shows the recipient's full name and a final irreversible warning
 
 Treat every environment that can move real money as production.
 

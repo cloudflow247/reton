@@ -23,7 +23,7 @@ beforeEach(function () {
         ],
     ]);
 
-    // channels.php runs at boot against the null driver in phpunit.xml — register on reverb for this suite.
+    // channels.php runs at boot against the null driver in phpunit.xml - register on reverb for this suite.
     require base_path('routes/channels.php');
 });
 

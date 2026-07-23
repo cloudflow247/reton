@@ -366,7 +366,7 @@ it('matches official static-wallet create and validate payloads', function () {
     fakeAlatpayMerchantSession([
         'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount/validateAndCreate' => Http::response([
             'accountNumber' => '0412345678',
-            'accountName' => 'Your Business – David_Mark',
+            'accountName' => 'Your Business - David_Mark',
             'id' => 'staticWalletid',
         ], 200),
         'apibox.alatpay.ng/alatpay-wallet/api/v1/staticaccount' => Http::response([
@@ -515,7 +515,7 @@ it('matches collection history when alatpay drops a leading zero on account numb
                 [
                     'staticAccountTransactionId' => 'txn-leading-zero',
                     'status' => 1,
-                    // JSON number — leading zero stripped vs Reton VA 0450041659
+                    // JSON number - leading zero stripped vs Reton VA 0450041659
                     'accountNumber' => 450041659,
                     'amount' => 150.00,
                     'narration' => 'IP:MOGAJI GABRIEL ROTIMI-NIP Transfer to CLOUDFLO',

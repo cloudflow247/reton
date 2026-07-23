@@ -1,4 +1,4 @@
-> **Proprietary** ? Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji · Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
+> **Proprietary** - Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji · Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
 >
 > **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
@@ -13,7 +13,7 @@
 ### Goal
 
 Give each Reton wallet a **permanent AlatPay static account** the user can fund by
-ordinary bank transfer — any amount, any number of times, without generating new payment
+ordinary bank transfer - any amount, any number of times, without generating new payment
 details each time. Reton **polls** AlatPay's static-account transactions endpoint and
 credits the wallet for each new successful payment through the existing audited
 double-entry ledger path (a `Deposit` row, `provider = 'alatpay_static'`).
@@ -22,7 +22,7 @@ This is an **AlatPay-native** feature (deepens AlatPay usage for the buildathon)
 high-polish funding UX: a stable "account number to fund anytime," versus today's
 one-time virtual account minted per deposit.
 
-### Non-goals (deferred — YAGNI)
+### Non-goals (deferred - YAGNI)
 
 - **Auto-selecting the wallet type by KYC tier.** The type is an explicit parameter; the
   "Individual once KYC-verified, else Collection" policy is deferred (KYC domain not built).
@@ -35,7 +35,7 @@ one-time virtual account minted per deposit.
 ### Context
 
 Reton is an AlatPay Buildathon entry (aim: win 1st). AlatPay Static Wallet API confirmed
-from docs.alatpay.ng/static-wallet on 2026-06-23 — see the `alatpay-static-wallet-api`
+from docs.alatpay.ng/static-wallet on 2026-06-23 - see the `alatpay-static-wallet-api`
 project memory for the full contract.
 
 ## 2. Decisions locked
@@ -64,12 +64,12 @@ provision(User, Wallet, type, bvn?)
 verify(StaticAccount, otp)
    └─ POST /alatpay-wallet/api/v1/staticaccount/validateAndCreate
         {staticWalletId, businessId, otp, trackingId}
-        ← {accountNumber:"0412345678", accountName:"Your Business – David_Mark", id}
+        ← {accountNumber:"0412345678", accountName:"Your Business - David_Mark", id}
    └─ StaticAccount row: status=active, account_number, account_name
 ```
 
 If the provision response already carries an `accountNumber` and no `otpTrackingId` (e.g. a
-Collection wallet that does not require OTP — to confirm at implementation), `provision`
+Collection wallet that does not require OTP - to confirm at implementation), `provision`
 stores the account number and sets status `active` directly; `verify` is then a no-op that
 returns the already-active account.
 
@@ -116,7 +116,7 @@ New `static_accounts` table; `StaticAccount` model in `app/Domain/Payments/`.
 | `created_at` / `updated_at` | timestamps | |
 
 Index `['user_id', 'status']`. The `account_number` here is AlatPay's external payable
-account — distinct from the internal `wallets.account_number` (NUBAN-style, for internal
+account - distinct from the internal `wallets.account_number` (NUBAN-style, for internal
 wallet-to-wallet lookup). Keep the two clearly separate; do not conflate.
 
 Enums in `app/Domain/Payments/Enums/`:
@@ -163,15 +163,15 @@ The **Http** gateway maps defensively (best-effort `data.*` / documented keys), 
 `AlatpayGateway` and `WalletService`:
 
 - `provision(User $user, Wallet $wallet, StaticWalletType $type, ?string $bvn = null): StaticAccount`
-  — Collection resolves BVN from `config('services.alatpay.business_bvn')`; Individual uses
+  - Collection resolves BVN from `config('services.alatpay.business_bvn')`; Individual uses
   `$bvn`. Creates the row, calls the gateway, stores `staticWalletId`/`otpTrackingId`; if the
   response already has an account number, sets `active` immediately.
-- `verify(StaticAccount $account, string $otp): StaticAccount` — calls the gateway, stores
+- `verify(StaticAccount $account, string $otp): StaticAccount` - calls the gateway, stores
   `account_number`/`account_name`, flips to `active`. No-op (returns as-is) if already active.
-- `poll(StaticAccount $account): int` — fetches transactions, credits each new successful one
+- `poll(StaticAccount $account): int` - fetches transactions, credits each new successful one
   via `credit()`, returns the number credited; stamps `last_polled_at`. Only polls `active`
   accounts.
-- `private credit(StaticAccount $account, StaticAccountTransaction $txn): void` — inside a
+- `private credit(StaticAccount $account, StaticAccountTransaction $txn): void` - inside a
   `DB::transaction`: create the `Deposit`, call `WalletService::fund()` with the txn id as
   idempotency key, mark the deposit completed. Mirrors `AlatpayDepositService::creditDeposit()`.
 
@@ -211,7 +211,7 @@ credited. Registered on the scheduler is out of scope for this plan (manual/cron
 - Poll: transactions with `status != 1` are skipped; already-recorded transactions
   (dedup by `staticAccountTransactionId`) are no-ops; a malformed amount that rounds to 0 is
   skipped and logged.
-- Double-credit prevented by the three guards in §4.
+- Double-credit prevented by the three guards in section 4.
 
 ## 11. Testing
 

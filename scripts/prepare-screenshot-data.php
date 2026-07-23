@@ -23,7 +23,7 @@ $marketplace = app(DigitalMarketplaceService::class);
 
 $listing = $marketplace->createListing(
     $ada,
-    'UI kit — Lagos Fintech',
+    'UI kit - Lagos Fintech',
     'Figma component library with mobile wallet patterns. Instant download after delivery.',
     Money::of(15_000_00, 'NGN'),
     "Download: https://demo.retonpay.com/files/lagos-ui-kit.zip\nLicense: RETON-DEMO-SCREENSHOT",
@@ -35,7 +35,7 @@ $order = $marketplace->purchase($bola, $listing->fresh(), $bolaWallet->refresh()
 // Fresh shareable listing (still active) for guest / buyer screenshots.
 $shareListing = $marketplace->createListing(
     $bola,
-    'eBook — Trust-First Payments',
+    'eBook - Trust-First Payments',
     'PDF guide to callback protection and wrong-transfer recovery for African fintech.',
     Money::of(5_000_00, 'NGN'),
     "Download: https://demo.retonpay.com/files/trust-first-payments.pdf\nAccess code: BOLA-SCREENSHOT",

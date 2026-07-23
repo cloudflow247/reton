@@ -1,4 +1,4 @@
-> **Proprietary** � Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji � Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
+> **Proprietary** - Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji - Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
 >
 > **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
@@ -15,11 +15,11 @@
 ## Global Constraints
 
 - `declare(strict_types=1);` at the top of every PHP file.
-- All money is integer **minor units** (kobo). BUT AlatPay static-account transaction `amount` is **MAJOR** units (e.g. `100.00` = ₦100) — convert with `(int) round($amountMajor * 100)`.
-- No balance mutation outside the ledger — credit only via `WalletService::fund()`.
+- All money is integer **minor units** (kobo). BUT AlatPay static-account transaction `amount` is **MAJOR** units (e.g. `100.00` = ₦100) - convert with `(int) round($amountMajor * 100)`.
+- No balance mutation outside the ledger - credit only via `WalletService::fund()`.
 - Idempotency key for a static credit = AlatPay's `staticAccountTransactionId`.
 - **BVN is never persisted.** Collection BVN from `config('services.alatpay.business_bvn')`; individual BVN supplied per request, used once, discarded.
-- The AlatPay static `account_number` is the EXTERNAL payable account — distinct from the internal `wallets.account_number` (NUBAN-style). Never conflate them.
+- The AlatPay static `account_number` is the EXTERNAL payable account - distinct from the internal `wallets.account_number` (NUBAN-style). Never conflate them.
 - Domain code under `backend/app/Domain/Payments/`; HTTP under `backend/app/Http/...`; commands under `backend/app/Console/Commands/`.
 - Tests are Pest under `backend/tests/Feature/Payments/`, using `RefreshDatabase` and the in-memory `FakeAlatpayGateway` bound via `$this->app->instance(AlatpayGateway::class, ...)`.
 - Follow existing patterns exactly (`Deposit` model/migration, `AlatpayDepositService`, `DepositController`, `DepositPolicy`, `ReconcileDeposits` are the references).
@@ -86,7 +86,7 @@ it('maps the individual wallet type to provider code 1', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/StaticAccountModelTest.php`
-Expected: FAIL — class `StaticAccount` not found.
+Expected: FAIL - class `StaticAccount` not found.
 
 - [ ] **Step 3: Create the migration**
 
@@ -369,7 +369,7 @@ it('reports recorded transactions in major units with a minor-unit helper', func
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/FakeStaticAccountGatewayTest.php`
-Expected: FAIL — `StaticAccountRequest` / methods not found.
+Expected: FAIL - `StaticAccountRequest` / methods not found.
 
 - [ ] **Step 3: Create the DTOs**
 
@@ -619,7 +619,7 @@ Note: `AlatpayException` is already imported in this file.
 
 - [ ] **Step 6: Implement in HttpAlatpayGateway**
 
-In `backend/app/Domain/Payments/Alatpay/Gateways/HttpAlatpayGateway.php`, add the same five DTO imports as the contract plus `StaticAccountTransaction`. Add these methods (endpoint paths follow docs.alatpay.ng/static-wallet; the transactions path is best-effort and confirmed at integration time — defensive `data.*` mapping mirrors `createCollection`):
+In `backend/app/Domain/Payments/Alatpay/Gateways/HttpAlatpayGateway.php`, add the same five DTO imports as the contract plus `StaticAccountTransaction`. Add these methods (endpoint paths follow docs.alatpay.ng/static-wallet; the transactions path is best-effort and confirmed at integration time - defensive `data.*` mapping mirrors `createCollection`):
 
 ```php
     public function provisionStaticAccount(StaticAccountRequest $request): StaticAccountProvisionResponse
@@ -728,7 +728,7 @@ git commit -m "feat(payments): AlatPay static-account gateway methods (provision
 
 ---
 
-### Task 3: StaticAccountService — provisioning (provision + verify)
+### Task 3: StaticAccountService - provisioning (provision + verify)
 
 **Files:**
 - Create: `backend/app/Domain/Payments/Services/StaticAccountService.php`
@@ -829,7 +829,7 @@ it('activates immediately when the provider returns an account number without an
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/StaticAccountProvisioningTest.php`
-Expected: FAIL — `StaticAccountService` not found.
+Expected: FAIL - `StaticAccountService` not found.
 
 - [ ] **Step 3: Implement the service (provisioning half)**
 
@@ -858,7 +858,7 @@ use Illuminate\Support\Str;
  * Provisioning is a two-step OTP flow (provision -> verify), except when the
  * provider returns an account number immediately (e.g. a Collection wallet that
  * needs no OTP), in which case the account is activated on provision. Funding is
- * poll-driven: see poll()/credit() — every credit flows through the audited
+ * poll-driven: see poll()/credit() - every credit flows through the audited
  * WalletService ledger path.
  */
 class StaticAccountService
@@ -948,7 +948,7 @@ git commit -m "feat(payments): StaticAccountService provisioning (provision + OT
 
 ---
 
-### Task 4: StaticAccountService — poll-driven funding (poll + credit)
+### Task 4: StaticAccountService - poll-driven funding (poll + credit)
 
 **Files:**
 - Modify: `backend/app/Domain/Payments/Services/StaticAccountService.php`
@@ -1040,7 +1040,7 @@ it('stamps last_polled_at', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/StaticAccountFundingTest.php`
-Expected: FAIL — `poll()` not defined.
+Expected: FAIL - `poll()` not defined.
 
 - [ ] **Step 3: Add `poll()` and `credit()` to the service**
 
@@ -1055,7 +1055,7 @@ use App\Support\Money\Money;
 use Illuminate\Support\Facades\DB;
 ```
 
-(`StaticAccountStatus` is already imported from Task 3 — do not duplicate.)
+(`StaticAccountStatus` is already imported from Task 3 - do not duplicate.)
 
 Add a class constant for the static provider key near `PROVIDER`:
 
@@ -1262,7 +1262,7 @@ it('forbids viewing someone elses static account', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/StaticAccountApiTest.php`
-Expected: FAIL — route not defined (404).
+Expected: FAIL - route not defined (404).
 
 - [ ] **Step 3: Create the form requests**
 
@@ -1567,7 +1567,7 @@ it('credits funded transactions across active static accounts', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/PollStaticAccountsCommandTest.php`
-Expected: FAIL — command `static-accounts:poll` not found.
+Expected: FAIL - command `static-accounts:poll` not found.
 
 - [ ] **Step 3: Create the command**
 
@@ -1641,20 +1641,20 @@ git commit -m "feat(payments): static-accounts:poll command for poll-driven fund
 ## Self-Review
 
 **Spec coverage:**
-- §3 provisioning (2-step OTP, immediate-active fallback) → Task 3.
-- §4 polling → ledger credit (major→minor, dedup, three guards) → Task 4.
-- §5 data model (table, two enums, model) → Task 1.
-- §6 gateway extension (5 DTOs, 3 methods, Fake+Http, `business_bvn` config) → Task 2.
-- §7 service (`provision`/`verify`/`poll`/`credit`) → Tasks 3 & 4.
-- §8 HTTP API (provision/verify/list/show, validation, policy, resource) → Task 5.
-- §9 scheduled command → Task 6.
-- §10 error handling (gateway failure, wrong OTP, status!=1, amount→0, dedup) → covered by tests in Tasks 3, 4.
-- §11 testing scenarios 1–9 → distributed: 1–4 Task 3 & Task 2; 5–7 Task 4; 8 Task 5; 9 Task 6.
+- section 3 provisioning (2-step OTP, immediate-active fallback) → Task 3.
+- section 4 polling → ledger credit (major→minor, dedup, three guards) → Task 4.
+- section 5 data model (table, two enums, model) → Task 1.
+- section 6 gateway extension (5 DTOs, 3 methods, Fake+Http, `business_bvn` config) → Task 2.
+- section 7 service (`provision`/`verify`/`poll`/`credit`) → Tasks 3 & 4.
+- section 8 HTTP API (provision/verify/list/show, validation, policy, resource) → Task 5.
+- section 9 scheduled command → Task 6.
+- section 10 error handling (gateway failure, wrong OTP, status!=1, amount→0, dedup) → covered by tests in Tasks 3, 4.
+- section 11 testing scenarios 1-9 → distributed: 1-4 Task 3 & Task 2; 5-7 Task 4; 8 Task 5; 9 Task 6.
 
-**Deferred (per spec §1):** webhook crediting, KYC auto-select, multi-account-per-wallet, BVN persistence, de-provisioning — no tasks, intentional.
+**Deferred (per spec section 1):** webhook crediting, KYC auto-select, multi-account-per-wallet, BVN persistence, de-provisioning - no tasks, intentional.
 
 **Type consistency:** `provisionStaticAccount`/`verifyStaticAccount`/`fetchStaticAccountTransactions` signatures identical across contract (Task 2), Fake/Http (Task 2), and service (Tasks 3, 4). `StaticWalletType::providerCode()` (1/2) used in Task 2 test and Task 3 service. `StaticAccountStatus` cases (`PendingOtp`/`Active`/`Failed`) consistent across model, service, controller, command. `StaticAccountTransaction::amountMinor()` (`(int) round(amountMajor*100)`) used in Task 2 and Task 4. `provider='alatpay_static'` and idempotency key `staticAccountTransactionId` consistent between Task 4 service and its tests. Fake helpers `markStaticFunded`/`provisionReturnsImmediately` defined in Task 2 and used in Tasks 3, 4, 6.
 
-**Placeholder scan:** none — every step has complete code or an exact command. The only deferred details are AlatPay's exact transactions endpoint path and whether Collection skips OTP (spec §12 open questions), both flagged and non-blocking because the Fake gateway drives all tests.
+**Placeholder scan:** none - every step has complete code or an exact command. The only deferred details are AlatPay's exact transactions endpoint path and whether Collection skips OTP (spec section 12 open questions), both flagged and non-blocking because the Fake gateway drives all tests.
 
-**Negative-path coverage:** the Fake exposes `recordStaticTransaction(accountNumber, status, amountMajor, transactionId)` so Task 4's "ignores unsuccessful transactions" test injects a real `status != 1` row alongside a successful one and asserts only the successful one credits — genuinely exercising the `isSuccessful()` filter in `poll()`. `markStaticFunded` delegates to it with `status = 1` for the happy-path tests.
+**Negative-path coverage:** the Fake exposes `recordStaticTransaction(accountNumber, status, amountMajor, transactionId)` so Task 4's "ignores unsuccessful transactions" test injects a real `status != 1` row alongside a successful one and asserts only the successful one credits - genuinely exercising the `isSuccessful()` filter in `poll()`. `markStaticFunded` delegates to it with `status = 1` for the happy-path tests.

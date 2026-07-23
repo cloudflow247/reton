@@ -1,8 +1,8 @@
-> **Proprietary** � Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji � Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
+> **Proprietary** - Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji - Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
 >
 > **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
-# Reton M0 � Foundation Implementation Plan
+# Reton M0 - Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -15,14 +15,14 @@
 ## Global Constraints
 
 - PHP **8.4+**, Laravel **12**. (CLAUDE.md)
-- API base path is **`/api/v1`** for every endpoint. (Roadmap §7, M0 spec §5)
-- All API responses use the standard envelope: success `{ "data", "meta" }`, error `{ "error": { "code", "message" } }`, validation `{ "error": { "code": "validation_error", "message", "fields" } }`, paginated `{ "data": [...], "meta": { "page", "per_page", "total" } }`. (M0 spec §5)
-- Primary keys are **UUID v7**. Money is **never** floats — minor-units integers only (not exercised in M0 but the rule stands). (M0 spec §11, roadmap §7)
-- **No balance mutation / money logic in M0.** Auth scaffold is register/login/logout/me only; PIN, 2FA, device fingerprinting, verification are typed stubs, not implementations. (M0 spec §1, §6)
-- DDD dependency rule: `Domain/` depends on nothing framework-y; `Application/` depends only on `Domain/`; `Http/` and `Infrastructure/` depend inward. Enforced by a CI architecture test. (M0 spec §3)
-- `audit_logs` is **append-only**. (M0 spec §7)
-- Static analysis runs at **Larastan level 8**; CI gates lint + static + tests + contract check. Coverage is reported, not gated, in M0. (M0 spec §8)
-- Secrets are never committed; `.env.example` is the only committed env file. (M0 spec §4)
+- API base path is **`/api/v1`** for every endpoint. (Roadmap section 7, M0 spec section 5)
+- All API responses use the standard envelope: success `{ "data", "meta" }`, error `{ "error": { "code", "message" } }`, validation `{ "error": { "code": "validation_error", "message", "fields" } }`, paginated `{ "data": [...], "meta": { "page", "per_page", "total" } }`. (M0 spec section 5)
+- Primary keys are **UUID v7**. Money is **never** floats - minor-units integers only (not exercised in M0 but the rule stands). (M0 spec section 11, roadmap section 7)
+- **No balance mutation / money logic in M0.** Auth scaffold is register/login/logout/me only; PIN, 2FA, device fingerprinting, verification are typed stubs, not implementations. (M0 spec section 1, section 6)
+- DDD dependency rule: `Domain/` depends on nothing framework-y; `Application/` depends only on `Domain/`; `Http/` and `Infrastructure/` depend inward. Enforced by a CI architecture test. (M0 spec section 3)
+- `audit_logs` is **append-only**. (M0 spec section 7)
+- Static analysis runs at **Larastan level 8**; CI gates lint + static + tests + contract check. Coverage is reported, not gated, in M0. (M0 spec section 8)
+- Secrets are never committed; `.env.example` is the only committed env file. (M0 spec section 4)
 
 ---
 
@@ -395,7 +395,7 @@ it('renders the error envelope', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `cd backend && ./vendor/bin/pest tests/Unit/ApiResponseTest.php`
-Expected: FAIL — `Class "App\Support\Http\ApiResponse" not found`.
+Expected: FAIL - `Class "App\Support\Http\ApiResponse" not found`.
 
 - [ ] **Step 3: Implement `ApiResponse`**
 
@@ -521,7 +521,7 @@ it('echoes a supplied request id and generates one when absent', function () {
 - [ ] **Step 2: Run it to confirm failure**
 
 Run: `cd backend && ./vendor/bin/pest tests/Feature/CorrelationIdTest.php`
-Expected: FAIL — `/api/v1/health` route does not exist yet AND header missing.
+Expected: FAIL - `/api/v1/health` route does not exist yet AND header missing.
 
 - [ ] **Step 3: Implement the correlation-id middleware**
 
@@ -702,7 +702,7 @@ it('persists a user with a uuid primary key via the repository', function () {
 - [ ] **Step 2: Run it to confirm failure**
 
 Run: `cd backend && ./vendor/bin/pest tests/Feature/UserRegistrationStorageTest.php`
-Expected: FAIL — `UserRepository` not bound.
+Expected: FAIL - `UserRepository` not bound.
 
 - [ ] **Step 3: Enable citext + reshape the users migration**
 
@@ -741,13 +741,13 @@ Schema::create('users', function (Blueprint $table) {
 });
 DB::statement('ALTER TABLE users ALTER COLUMN email TYPE citext');
 ```
-Add `use Illuminate\Support\Facades\DB;` to that migration's imports. (Note: the citext migration must run before the users table — rename its timestamp prefix to sort first if needed, e.g. `0001_01_01_000000` keeps users; give citext `0001_01_01_000000`-earlier by using `2026_06_22_000000`. Ensure citext migration sorts BEFORE users.)
+Add `use Illuminate\Support\Facades\DB;` to that migration's imports. (Note: the citext migration must run before the users table - rename its timestamp prefix to sort first if needed, e.g. `0001_01_01_000000` keeps users; give citext `0001_01_01_000000`-earlier by using `2026_06_22_000000`. Ensure citext migration sorts BEFORE users.)
 
 > Correction for ordering: name the citext migration `0000_00_00_000000_enable_citext.php` so it runs first.
 
 - [ ] **Step 4: Make the User model UUID + token aware**
 
-`backend/app/Models/User.php` — set the class body to:
+`backend/app/Models/User.php` - set the class body to:
 ```php
 <?php
 
@@ -965,7 +965,7 @@ git commit -m "feat: authentication domain skeleton, uuid users, citext email, t
 - Test: `backend/tests/Feature/Auth/AuthFlowTest.php`
 
 **Interfaces:**
-- Consumes: `UserRepository` (Task 6), `ApiResponse` (Task 4), `audit` logger arrives in Task 8 — auth events are logged there, so this task does NOT call audit yet.
+- Consumes: `UserRepository` (Task 6), `ApiResponse` (Task 4), `audit` logger arrives in Task 8 - auth events are logged there, so this task does NOT call audit yet.
 - Produces: routes `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`. `RegisterUserHandler::handle(array $data): User`, `LoginUserHandler::handle(string $email, string $password): ?User`.
 
 - [ ] **Step 1: Write the failing auth flow test**
@@ -1011,7 +1011,7 @@ it('returns the authenticated user from me and revokes on logout', function () {
 - [ ] **Step 2: Run it to confirm failure**
 
 Run: `cd backend && ./vendor/bin/pest tests/Feature/Auth/AuthFlowTest.php`
-Expected: FAIL — auth routes do not exist.
+Expected: FAIL - auth routes do not exist.
 
 - [ ] **Step 3: Form requests**
 
@@ -1271,7 +1271,7 @@ it('records an audit row on registration', function () {
 - [ ] **Step 2: Run it to confirm failure**
 
 Run: `cd backend && ./vendor/bin/pest tests/Feature/AuditLogTest.php`
-Expected: FAIL — `AuditLog` class missing.
+Expected: FAIL - `AuditLog` class missing.
 
 - [ ] **Step 3: Migration (append-only via DB rule)**
 
@@ -1401,7 +1401,7 @@ git commit -m "feat: append-only audit_logs with DB-enforced immutability + auth
 - Test: `backend/tests/Architecture/LayeringTest.php`
 
 **Interfaces:**
-- Consumes: the `app/Domains` structure from Tasks 6–7.
+- Consumes: the `app/Domains` structure from Tasks 6-7.
 - Produces: a CI-gating test that fails if `Domain/` imports Eloquent/Illuminate framework code or if `Application/` imports `Infrastructure/`.
 
 - [ ] **Step 1: Write the architecture test**
@@ -1426,7 +1426,7 @@ arch('no debugging statements ship')
     ->not->toBeUsed();
 ```
 
-- [ ] **Step 2: Run it — expect PASS (guardrail holds on current code)**
+- [ ] **Step 2: Run it - expect PASS (guardrail holds on current code)**
 
 Run: `cd backend && ./vendor/bin/pest tests/Architecture/LayeringTest.php`
 Expected: PASS.
@@ -1436,7 +1436,7 @@ Expected: PASS.
 Temporarily add `use Illuminate\Database\Eloquent\Model;` and reference `Model::class` inside `app/Domains/Authentication/Domain/Contracts/UserRepository.php`, then re-run:
 
 Run: `cd backend && ./vendor/bin/pest tests/Architecture/LayeringTest.php`
-Expected: FAIL — confirms the guardrail catches violations. Then revert the temporary edit and re-run to confirm PASS again.
+Expected: FAIL - confirms the guardrail catches violations. Then revert the temporary edit and re-run to confirm PASS again.
 
 - [ ] **Step 4: Commit**
 
@@ -1514,7 +1514,7 @@ it('passes the contract check because every api/v1 route is documented', functio
 - [ ] **Step 3: Run it to confirm failure**
 
 Run: `cd backend && ./vendor/bin/pest tests/Feature/ContractCheckTest.php`
-Expected: FAIL — `contract:check` command not defined.
+Expected: FAIL - `contract:check` command not defined.
 
 - [ ] **Step 4: Implement the command**
 
@@ -1657,7 +1657,7 @@ describe("auth store", () => {
 - [ ] **Step 5: Run it to confirm failure**
 
 Run: `cd frontend && npm run test`
-Expected: FAIL — `./useAuth` not found.
+Expected: FAIL - `./useAuth` not found.
 
 - [ ] **Step 6: Implement the auth store + screens**
 
@@ -1817,7 +1817,7 @@ git commit -m "feat: react skeleton with typed client generated from openapi + a
 - Create: `.github/workflows/ci.yml`
 
 **Interfaces:**
-- Consumes: composer scripts (Task 3), Pest tests (Tasks 4–10), frontend scripts (Task 11), `contract:check` (Task 10).
+- Consumes: composer scripts (Task 3), Pest tests (Tasks 4-10), frontend scripts (Task 11), `contract:check` (Task 10).
 - Produces: a CI workflow gating lint + Larastan level 8 + Pest + contract check + frontend typecheck/test on push and PR.
 
 - [ ] **Step 1: Write the workflow**
@@ -1918,7 +1918,7 @@ git commit -m "ci: github actions pipeline (lint, larastan, pest, contract, fron
 
 `docs/erd/reton-erd.md`:
 ```markdown
-# Reton ERD — M0 (Identity)
+# Reton ERD - M0 (Identity)
 
 Only identity tables exist in M0. The financial schema (ledger_accounts,
 ledger_entries, wallets, …) is designed in M1.
@@ -2035,7 +2035,7 @@ git commit -m "docs: README with new-engineer setup, run, and test instructions"
 
 ## Self-Review
 
-**Spec coverage (M0 spec §9 exit criteria):**
+**Spec coverage (M0 spec section 9 exit criteria):**
 1. `docker compose up` + healthy `/api/v1/health` → Tasks 2, 3, 5, 14. ✓
 2. register/login/me/logout → Task 7. ✓
 3. React skeleton uses generated typed client to register/login → Task 11 (gen:api + manual proof). ✓
@@ -2046,11 +2046,11 @@ git commit -m "docs: README with new-engineer setup, run, and test instructions"
 
 Other spec sections: response envelope (Task 4), correlation-id/idempotency/rate-limit middleware (Tasks 5, 7), UUID v7 + citext (Task 6), append-only audit_logs (Task 8), typed security stubs (Task 6). All covered.
 
-**Placeholder scan:** No "TBD"/"add error handling"/"similar to Task N" — every code step shows complete code. One intentional note in Task 6 step 3 about migration ordering is resolved inline (rename citext migration to `0000_00_00_000000`).
+**Placeholder scan:** No "TBD"/"add error handling"/"similar to Task N" - every code step shows complete code. One intentional note in Task 6 step 3 about migration ordering is resolved inline (rename citext migration to `0000_00_00_000000`).
 
-**Type consistency:** `ApiResponse::success/error` signatures consistent across Tasks 4–10. `UserRepository::create/findByEmail` consistent in Tasks 6–7. `AuditLogger::record(action, userId, context)` consistent in Task 8. `useAuthStore` shape consistent in Task 11.
+**Type consistency:** `ApiResponse::success/error` signatures consistent across Tasks 4-10. `UserRepository::create/findByEmail` consistent in Tasks 6-7. `AuditLogger::record(action, userId, context)` consistent in Task 8. `useAuthStore` shape consistent in Task 11.
 
-**Known follow-up (not M0 blockers):** the `contract:check` command does only presence-matching of paths, not full schema validation — acceptable for M0; tighten with Spectral in M6.
+**Known follow-up (not M0 blockers):** the `contract:check` command does only presence-matching of paths, not full schema validation - acceptable for M0; tighten with Spectral in M6.
 
-**UUID/Sanctum compatibility (resolved):** Sanctum's default `personal_access_tokens` table uses `bigint` morph keys, incompatible with UUID users — fixed in Task 6 step 8a via `$table->uuidMorphs('tokenable')`. Without this, `createToken()` in Task 7 would fail at runtime, so it is sequenced before the auth endpoints.
+**UUID/Sanctum compatibility (resolved):** Sanctum's default `personal_access_tokens` table uses `bigint` morph keys, incompatible with UUID users - fixed in Task 6 step 8a via `$table->uuidMorphs('tokenable')`. Without this, `createToken()` in Task 7 would fail at runtime, so it is sequenced before the auth endpoints.
 ```

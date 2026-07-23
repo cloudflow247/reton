@@ -22,7 +22,7 @@ it('materialises the full house chart for every configured currency', function (
         ->and(LedgerAccount::where('code', 'system:settlement_payable:USD')->first()?->type)->toBe(AccountType::Liability);
 });
 
-it('is idempotent — reseeding creates no duplicates', function () {
+it('is idempotent - reseeding creates no duplicates', function () {
     config(['reton.currencies' => ['NGN']]);
 
     $this->seed(SystemAccountsSeeder::class);

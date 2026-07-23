@@ -127,7 +127,7 @@ it('replaying the same collection webhook credits the requester only once', func
     [$payload, $signature] = signedCollection($request->provider_reference, 25000, 'evt_router_dedup_1');
 
     router()->handle($payload, $signature);
-    router()->handle($payload, $signature);  // identical replay — must be a no-op
+    router()->handle($payload, $signature);  // identical replay - must be a no-op
 
     expect($wallet->fresh()->balance)->toBe(25000)     // credited exactly once
         ->and($request->fresh()->status)->toBe(PaymentRequestStatus::Paid);

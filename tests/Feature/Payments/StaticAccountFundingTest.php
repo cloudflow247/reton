@@ -111,7 +111,7 @@ it('shows the credited balance on the dashboard after polling', function () {
             ->where('auth.wallets.0.balance', 15000)
             ->where('auth.wallets.0.account_number', $wallet->fresh()->account_number)
             ->where('depositAccount.account_number', $account->fresh()->account_number)
-            ->where('flash.success', 'Deposit received — your balance is updated.'));
+            ->where('flash.success', 'Deposit received - your balance is updated.'));
 
     expect($wallet->fresh()->balance)->toBe(15000);
 });

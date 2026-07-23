@@ -132,7 +132,7 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated — email verification (pre-wallet access)
+| Authenticated - email verification (pre-wallet access)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function (): void {
@@ -149,7 +149,7 @@ Route::middleware('auth')->group(function (): void {
 
 /*
 |--------------------------------------------------------------------------
-| Verified users — onboarding + wallet setup
+| Verified users - onboarding + wallet setup
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function (): void {
@@ -174,7 +174,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated app (Inertia) — verified + onboarding complete
+| Authenticated app (Inertia) - verified + onboarding complete
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
@@ -217,7 +217,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
     Route::post('/cards/freeze', [CardsController::class, 'freeze'])->name('cards.freeze');
     Route::post('/cards/unfreeze', [CardsController::class, 'unfreeze'])->name('cards.unfreeze');
 
-    // Digital marketplace — protected purchases between users
+    // Digital marketplace - protected purchases between users
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace');
     Route::post('/marketplace/listings', [MarketplaceController::class, 'store'])->name('marketplace.listings.store');
     Route::post('/marketplace/listings/{listing}/purchase', [MarketplaceController::class, 'purchase'])->name('marketplace.listings.purchase');
@@ -226,7 +226,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
     Route::post('/marketplace/orders/{order}/confirm', [MarketplaceController::class, 'confirm'])->name('marketplace.orders.confirm');
     Route::post('/marketplace/orders/{order}/dispute', [MarketplaceController::class, 'dispute'])->name('marketplace.orders.dispute');
 
-    // Protection center — held transfers, callbacks, recoveries
+    // Protection center - held transfers, callbacks, recoveries
     Route::get('/protection', [ProtectionController::class, 'index'])->name('protection');
     Route::post('/transfers/{transfer}/release', [ProtectionController::class, 'release'])->name('transfers.release');
     Route::post('/transfers/{transfer}/callbacks', [ProtectionController::class, 'storeCallback'])->name('callbacks.store');
@@ -236,7 +236,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
     Route::post('/recoveries/{recovery}/return', [ProtectionController::class, 'returnRecovery'])->name('recoveries.return');
     Route::post('/recoveries/{recovery}/dispute', [ProtectionController::class, 'disputeRecovery'])->name('recoveries.dispute');
 
-    // AI support — rule-based assistant with transaction lookup and escalation
+    // AI support - rule-based assistant with transaction lookup and escalation
     Route::get('/support', [SupportController::class, 'index'])->name('support');
     Route::post('/support/messages', [SupportController::class, 'storeMessage'])->name('support.messages.store');
     Route::post('/support/escalate', [SupportController::class, 'escalate'])->name('support.escalate');
@@ -244,7 +244,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function (): void {
 
 /*
 |--------------------------------------------------------------------------
-| Platform admin — registered last so /dashboard and other literals win
+| Platform admin - registered last so /dashboard and other literals win
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified', 'admin.path', 'admin'])

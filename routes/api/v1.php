@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Public webhook receiver — authenticated by HMAC signature, not Sanctum.
+// Public webhook receiver - authenticated by HMAC signature, not Sanctum.
 Route::post('webhooks/alatpay', [AlatpayWebhookController::class, 'handle'])->name('webhooks.alatpay');
 Route::post('webhooks/paystack', [PaystackWebhookController::class, 'handle'])->name('webhooks.paystack');
 Route::post('webhooks/giglogistics', [GiglogisticsWebhookController::class, 'handle'])->name('webhooks.giglogistics');

@@ -114,7 +114,7 @@ it('stores seo settings and exposes them in the page shell', function () {
     $this->actingAs($admin)->put('/admin/site', [
         'group' => 'seo',
         'site_name' => 'Reton Pay',
-        'title' => 'Reton Pay — trust-first wallet',
+        'title' => 'Reton Pay - trust-first wallet',
         'description' => 'Callback protection for African payments.',
         'keywords' => 'fintech, nigeria, wallet',
         'og_image' => '/og-banner.png',

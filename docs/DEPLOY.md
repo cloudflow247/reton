@@ -2,7 +2,7 @@
 
 A practical production deploy guide for Reton on [Laravel Cloud](https://cloud.laravel.com/).
 
-Reton is a Laravel 12 + Inertia (React 19 / Vite) product from **RETON PTE LTD**. You will need PostgreSQL, Redis, the scheduler, a Vite asset build, and — for live payments — production rail credentials stored in environment variables or Admin → Integrations (never in git).
+Reton is a Laravel 12 + Inertia (React 19 / Vite) product from **RETON PTE LTD**. You will need PostgreSQL, Redis, the scheduler, a Vite asset build, and - for live payments - production rail credentials stored in environment variables or Admin → Integrations (never in git).
 
 ---
 
@@ -36,7 +36,7 @@ SESSION_DRIVER=database
 QUEUE_CONNECTION=redis
 CACHE_STORE=redis
 
-# Payment rail — live only; paste real secrets in the Cloud UI, never commit them
+# Payment rail - live only; paste real secrets in the Cloud UI, never commit them
 ALATPAY_DRIVER=http
 ALATPAY_BASE_URL=https://api.alatpay.ng
 ALATPAY_API_KEY=
@@ -105,13 +105,13 @@ Demo mode shows one-click logins for reviewers. It needs the env flag **and** se
 
 ### Composer install fails with HTTP 400/403 from GitHub
 
-Often rate-limiting on unauthenticated downloads. Redeploy first. If it continues, add a GitHub token as a Cloud secret via Composer’s auth config — do not paste tokens into this repo.
+Often rate-limiting on unauthenticated downloads. Redeploy first. If it continues, add a GitHub token as a Cloud secret via Composer's auth config - do not paste tokens into this repo.
 
 ### 500 on first database query
 
 If Postgres is not attached, Laravel may fall back to SQLite. Attach PostgreSQL, remove any leftover `DB_CONNECTION=sqlite`, redeploy, then `php artisan migrate --force`.
 
-### “Something went wrong” or blank dashboard after login
+### "Something went wrong" or blank dashboard after login
 
 1. Hard-refresh after a deploy so the browser picks up the new Vite manifest.
 2. Check the browser console for React errors.
@@ -121,7 +121,7 @@ If Postgres is not attached, Laravel may fall back to SQLite. Attach PostgreSQL,
 ### BVN OTP not arriving
 
 - Payment driver must be `http` with valid credentials (env or Admin → Integrations).
-- The payment rail sends the BVN OTP SMS — Reton’s own SMS stack is not involved in that path.
+- The payment rail sends the BVN OTP SMS - Reton's own SMS stack is not involved in that path.
 - If the driver is `fake`, no SMS is sent; use the on-screen sandbox code in local/demo only.
 
 ---

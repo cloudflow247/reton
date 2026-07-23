@@ -1,12 +1,12 @@
-> **Proprietary** ? Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji · Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
+> **Proprietary** - Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji · Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
 >
 > **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
-# Reton M0 ? Foundation (Design Spec)
+# Reton M0 - Foundation (Design Spec)
 
 **Date:** 2026-06-22
-**Status:** Approved (shape) ? pending user review
-**Parent:** `2026-06-22-reton-build-roadmap.md` ? Milestone M0
+**Status:** Approved (shape) - pending user review
+**Parent:** `2026-06-22-reton-build-roadmap.md` - Milestone M0
 **Scope:** Project skeleton only. **No business logic.** A runnable, CI-green,
 contract-first foundation that every later milestone inherits.
 
@@ -22,8 +22,8 @@ static analysis + tests, and read the committed ERD and OpenAPI contract.
 
 ### Non-goals (explicitly deferred)
 - No ledger, wallet, transfers, or any money logic (that is M1+).
-- No Golang, MinIO, Meilisearch, Reverb, Prometheus/Grafana (deferred per roadmap §2).
-- No real KYC/AlatPay integration — only the module folders that will hold them later.
+- No Golang, MinIO, Meilisearch, Reverb, Prometheus/Grafana (deferred per roadmap section 2).
+- No real KYC/AlatPay integration - only the module folders that will hold them later.
 - Auth scaffold ships **register / login / logout / me** only. PIN, 2FA, device
   fingerprinting, email/phone verification are stubbed interfaces, not implementations.
 
@@ -90,11 +90,11 @@ reton/
 
 `app/Domains/{Domain}/` always has three layers:
 
-- **Domain/** — pure PHP. Entities, value objects (e.g. `Money`, `Email`), domain
+- **Domain/** - pure PHP. Entities, value objects (e.g. `Money`, `Email`), domain
   events, and **interfaces** (e.g. `UserRepository`). No framework, no Eloquent.
-- **Application/** — use-cases as single-purpose handlers (e.g. `RegisterUserHandler`),
+- **Application/** - use-cases as single-purpose handlers (e.g. `RegisterUserHandler`),
   command/DTO objects, orchestration. Depends on Domain interfaces, not infrastructure.
-- **Infrastructure/** — Eloquent models, repository implementations, external API
+- **Infrastructure/** - Eloquent models, repository implementations, external API
   adapters, queue jobs. Implements Domain interfaces.
 
 **Dependency rule (enforced):** `Domain` depends on nothing; `Application` depends only
@@ -168,16 +168,16 @@ Endpoints (all in `openapi.yaml` first):
 - Password hashing via Laravel (bcrypt/argon).
 - `users` table: `id` (uuid v7), `name`, `email` (unique, citext), `phone`,
   `password`, `email_verified_at` (nullable), timestamps. KYC tier and limits are
-  **not** added here — they arrive in M1's KYC work. Keep the table minimal.
+  **not** added here - they arrive in M1's KYC work. Keep the table minimal.
 - Stubbed-but-typed interfaces for later: `DeviceFingerprintService`,
-  `TwoFactorService`, `PhoneVerificationService` — defined in `Domain/`, with a
+  `TwoFactorService`, `PhoneVerificationService` - defined in `Domain/`, with a
   no-op/throw implementation, so M3 security work has seams to fill.
 
 ---
 
 ## 7. ERD (M0 scope)
 
-`docs/erd/reton-erd.md` — Mermaid. M0 commits **only** the identity tables (`users`,
+`docs/erd/reton-erd.md` - Mermaid. M0 commits **only** the identity tables (`users`,
 `personal_access_tokens`, `audit_logs`). The full financial ERD (ledger_accounts,
 ledger_entries, wallets, …) is designed in M1 where the decisions actually matter.
 `audit_logs` is created in M0 (append-only) because the convention "everything
@@ -189,11 +189,11 @@ money-touching is audit-logged" needs the table to exist before M1.
 
 Runs on every push and PR. Jobs:
 
-1. **Lint** — Laravel Pint (`--test`), Prettier/ESLint for frontend.
-2. **Static analysis** — Larastan/PHPStan **level 8**, TypeScript `tsc --noEmit`.
-3. **Test** — Pest (Unit + Feature + **Architecture** tests) against a Postgres
+1. **Lint** - Laravel Pint (`--test`), Prettier/ESLint for frontend.
+2. **Static analysis** - Larastan/PHPStan **level 8**, TypeScript `tsc --noEmit`.
+3. **Test** - Pest (Unit + Feature + **Architecture** tests) against a Postgres
    service container; frontend Vitest.
-4. **Contract check** — assert every registered `/api/v1` route exists in
+4. **Contract check** - assert every registered `/api/v1` route exists in
    `openapi.yaml` and vice versa (a small artisan command or spectral + a route-diff
    step). Fails the build on drift.
 
@@ -240,10 +240,10 @@ in M6 for money-path domains).
 ## 11. Open questions before starting M0
 
 - **UUID strategy:** UUID v7 (time-ordered, index-friendly) vs ULID. Recommendation:
-  **UUID v7** — native, sortable, no extra dependency.
+  **UUID v7** - native, sortable, no extra dependency.
 - **`citext` for email:** enable the Postgres `citext` extension for case-insensitive
-  unique emails, or normalize in app code? Recommendation: **`citext` extension** — DB
+  unique emails, or normalize in app code? Recommendation: **`citext` extension** - DB
   enforces it, can't be bypassed.
 - **Frontend in M0:** full skeleton now, or just enough to prove the generated client?
-  Recommendation: **just enough** — auth screens + generated client. The full customer
+  Recommendation: **just enough** - auth screens + generated client. The full customer
   app is M5; building UI now risks rework against later design-system decisions.

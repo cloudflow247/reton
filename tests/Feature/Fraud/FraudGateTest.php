@@ -47,7 +47,7 @@ it('blocks a high-risk transfer and records a fraud alert', function () {
 
     $response->assertStatus(403)->assertJsonPath('code', 'fraud_blocked');
 
-    expect($from->fresh()->balance)->toBe(100000000) // unchanged — transfer blocked
+    expect($from->fresh()->balance)->toBe(100000000) // unchanged - transfer blocked
         ->and(FraudAlert::where('user_id', $sender->id)->where('level', 'high')->exists())->toBeTrue();
 });
 

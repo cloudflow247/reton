@@ -1,11 +1,11 @@
-> **Proprietary** � Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji � Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
+> **Proprietary** - Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji - Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
 >
 > **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
-# Request Money (AlatPay Payment Link) � Design Spec
+# Request Money (AlatPay Payment Link) - Design Spec
 
 **Date:** 2026-06-23
-**Milestone:** M4 (Surround) — AlatPay-native depth
+**Milestone:** M4 (Surround) - AlatPay-native depth
 **Status:** Approved for planning
 
 ## 1. Goal & non-goals
@@ -13,16 +13,16 @@
 ### Goal
 
 Let a Reton user (the **requester**) raise a fixed-amount money request, backed by an
-AlatPay-hosted **payment link**. Anyone holding the link (the **payer** — no Reton
+AlatPay-hosted **payment link**. Anyone holding the link (the **payer** - no Reton
 account required) pays through any AlatPay channel (card, bank transfer, USSD). On
 AlatPay's signature-verified webhook, the requester's wallet is credited through the
 existing audited double-entry ledger path.
 
 This is an **AlatPay-native** feature: it deepens AlatPay usage (a scoring axis for the
-buildathon — see context below) and reinforces Reton's trust story without introducing
+buildathon - see context below) and reinforces Reton's trust story without introducing
 any non-AlatPay vendor.
 
-### Non-goals (explicitly deferred — YAGNI)
+### Non-goals (explicitly deferred - YAGNI)
 
 - **Reusable / multi-use links** (one link, many payers). V1 is single-payer: the first
   successful payment fulfils the request.
@@ -37,7 +37,7 @@ any non-AlatPay vendor.
 ### Context
 
 Reton is an entry for the **AlatPay Buildathon**, aiming to win 1st. AlatPay's confirmed
-API surface is collections + payouts + split payment + payment links — it has **no**
+API surface is collections + payouts + split payment + payment links - it has **no**
 bills/airtime/VAS/RRR API. Request Money was chosen as the first AlatPay-native feature
 because it is self-contained (no Merchant domain dependency), demo-friendly, and uses
 AlatPay's *Payment Link via API* product directly.
@@ -46,13 +46,13 @@ AlatPay's *Payment Link via API* product directly.
 
 - **V1 scope:** fixed-amount, single-payer, single-use link.
 - **Crediting reuses `WalletService.fund()`** (debit System Cash, credit requester wallet)
-  — no new credit path. Idempotency key = the request's business reference.
+  - no new credit path. Idempotency key = the request's business reference.
 - **One new gateway method** on the existing `AlatpayGateway` contract; implemented in both
   the Fake and Http gateways. No parallel vendor or service layer.
 - **Webhook handling is refactored** into a router that admits/dedups once, then dispatches
   by `provider_reference`. The current `type`-prefix routing cannot distinguish a
   payment-link collection from a deposit collection.
-- **Amounts in minor units** (kobo), `char(3)` currency — consistent with the codebase.
+- **Amounts in minor units** (kobo), `char(3)` currency - consistent with the codebase.
 
 ## 3. Flow
 
@@ -81,7 +81,7 @@ Payer ──pays via AlatPay channel──▶ AlatPay
 
 Reconciliation fallback: a scheduled/triggered `reconcile()` calls
 `AlatpayGateway.fetchTransaction(provider_reference)` and credits if AlatPay reports the
-payment successful with a matching amount/currency — mirroring `AlatpayDepositService::reconcile()`.
+payment successful with a matching amount/currency - mirroring `AlatpayDepositService::reconcile()`.
 
 ## 4. Domain & data
 
@@ -141,13 +141,13 @@ public function createPaymentLink(PaymentLinkRequest $request): PaymentLinkRespo
 
 **`FakeAlatpayGateway`**: returns a deterministic URL
 (`https://pay.alatpay.test/{reference}`) and `providerReference` derived from the request
-reference — makes the entire flow runnable in tests and the demo without network.
+reference - makes the entire flow runnable in tests and the demo without network.
 
 **`HttpAlatpayGateway`**: POSTs to AlatPay's *Payment Link via API* endpoint. Exact path,
 request fields, and response keys to be confirmed from `docs.alatpay.ng` (Others → Payment
 Link via API) at implementation time; mapped defensively like the existing
 `createCollection` (best-effort `data.*` extraction with fallbacks). Auth header
-`Ocp-Apim-Subscription-Key`, base URL from config — same `client()` helper.
+`Ocp-Apim-Subscription-Key`, base URL from config - same `client()` helper.
 
 > Implementation note: if AlatPay's payment-link response does not include a transaction
 > id until payment occurs, `provider_reference` is set to the link id at creation and
@@ -200,7 +200,7 @@ controller becomes a thin pass-through to the router. `AlatpayWebhookGuard` is u
 - **Resources:** `PaymentRequestResource` (owner view, full) and `PublicPaymentRequestResource`
   (payer view, no requester PII beyond display name). Standard success/error/validation/
   pagination envelopes.
-- **Policy:** `PaymentRequestPolicy` — view/cancel restricted to the requester, mirroring
+- **Policy:** `PaymentRequestPolicy` - view/cancel restricted to the requester, mirroring
   `DepositPolicy`.
 - **Cancel semantics:** only `pending` → `cancelled`. A webhook arriving for a cancelled
   request is treated as `ignored` (request no longer open); refund/return is out of scope
@@ -240,7 +240,7 @@ coverage target 90%:
 
 ## 10. Out-of-scope follow-ups
 
-- Notifications to the requester on payment (depends on the Notifications domain — separate
+- Notifications to the requester on payment (depends on the Notifications domain - separate
   M4 item).
 - Reusable links, variable amounts, group/split requests.
 - Merchant invoicing on top of payment links.

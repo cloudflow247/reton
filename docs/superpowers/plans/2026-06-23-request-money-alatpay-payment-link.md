@@ -1,4 +1,4 @@
-> **Proprietary** � Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji � Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
+> **Proprietary** - Copyright 2026 RETON PTE LTD. Founder & CEO: Gabriel Rotimi Mogaji - Co-Founder: Aina Christana Olajumoke. See [LICENSE](../../../LICENSE).
 >
 > **Historical notes.** Early planning. For current setup, see [README](../../../README.md), [roadmap](../../../roadmap.md), and [deploy guide](../../DEPLOY.md).
 
@@ -16,7 +16,7 @@
 
 - PHP `declare(strict_types=1);` at the top of every PHP file.
 - All money is integer **minor units** (kobo); currency is `char(3)`, default `NGN`.
-- No balance mutation outside the ledger — credit only via `WalletService::fund()`.
+- No balance mutation outside the ledger - credit only via `WalletService::fund()`.
 - Idempotency key for a credit = the `PaymentRequest.reference` (business ref).
 - Domain code lives under `backend/app/Domain/Payments/`; HTTP under `backend/app/Http/...`.
 - Tests are Pest, under `backend/tests/Feature/Payments/`, using `RefreshDatabase` and the in-memory `FakeAlatpayGateway` bound via `$this->app->instance(AlatpayGateway::class, ...)`.
@@ -78,7 +78,7 @@ it('persists a payment request with enum status and relations', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/PaymentRequestModelTest.php`
-Expected: FAIL — class `PaymentRequest` not found.
+Expected: FAIL - class `PaymentRequest` not found.
 
 - [ ] **Step 3: Create the migration**
 
@@ -320,7 +320,7 @@ it('creates a deterministic payment link and tracks it as a pending transaction'
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/FakePaymentLinkGatewayTest.php`
-Expected: FAIL — `PaymentLinkRequest` / `createPaymentLink` not found.
+Expected: FAIL - `PaymentLinkRequest` / `createPaymentLink` not found.
 
 - [ ] **Step 3: Create the DTOs**
 
@@ -486,7 +486,7 @@ git commit -m "feat(payments): AlatPay createPaymentLink gateway method (contrac
 - Produces:
   - `create(User $user, Wallet $wallet, Money $amount, string $title, ?string $description = null): PaymentRequest`
   - `handleWebhook(string $rawPayload, ?string $signature): WebhookEvent`
-  - `process(WebhookEvent $event, array $data): void` (public — called by the router in Task 4)
+  - `process(WebhookEvent $event, array $data): void` (public - called by the router in Task 4)
   - `reconcile(PaymentRequest $request): bool`
   - `cancel(PaymentRequest $request): PaymentRequest`
 
@@ -628,7 +628,7 @@ it('reconciles a pending request AlatPay reports as paid', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/PaymentRequestServiceTest.php`
-Expected: FAIL — `PaymentRequestService` not found.
+Expected: FAIL - `PaymentRequestService` not found.
 
 - [ ] **Step 3: Implement the service**
 
@@ -910,7 +910,7 @@ it('routes a deposit collection to the deposit handler', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/AlatpayWebhookRouterTest.php`
-Expected: FAIL — `AlatpayWebhookRouter` not found.
+Expected: FAIL - `AlatpayWebhookRouter` not found.
 
 - [ ] **Step 3: Make `process` public in AlatpayDepositService**
 
@@ -1048,7 +1048,7 @@ class AlatpayWebhookController extends Controller
 - [ ] **Step 7: Run the router test AND the existing payment suite (no regressions)**
 
 Run: `./vendor/bin/pest tests/Feature/Payments`
-Expected: PASS — new router tests plus all existing deposit/payout/API tests stay green.
+Expected: PASS - new router tests plus all existing deposit/payout/API tests stay green.
 
 - [ ] **Step 8: Commit**
 
@@ -1189,7 +1189,7 @@ it('forbids cancelling someone elses request', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/PaymentRequestApiTest.php`
-Expected: FAIL — route `/api/v1/payment-requests` not defined (404).
+Expected: FAIL - route `/api/v1/payment-requests` not defined (404).
 
 - [ ] **Step 3: Create the form request**
 
@@ -1284,7 +1284,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Payer-facing view of a payment request — no requester PII.
+ * Payer-facing view of a payment request - no requester PII.
  *
  * @mixin PaymentRequest
  */
@@ -1531,7 +1531,7 @@ it('credits a pending request that AlatPay reports as paid', function () {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `./vendor/bin/pest tests/Feature/Payments/ReconcilePaymentRequestsCommandTest.php`
-Expected: FAIL — command `payment-requests:reconcile` not found.
+Expected: FAIL - command `payment-requests:reconcile` not found.
 
 - [ ] **Step 3: Create the command**
 
@@ -1550,7 +1550,7 @@ use App\Domain\Payments\Services\PaymentRequestService;
 use Illuminate\Console\Command;
 
 /**
- * Reconciles pending payment requests against AlatPay — a safety net for missed
+ * Reconciles pending payment requests against AlatPay - a safety net for missed
  * or delayed webhooks. Only requests old enough to have settled are checked.
  */
 class ReconcilePaymentRequests extends Command
@@ -1607,17 +1607,17 @@ git commit -m "feat(payments): payment-requests:reconcile command for missed web
 ## Self-Review
 
 **Spec coverage:**
-- §3 flow (create → link → pay → webhook → credit) → Tasks 2, 3, 4.
-- §4 data model (table, enum, model) → Task 1.
-- §5 gateway extension (DTOs, contract, Fake, Http) → Task 2.
-- §6 webhook router refactor → Task 4.
-- §7 API surface (create/list/show/cancel/public pay) → Task 5.
-- §8 error handling (signature, mismatch, replay, cancel, expiry) → covered by tests in Tasks 3 & 4 (invalid signature, amount mismatch, duplicate, cancel-then-ignore).
-- §9 testing (all 10 scenarios) → distributed across Tasks 2–6; reconcile → Tasks 3 & 6; router dispatch → Task 4.
+- section 3 flow (create → link → pay → webhook → credit) → Tasks 2, 3, 4.
+- section 4 data model (table, enum, model) → Task 1.
+- section 5 gateway extension (DTOs, contract, Fake, Http) → Task 2.
+- section 6 webhook router refactor → Task 4.
+- section 7 API surface (create/list/show/cancel/public pay) → Task 5.
+- section 8 error handling (signature, mismatch, replay, cancel, expiry) → covered by tests in Tasks 3 & 4 (invalid signature, amount mismatch, duplicate, cancel-then-ignore).
+- section 9 testing (all 10 scenarios) → distributed across Tasks 2-6; reconcile → Tasks 3 & 6; router dispatch → Task 4.
 - Reconciliation safety net (mirrors `ReconcileDeposits`) → Task 6.
 
-**Deferred (per spec §1 non-goals, §10):** notifications, reusable/variable links, merchant invoicing, fraud scoring — no tasks, intentionally.
+**Deferred (per spec section 1 non-goals, section 10):** notifications, reusable/variable links, merchant invoicing, fraud scoring - no tasks, intentionally.
 
 **Type consistency:** `createPaymentLink(PaymentLinkRequest): PaymentLinkResponse` used identically in contract (Task 2), Fake/Http (Task 2), and service (Task 3). `process(WebhookEvent, array): void` signature matches across deposit/payout/payment-request services and the router (Task 4). `PaymentRequestStatus` cases (`Pending/Paid/Expired/Cancelled`) used consistently in model, service, command, and tests. Service method names (`create`, `handleWebhook`, `process`, `reconcile`, `cancel`) match controller and router call sites.
 
-**Placeholder scan:** none — every step contains complete code or an exact command. The only deferred detail is the AlatPay *Payment Link via API* endpoint path/keys in the Http gateway (spec §11 open question), which is explicitly flagged and does not block tests (the Fake gateway drives all tests).
+**Placeholder scan:** none - every step contains complete code or an exact command. The only deferred detail is the AlatPay *Payment Link via API* endpoint path/keys in the Http gateway (spec section 11 open question), which is explicitly flagged and does not block tests (the Fake gateway drives all tests).

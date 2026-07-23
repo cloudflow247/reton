@@ -1,4 +1,4 @@
-# Reton release brief — 30 June 2026
+# Reton release brief - 30 June 2026
 
 A team walkthrough of what shipped that day: new pages, money flows, and how the pieces connect. Use this when onboarding someone to the product or rehearsing a demo.
 
@@ -6,11 +6,11 @@ A team walkthrough of what shipped that day: new pages, money flows, and how the
 **Screenshots:** [`screenshots/`](screenshots/)  
 **Regenerate:** with the app running (`php artisan serve`), run `node scripts/capture-release-screenshots.mjs`
 
-Sandbox logins only when `RETON_DEMO_MODE=true` on a private environment. Credentials live in your local / Cloud secrets (`RETON_DEMO_*`) — never commit them and never enable demo mode on public production.
+Sandbox logins only when `RETON_DEMO_MODE=true` on a private environment. Credentials live in your local / Cloud secrets (`RETON_DEMO_*`) - never commit them and never enable demo mode on public production.
 
 ---
 
-## 1. What’s new (at a glance)
+## 1. What's new (at a glance)
 
 | Area | What changed | Screenshot |
 |------|----------------|------------|
@@ -18,9 +18,9 @@ Sandbox logins only when `RETON_DEMO_MODE=true` on a private environment. Creden
 | **Digital marketplace** | Sell/buy digital items with Reton protection, active orders, past orders | [Seller view](screenshots/03-marketplace-seller.png) · [Buyer browse](screenshots/08-marketplace-buyer-view.png) |
 | **Create listing** | Guided modal: description vs private delivery payload, accuracy checkbox | [Create modal](screenshots/04-create-listing-modal.png) |
 | **Dashboard balance** | Hero = **Available to spend**; pending incoming shown separately | [Dashboard](screenshots/05-dashboard-balance.png) |
-| **Send — Protected** | Sender debited immediately; receiver sees **pending** until release/refund | [Send](screenshots/06-send-protected.png) |
+| **Send - Protected** | Sender debited immediately; receiver sees **pending** until release/refund | [Send](screenshots/06-send-protected.png) |
 | **Protection center** | Held transfers, callbacks, recoveries + digital order escrow cards | [Protection](screenshots/07-protection-center.png) |
-| **Buyer signed-in listing** | Same share link after login — pay with PIN on the page | [Buyer listing](screenshots/09-listing-share-buyer-signed-in.png) |
+| **Buyer signed-in listing** | Same share link after login - pay with PIN on the page | [Buyer listing](screenshots/09-listing-share-buyer-signed-in.png) |
 
 Full changelog: [`CHANGELOG.md`](../../CHANGELOG.md)
 
@@ -105,7 +105,7 @@ sequenceDiagram
   end
 ```
 
-**Key idea:** funds never sit in a separate escrow account. The receiver’s wallet shows **pending** (`held_balance`) until release or refund — same model as protected Send.
+**Key idea:** funds never sit in a separate escrow account. The receiver's wallet shows **pending** (`held_balance`) until release or refund - same model as protected Send.
 
 ---
 
@@ -127,9 +127,9 @@ stateDiagram-v2
 ```
 
 Configurable windows (`config/reton.php` → `digital.*`):
-- **Delivery deadline** — default 72h (auto-refund if undelivered)
-- **Dispute grace** — default 24h before early “not delivered” dispute
-- **Confirm window** — default 48h after delivery
+- **Delivery deadline** - default 72h (auto-refund if undelivered)
+- **Dispute grace** - default 24h before early "not delivered" dispute
+- **Confirm window** - default 48h after delivery
 
 ---
 
@@ -160,11 +160,11 @@ Web and mobile share the **same path** (`/l/*`). When apps ship, set `RETON_APPL
 ### Listing share page (`/l/{uuid}`)
 - **Guest:** product preview, price, seller name, Sign in / Create account (redirects back to listing).
 - **Seller (owner):** copy link, native share sheet, QR for in-person handoff.
-- **Buyer (signed in):** PIN + “Pay with protection”.
+- **Buyer (signed in):** PIN + "Pay with protection".
 - After publish, sellers are redirected here automatically.
 
 ### Marketplace (`/marketplace`)
-- Browse other users’ listings, your listings with inline share tools, active/past digital orders with escrow stepper cards.
+- Browse other users' listings, your listings with inline share tools, active/past digital orders with escrow stepper cards.
 - Seller must **Mark delivered** before buyer can confirm.
 
 ### Dashboard
@@ -172,8 +172,8 @@ Web and mobile share the **same path** (`/l/*`). When apps ship, set `RETON_APPL
 - If you have pending incoming protected funds, an amber pill and **Total in wallet** appear.
 
 ### Send
-- **Standard** — instant, final.
-- **Protected** — receiver pending; sender can recall via callback until release.
+- **Standard** - instant, final.
+- **Protected** - receiver pending; sender can recall via callback until release.
 
 ### Protection center
 - All held transfers, open callbacks, recoveries.
@@ -197,10 +197,10 @@ Web and mobile share the **same path** (`/l/*`). When apps ship, set `RETON_APPL
 
 ## 5. Suggested demo script (5 minutes)
 
-1. **Bola** — Marketplace → Your listings → Copy link (show QR). Paste link narrative for WhatsApp.
-2. **Ada** (guest/incognito) — open `/l/…` → Sign in → Pay with protection (enter transaction PIN).
-3. **Bola** — Marketplace → Active order → Mark delivered.
-4. **Ada** — open delivery content → Confirm (or show dispute options).
+1. **Bola** - Marketplace → Your listings → Copy link (show QR). Paste link narrative for WhatsApp.
+2. **Ada** (guest/incognito) - open `/l/…` → Sign in → Pay with protection (enter transaction PIN).
+3. **Bola** - Marketplace → Active order → Mark delivered.
+4. **Ada** - open delivery content → Confirm (or show dispute options).
 5. **Optional:** Protection center → show pending transfer; Dashboard → available vs pending.
 
 ---

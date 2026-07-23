@@ -123,7 +123,7 @@ it('rejects entries spanning multiple currencies', function () {
     );
 })->throws(CurrencyMismatchException::class);
 
-it('is idempotent — the same idempotency key never posts twice', function () {
+it('is idempotent - the same idempotency key never posts twice', function () {
     $wallet = Wallet::factory()->create(['currency' => 'NGN']);
 
     $draft = fn () => PostingDraft::for(TransactionType::WalletFunding)
@@ -156,7 +156,7 @@ it('generates a unique reference per transaction', function () {
         ->and($tx->posted_at)->not->toBeNull();
 });
 
-it('records entries as immutable — they cannot be updated', function () {
+it('records entries as immutable - they cannot be updated', function () {
     $wallet = Wallet::factory()->create(['currency' => 'NGN']);
 
     $tx = ledger()->post(

@@ -40,7 +40,7 @@ it('renders a transfer receipt even when the hold row is missing', function () {
         null,
     );
 
-    // Instant transfers may have no hold — resource must not 500 on null hold.
+    // Instant transfers may have no hold - resource must not 500 on null hold.
     $transfer->hold()?->delete();
 
     $entryId = \App\Domain\Ledger\Models\LedgerEntry::query()
