@@ -611,11 +611,11 @@ function ActionDialog({ action, onClose }: { action: ActionDef; onClose: () => v
         <p className="text-sm leading-relaxed text-text">{action.confirmStep.question}</p>
         <p className="mt-3 font-num text-lg font-bold text-text">{action.confirmStep.detail}</p>
         <div className="mt-5 flex flex-col gap-2">
-          <Button type="button" className="w-full" onClick={() => setGatePassed(true)}>
-            {action.confirmStep.yesLabel}
-          </Button>
           <Button type="button" variant="secondary" className="w-full" onClick={onClose}>
             {action.confirmStep.noLabel}
+          </Button>
+          <Button type="button" className="w-full" onClick={() => setGatePassed(true)}>
+            {action.confirmStep.yesLabel}
           </Button>
         </div>
       </Modal>
