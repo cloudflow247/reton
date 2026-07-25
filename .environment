@@ -1,6 +1,6 @@
 # Upsun runtime env mapping for Laravel (Reton).
-# Set secrets in the Upsun console (APP_KEY, ALATPAY_*, MAIL_*, etc.).
-# APP_KEY must match Laravel Cloud so encrypted fields still decrypt.
+# Set secrets in the Upsun console: APP_KEY (same as Laravel Cloud), APP_URL,
+# ALATPAY_*, MAIL_*, and other integration keys.
 
 # PostgreSQL (relationship: database)
 export DB_CONNECTION="pgsql"
@@ -21,7 +21,7 @@ export CACHE_STORE="redis"
 export SESSION_DRIVER="redis"
 export QUEUE_CONNECTION="redis"
 
-# Production defaults (override in Upsun variables when needed)
+# Production defaults (override via Upsun project variables when needed)
 export APP_ENV="${APP_ENV:-production}"
 export APP_DEBUG="${APP_DEBUG:-false}"
 export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"

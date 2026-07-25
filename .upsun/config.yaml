@@ -1,43 +1,113 @@
-# Upsun configuration, generated using AI at: 2026-07-25T07:54:20.458Z
-# AI can make mistakes. Please modify this file to suit your needs.
+# Upsun configuration for Reton (Laravel 12 + Inertia + Horizon)
+# https://developer.upsun.com/docs/get-started/stacks/laravel/
+
 applications:
   reton:
-    type: php:8.5
+    source:
+      root: "/"
+
+    type: "php:8.4"
+
+    relationships:
+      database: "database:postgresql"
+      redis: "redis:redis"
+
+    mounts:
+      "/.config":
+        source: "storage"
+        source_path: "config"
+      "bootstrap/cache":
+        source: "storage"
+        source_path: "bootstrap-cache"
+      "storage":
+        source: "storage"
+        source_path: "storage"
+
+    web:
+      locations:
+        "/":
+          root: "public"
+          passthru: "/index.php"
+          index:
+            - index.php
+          scripts: true
+          allow: true
+          expires: 1h
+          headers:
+            X-Frame-Options: SAMEORIGIN
+            X-Content-Type-Options: nosniff
+        "/build":
+          root: "public/build"
+          scripts: false
+          allow: true
+          expires: 1y
+          headers:
+            Cache-Control: "public, max-age=31536000, immutable"
+
+    hooks:
+      build: |
+        set -eux
+        composer --no-ansi --no-interaction install --no-progress --prefer-dist --optimize-autoloader --no-dev
+        # Vite/TypeScript are in devDependencies; needed only for the asset build.
+        npm ci
+        npm run build
+      deploy: |
+        set -eux
+        mkdir -p storage/framework/{sessions,cache,views} storage/logs storage/app/public
+        php artisan storage:link --force || true
+        php artisan migrate --force
+        php artisan config:cache
+        php artisan route:cache
+        php artisan view:cache
+        php artisan event:cache || true
+        php artisan horizon:terminate || true
 
     build:
       flavor: none
 
-    hooks:
-      build: |
-        set -ex
-        composer install --no-progress --no-interaction --optimize-autoloader --no-dev
+    dependencies:
+      php:
+        composer/composer: "^2"
+      nodejs:
+        npm: "^10"
 
-    web:
-      locations:
-        /:
-          root: public
-          passthru: /index.php
+    runtime:
+      extensions:
+        - redis
+        - pdo
+        - pdo_pgsql
+        - pcntl
+        - posix
+        - sodium
+        - intl
 
     variables:
       php:
         memory_limit: 256M
 
-    relationships:
-      database: {}
-      cache: {}
-      horizon: {}
+    workers:
+      horizon:
+        commands:
+          start: |
+            php artisan horizon
+
+    crons:
+      scheduler:
+        spec: "*/1 * * * *"
+        commands:
+          start: |
+            php artisan schedule:run --verbose --no-interaction
 
 services:
   database:
-    type: postgresql:18
-
-  cache:
-    type: redis:8.0
-
-  horizon:
-    type: redis-persistent:8.0
+    type: postgresql:16
+  redis:
+    type: redis:7.2
 
 routes:
-  https://{default}/:
+  "https://{default}/":
     type: upstream
-    upstream: reton:http
+    upstream: "reton:http"
+  "http://{default}/":
+    type: redirect
+    to: "https://{default}/"
