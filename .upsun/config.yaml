@@ -8,6 +8,9 @@ applications:
 
     type: "php:8.4"
 
+    # Persistent disk for storage / bootstrap mounts (defaults showed disk: 0).
+    disk: 512
+
     relationships:
       database: "database:postgresql"
       redis: "redis:redis"
@@ -22,6 +25,10 @@ applications:
       "storage":
         source: "storage"
         source_path: "storage"
+      # Avoid storage:link on read-only deploy filesystem.
+      "public/storage":
+        source: "storage"
+        source_path: "storage/app/public"
 
     web:
       locations:
@@ -59,8 +66,15 @@ applications:
         npm run build
       deploy: |
         set -eux
-        mkdir -p storage/framework/{sessions,cache,views} storage/logs storage/app/public
-        php artisan storage:link --force || true
+        # Explicit paths: dash/sh may not expand bash brace lists.
+        mkdir -p storage/framework/sessions
+        mkdir -p storage/framework/cache/data
+        mkdir -p storage/framework/views
+        mkdir -p storage/logs
+        mkdir -p storage/app/public
+        mkdir -p bootstrap/cache
+        # Mounted bootstrap/cache is empty on first boot; rediscover packages.
+        php artisan package:discover --ansi
         php artisan migrate --force
         php artisan config:cache
         php artisan route:cache
