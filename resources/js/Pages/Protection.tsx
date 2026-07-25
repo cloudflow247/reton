@@ -602,7 +602,7 @@ function ActionDialog({ action, onClose }: { action: ActionDef; onClose: () => v
         </div>
       )}
       {action.warning && (
-        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] px-3.5 py-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
+        <div className="mt-3 rounded-2xl border border-danger/35 bg-danger/10 px-3.5 py-3 text-xs font-medium leading-relaxed text-danger">
           {action.warning}
         </div>
       )}
