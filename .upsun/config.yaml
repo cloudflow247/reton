@@ -74,10 +74,7 @@ applications:
     runtime:
       extensions:
         - redis
-        - pdo
         - pdo_pgsql
-        - pcntl
-        - posix
         - sodium
         - intl
 
