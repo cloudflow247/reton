@@ -1,0 +1,29 @@
+# Upsun runtime env mapping for Laravel (Reton).
+# Set secrets in the Upsun console (APP_KEY, ALATPAY_*, MAIL_*, etc.).
+# APP_KEY must match Laravel Cloud so encrypted fields still decrypt.
+
+# PostgreSQL (relationship: database)
+export DB_CONNECTION="pgsql"
+export DB_HOST="${DATABASE_HOST}"
+export DB_PORT="${DATABASE_PORT}"
+export DB_DATABASE="${DATABASE_PATH}"
+export DB_USERNAME="${DATABASE_USERNAME}"
+export DB_PASSWORD="${DATABASE_PASSWORD}"
+export DATABASE_URL="${DATABASE_SCHEME}://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_PATH}"
+
+# Redis (relationship: redis)
+export REDIS_CLIENT="phpredis"
+export REDIS_HOST="${REDIS_HOST}"
+export REDIS_PORT="${REDIS_PORT}"
+export REDIS_URL="${REDIS_SCHEME}://${REDIS_HOST}:${REDIS_PORT}"
+
+export CACHE_STORE="redis"
+export SESSION_DRIVER="redis"
+export QUEUE_CONNECTION="redis"
+
+# Production defaults (override in Upsun variables when needed)
+export APP_ENV="${APP_ENV:-production}"
+export APP_DEBUG="${APP_DEBUG:-false}"
+export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"
+export RETON_DEMO_MODE="${RETON_DEMO_MODE:-false}"
+export BROADCAST_CONNECTION="${BROADCAST_CONNECTION:-log}"

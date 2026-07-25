@@ -142,4 +142,31 @@ If Postgres is not attached, Laravel may fall back to SQLite. Attach PostgreSQL,
 
 ---
 
+## Upsun (formerly Platform.sh)
+
+Reton ships with Upsun config in the repo:
+
+| File | Purpose |
+|------|---------|
+| `.upsun/config.yaml` | PHP 8.4 app, PostgreSQL 16, Redis, Horizon worker, scheduler cron, Vite build |
+| `.environment` | Maps Upsun service relationships to Laravel `DB_*` / `REDIS_*` |
+
+### First deploy checklist
+
+1. Link the GitHub repo in Upsun (already done if you see Activity builds).
+2. In Upsun **Variables**, set at least:
+   - `APP_KEY` - **same value as Laravel Cloud** (required for encrypted fields)
+   - `APP_URL` - your Upsun / custom domain URL
+   - Payment and mail secrets (`ALATPAY_*`, `MAIL_*`, etc.)
+3. Push `main` - build must find `.upsun/` (this repo includes it).
+4. Import the Laravel Cloud Postgres dump into the empty Upsun DB (Custom format via tunnel + `pg_restore`, or Plain SQL via `upsun sql < dump.sql`).
+5. Redeploy or run `php artisan migrate --force` only after import if needed.
+6. Point DNS and update ALATPay webhooks when smoke tests pass.
+
+Do **not** enable `RETON_DEMO_MODE` on Upsun production.
+
+Official guides: [Laravel on Upsun](https://developer.upsun.com/docs/get-started/stacks/laravel/get-started), [PostgreSQL import](https://developer.upsun.com/docs/add-services/postgresql).
+
+---
+
 © 2026 RETON PTE LTD. All rights reserved.
