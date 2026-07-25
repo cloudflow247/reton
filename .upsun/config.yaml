@@ -8,9 +8,6 @@ applications:
 
     type: "php:8.4"
 
-    # Persistent disk for storage / bootstrap mounts (defaults showed disk: 0).
-    disk: 512
-
     relationships:
       database: "database:postgresql"
       redis: "redis:redis"
