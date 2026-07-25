@@ -29,6 +29,12 @@ type ActionDef = {
   needReason?: boolean
   reasonLabel?: string
   path: string
+  confirmStep?: {
+    question: string
+    detail: string
+    yesLabel: string
+    noLabel: string
+  }
 }
 
 type Filter = 'all' | 'action' | 'held' | 'callbacks' | 'recovery'
@@ -291,6 +297,12 @@ export default function Protection() {
                               needReason: true,
                               reasonLabel: 'Why are you recalling this?',
                               path: `/transfers/${t.id}/callbacks`,
+                              confirmStep: {
+                                question: 'Are you sure you want to request a callback for this transaction?',
+                                detail: `${ngn(t.amount)} to ${t.receiver?.name?.trim() || 'the recipient'}`,
+                                yesLabel: 'Yes, Raise Callback',
+                                noLabel: 'No, Go Back',
+                              },
                             })
                           }
                         >
@@ -567,6 +579,7 @@ function SendProtectionTabs({ active }: { active: 'send' | 'protection' }) {
 
 function ActionDialog({ action, onClose }: { action: ActionDef; onClose: () => void }) {
   const [serverError, setServerError] = useState('')
+  const [gatePassed, setGatePassed] = useState(!action.confirmStep)
 
   const {
     register,
@@ -590,6 +603,23 @@ function ActionDialog({ action, onClose }: { action: ActionDef; onClose: () => v
         ),
       onFinish: () => undefined,
     })
+  }
+
+  if (action.confirmStep && !gatePassed) {
+    return (
+      <Modal title={action.title} onClose={onClose}>
+        <p className="text-sm leading-relaxed text-text">{action.confirmStep.question}</p>
+        <p className="mt-3 font-num text-lg font-bold text-text">{action.confirmStep.detail}</p>
+        <div className="mt-5 flex flex-col gap-2">
+          <Button type="button" className="w-full" onClick={() => setGatePassed(true)}>
+            {action.confirmStep.yesLabel}
+          </Button>
+          <Button type="button" variant="secondary" className="w-full" onClick={onClose}>
+            {action.confirmStep.noLabel}
+          </Button>
+        </div>
+      </Modal>
+    )
   }
 
   return (
