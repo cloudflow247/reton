@@ -47,6 +47,12 @@ applications:
     hooks:
       build: |
         set -eux
+        # Services are unavailable during build; keep artisan (package:discover) off real DB.
+        export DB_CONNECTION=sqlite
+        export DB_DATABASE=":memory:"
+        export CACHE_STORE=array
+        export SESSION_DRIVER=array
+        export QUEUE_CONNECTION=sync
         composer --no-ansi --no-interaction install --no-progress --prefer-dist --optimize-autoloader --no-dev
         # Vite/TypeScript are in devDependencies; needed only for the asset build.
         npm ci

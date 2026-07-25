@@ -291,7 +291,12 @@ class PlatformSettingsService
 
     public function applyToConfig(): void
     {
-        if (! Schema::hasTable('platform_settings')) {
+        try {
+            if (! Schema::hasTable('platform_settings')) {
+                return;
+            }
+        } catch (\Throwable) {
+            // Build hooks and package:discover run before services exist.
             return;
         }
 
