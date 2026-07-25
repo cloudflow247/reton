@@ -104,8 +104,7 @@ export default function Dashboard() {
   const attentionCount =
     (trust.pending_callbacks ?? 0) +
     (trust.open_recoveries ?? 0) +
-    (trust.open_fraud_alerts ?? 0) +
-    (trust.protected_transfers_pending ?? 0)
+    (trust.open_fraud_alerts ?? 0)
 
   const tone = trustTone(Number(trust.trust_score ?? 100))
   const score = Number(trust.trust_score ?? 100)

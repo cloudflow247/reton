@@ -123,6 +123,16 @@ export default function Protection() {
 
   const actionCount = actionCallbacks.length + actionRecoveries.length
 
+  const openCallbacks = useMemo(
+    () => callbacks.filter((c) => c.status === 'pending' || c.status === 'escalated'),
+    [callbacks],
+  )
+
+  const openRecoveries = useMemo(
+    () => recoveries.filter((r) => r.status === 'held' || r.status === 'escalated'),
+    [recoveries],
+  )
+
   const activeDigitalOrders = useMemo(
     () => digitalOrders.filter((o) => o.status !== 'completed' && o.status !== 'refunded'),
     [digitalOrders],
@@ -132,8 +142,8 @@ export default function Protection() {
     { id: 'all', label: 'All' },
     { id: 'action', label: 'Needs you', count: actionCount },
     { id: 'held', label: 'Held', count: heldProtected.length },
-    { id: 'callbacks', label: 'Callbacks', count: callbacks.length },
-    { id: 'recovery', label: 'Recovery', count: recoveries.length },
+    { id: 'callbacks', label: 'Callbacks', count: openCallbacks.length },
+    { id: 'recovery', label: 'Recovery', count: openRecoveries.length },
   ]
 
   const showHeld = filter === 'all' || filter === 'held'
@@ -162,8 +172,8 @@ export default function Protection() {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatCard label="Needs you" value={actionCount} highlight={actionCount > 0} />
         <StatCard label="Held" value={heldProtected.length} />
-        <StatCard label="Callbacks" value={callbacks.length} />
-        <StatCard label="Recoveries" value={recoveries.length} />
+        <StatCard label="Callbacks" value={openCallbacks.length} />
+        <StatCard label="Recoveries" value={openRecoveries.length} />
       </div>
 
       {/* Urgent queue */}
